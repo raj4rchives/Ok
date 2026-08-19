@@ -6,7 +6,7 @@ const LEGACY_V1 = "jee370rTrackerV1";
 const fields = [
   "date", "lec",
   "phyWork", "chemWork", "mathWork",
-  "chemDpp", "mathDpp",
+  "phyDpp", "chemDpp", "mathDpp",
   "phyPyq", "chemPyq", "mathPyq"
 ];
 
