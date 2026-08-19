@@ -2,13 +2,21 @@ const KEY = "jee370rTrackerV3";
 const LEGACY_V2 = "jee370rTrackerV2";
 const LEGACY_V1 = "jee370rTrackerV1";
 
-// Fields matching tracker structure
+// Tere naye HTML <thead> order ke exact same mapping:
 const fields = [
-  "date", "lec",
-  "phyWork", "chemWork", "mathWork",
-  "phyDpp", "chemDpp", "mathDpp",
-  "phyPyq", "chemPyq", "mathPyq"
+  "date",      // 1. DATE
+  "lec",       // 2. LEC TOTAL
+  "phyWork",   // 3. PHY HW / CLASS ILLU
+  "chemWork",  // 4. CHEM HW / CLASS ILLU
+  "mathWork",  // 5. MATH HW / CLASS ILLU
+  "phyDpp",    // 6. PHY DPP (Naya order)
+  "chemDpp",   // 7. CHEM DPP
+  "mathDpp",   // 8. MATH DPP
+  "phyPyq",    // 9. PHY PYQ
+  "chemPyq",   // 10. CHEM PYQ
+  "mathPyq"    // 11. MATH PYQ
 ];
+
 
 const tbody = document.querySelector("#tracker tbody");
 
