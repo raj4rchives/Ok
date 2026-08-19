@@ -408,97 +408,117 @@ document.addEventListener("DOMContentLoaded", () => {
     
 async function makePDF() {
   const { jsPDF } = window.jspdf;
-  // A4 Page Portrait mode me
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  // 1. Title & Subtitle Header
+  // 1. Title & Subtitle
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(16);
-  pdf.setTextColor(20, 20, 20);
-  pdf.text("15 DAY 370R JEE ADVANCED TRACKER", 105, 18, { align: "center" });
+  pdf.setFontSize(14);
+  pdf.text("370R JEE ADVANCED TRACKER", 14, 15);
+  pdf.setFontSize(8);
+  pdf.text("15-DAY QUESTION & LECTURE LOG", 14, 20);
 
-  // 2. Table Headers (Sahi Sequence)
+  // 2. Main Table Headers (Exact Image Match)
   const headers = [[
-    "DATE",
-    "LEC",
-    "PHY HW/\nILLU",
-    "CHEM HW/\nILLU",
-    "MATH HW/\nILLU",
-    "CHEM\nDPP",
-    "MATH\nDPP",
-    "PHY\nPYQ",
-    "CHEM\nPYQ",
-    "MATH\nPYQ"
+    "DATE", "LEC",
+    "PHY HW", "PHY ILLU",
+    "CHEM HW", "CHEM ILLU",
+    "MATH HW", "MATH ILLU",
+    "PHY DPP", "CHEM DPP", "MATH DPP",
+    "PHY PYQ", "CHEM PYQ", "MATH PYQ"
   ]];
 
-  // 3. User Data Matrix Prepare Karo
-  const data = rowsData();
-  let tableRows = data.slice(0, 15).map(r => [
-    r.date ? r.date.split("-").slice(1).reverse().join("/") : "", // Formats YYYY-MM-DD to DD/MM
-    r.lec || "",
-    r.phyWork || "",
-    r.chemWork || "",
-    r.mathWork || "",
-    r.chemDpp || "",
-    r.mathDpp || "",
-    r.phyPyq || "",
-    r.chemPyq || "",
-    r.mathPyq || ""
-  ]);
+  // 3. Extract 15 Rows Data
+  const tableRows = [...tbody.children].slice(0, 15).map(tr => {
+    const getVal = f => {
+      const inp = tr.querySelector(`[data-f="${f}"]`);
+      return inp ? inp.value : "";
+    };
 
-  // Ensure hamesha exactly 15 rows dikhein
-  while (tableRows.length < 15) {
-    tableRows.push(["", "", "", "", "", "", "", "", "", ""]);
-  }
+    return [
+      getVal("date"),
+      getVal("lec"),
+      getVal("phyWork"),  // PHY HW
+      "",                 // PHY ILLU (Blank for manual entry)
+      getVal("chemWork"), // CHEM HW
+      "",                 // CHEM ILLU
+      getVal("mathWork"), // MATH HW
+      "",                 // MATH ILLU
+      getVal("phyDpp"),
+      getVal("chemDpp"),
+      getVal("mathDpp"),
+      getVal("phyPyq"),
+      getVal("chemPyq"),
+      getVal("mathPyq")
+    ];
+  });
 
-  // 4. AutoTable Se Native PDF Grid Generate Karo
-  if (pdf.autoTable) {
-    pdf.autoTable({
-      startY: 25,
-      head: headers,
-      body: tableRows,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
-        lineWidth: 0.3,
-        lineColor: [0, 0, 0],
-        fontStyle: 'bold',
-        halign: 'center',
-        valign: 'middle',
-        fontSize: 8
-      },
-      bodyStyles: {
-        fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
-        lineWidth: 0.3,
-        lineColor: [0, 0, 0],
-        halign: 'center',
-        valign: 'middle',
-        fontSize: 9,
-        cellPadding: 3
-      },
-      columnStyles: {
-        0: { cellWidth: 22 }, // Date
-        1: { cellWidth: 15 }, // Lec
-        2: { cellWidth: 21 }, // Phy HW
-        3: { cellWidth: 21 }, // Chem HW
-        4: { cellWidth: 21 }, // Math HW
-        5: { cellWidth: 18 }, // Chem DPP
-        6: { cellWidth: 18 }, // Math DPP
-        7: { cellWidth: 16 }, // Phy PYQ
-        8: { cellWidth: 16 }, // Chem PYQ
-        9: { cellWidth: 16 }  // Math PYQ
-      }
-    });
-  }
+  // 4. Main Table Grid Setup
+  pdf.autoTable({
+    startY: 23,
+    head: headers,
+    body: tableRows,
+    theme: 'grid',
+    styles: {
+      fontSize: 6.5,
+      cellPadding: 1.8,
+      halign: 'center',
+      valign: 'middle',
+      textColor: [0, 0, 0],
+      lineColor: [120, 120, 120],
+      lineWidth: 0.1
+    },
+    headStyles: {
+      fillColor: [242, 201, 34], // Bright Yellow matching image
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    }
+  });
 
-  // 5. Footer Target Text
-  const finalY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 12 : 260;
-  pdf.setFontSize(11);
+  // 5. Calculate Summary Totals
+  const data = rowsData().slice(0, 15);
+  const totalLec = sumField(data, "lec");
+  const pWork = sumField(data, "phyWork"), cWork = sumField(data, "chemWork"), mWork = sumField(data, "mathWork");
+  const pDpp = sumField(data, "phyDpp"), cDpp = sumField(data, "chemDpp"), mDpp = sumField(data, "mathDpp");
+  const pPyq = sumField(data, "phyPyq"), cPyq = sumField(data, "chemPyq"), mPyq = sumField(data, "mathPyq");
+
+  const totalPyqs = pPyq + cPyq + mPyq;
+  const totalQs = pWork + cWork + mWork + pDpp + cDpp + mDpp + totalPyqs;
+
+  // 6. Bottom TOTAL Table Row
+  const finalY = pdf.lastAutoTable.finalY + 4;
+  
+  const bottomTotalRow = [[
+    "TOTAL",
+    totalLec || "",
+    pWork || 0, 0,
+    cWork || 0, 0,
+    mWork || 0, 0,
+    pDpp || 0, cDpp || 0, mDpp || 0,
+    pPyq || 0, cPyq || 0, mPyq || 0
+  ]];
+
+  pdf.autoTable({
+    startY: finalY,
+    body: bottomTotalRow,
+    theme: 'grid',
+    styles: {
+      fontSize: 6.5,
+      cellPadding: 2,
+      halign: 'center',
+      valign: 'middle',
+      fontStyle: 'bold',
+      textColor: [0, 0, 0],
+      lineColor: [120, 120, 120],
+      lineWidth: 0.1
+    }
+  });
+
+  // 7. Footer Text Block (Matching Exact Image Structure)
+  const footerY = pdf.lastAutoTable.finalY + 6;
+  pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
-  pdf.text("TARGET: 70-80 QUESTIONS PER DAY", 14, finalY);
+  pdf.text(`Total questions: ${totalQs}`, 14, footerY);
+  pdf.text(`Total lectures: ${totalLec}   |   Total PYQs: ${totalPyqs}`, 14, footerY + 5);
 
-  // Download PDF
-  pdf.save("370R-JEE-Advanced-Tracker-Filled.pdf");
+  pdf.save("370R-JEE-Advanced-Tracker.pdf");
 }
