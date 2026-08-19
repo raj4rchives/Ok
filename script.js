@@ -288,6 +288,92 @@ document.querySelector("#examDate").addEventListener("change",()=>{updateCountdo
 setInterval(updateCountdown,60000);
 updateCountdown();
 
+function generateTrackerPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+
+    // Title Section
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("15 DAY 370R JEE ADVANCED TRACKER", 297, 40, { align: "center" });
+
+    // Header Array (Matching exact PDF columns without PYQs Total)
+    const headers = [[
+        "DATE",
+        "LEC TOTAL",
+        "PHY HW/\nCLLASS ILLU",
+        "CHEM HW/\nCLASS ILLU",
+        "MATH HW/\nCLASS ILLU",
+        "CHEM DPP",
+        "MATH DPP"
+    ]];
+
+    // Prepare Table Rows (Website ke Array entries se)
+    let pdfData = entries.map(item => [
+        item.date || "",
+        item.lecTotal || "",
+        item.phyHw || "",
+        item.chemHw || "",
+        item.mathHw || "",
+        item.chemDpp || "",
+        item.mathDpp || ""
+    ]);
+
+    // Ensure always 15 rows exist in PDF (like original PDF template)
+    while (pdfData.length < 15) {
+        pdfData.push(["", "", "", "", "", "", ""]);
+    }
+
+    // AutoTable Generation
+    doc.autoTable({
+        startY: 60,
+        head: headers,
+        body: pdfData,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            lineWidth: 1,
+            lineColor: [0, 0, 0],
+            fontStyle: 'bold',
+            halign: 'center',
+            valign: 'middle',
+            fontSize: 8
+        },
+        bodyStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            lineWidth: 1,
+            lineColor: [0, 0, 0],
+            halign: 'center',
+            valign: 'middle',
+            fontSize: 9,
+            rowHeight: 22
+        },
+        columnStyles: {
+            0: { cellWidth: 55 }, // Date
+            1: { cellWidth: 65 }, // Lec Total
+            2: { cellWidth: 80 }, // Phy HW
+            3: { cellWidth: 80 }, // Chem HW
+            4: { cellWidth: 80 }, // Math HW
+            5: { cellWidth: 65 }, // Chem DPP
+            6: { cellWidth: 65 }  // Math DPP
+        }
+    });
+
+    // Bottom Stats Section
+    const finalY = doc.lastAutoTable.finalY + 20;
+    doc.setFontSize(10);
+    doc.text("TARGET: 70-80 QUESTIONS PER DAY", 40, finalY);
+
+    // Save Downloaded File
+    doc.save("370R-JEE-Advanced-Tracker-Filled.pdf");
+}
+
+// Download Button Event Handler
+document.getElementById("downloadPdfBtn").addEventListener("click", generateTrackerPDF);
+
+
 makeRows();
 const saved=migrateData();
 if(saved){
