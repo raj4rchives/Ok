@@ -406,18 +406,24 @@ document.addEventListener("DOMContentLoaded", () => {
   updateStats();
 });
     
-async function makePDF() {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  // 1. Title & Subtitle
+  async function makePDF() {
+  const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if (!jsPDFLib) {
+    alert("PDF library missing h! Index.html me script tags check kr.");
+    return;
+  }
+
+  const pdf = new jsPDFLib({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  // 1. Title Block
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(14);
-  pdf.text("370R JEE ADVANCED TRACKER", 14, 15);
+  pdf.setFontSize(13);
+  pdf.text("370R JEE ADVANCED TRACKER", 14, 12);
   pdf.setFontSize(8);
-  pdf.text("15-DAY QUESTION & LECTURE LOG", 14, 20);
+  pdf.text("15-DAY QUESTION & LECTURE LOG", 14, 16);
 
-  // 2. Main Table Headers (Exact Image Match)
+  // 2. Yellow Headers (14 Columns)
   const headers = [[
     "DATE", "LEC",
     "PHY HW", "PHY ILLU",
@@ -427,8 +433,8 @@ async function makePDF() {
     "PHY PYQ", "CHEM PYQ", "MATH PYQ"
   ]];
 
-  // 3. Extract 15 Rows Data
-  const tableRows = [...tbody.children].slice(0, 15).map(tr => {
+  // 3. Extract 15 Rows
+  const rows = [...tbody.children].slice(0, 15).map(tr => {
     const getVal = f => {
       const inp = tr.querySelector(`[data-f="${f}"]`);
       return inp ? inp.value : "";
@@ -437,12 +443,9 @@ async function makePDF() {
     return [
       getVal("date"),
       getVal("lec"),
-      getVal("phyWork"),  // PHY HW
-      "",                 // PHY ILLU (Blank for manual entry)
-      getVal("chemWork"), // CHEM HW
-      "",                 // CHEM ILLU
-      getVal("mathWork"), // MATH HW
-      "",                 // MATH ILLU
+      getVal("phyWork"), "",
+      getVal("chemWork"), "",
+      getVal("mathWork"), "",
       getVal("phyDpp"),
       getVal("chemDpp"),
       getVal("mathDpp"),
@@ -452,29 +455,7 @@ async function makePDF() {
     ];
   });
 
-  // 4. Main Table Grid Setup
-  pdf.autoTable({
-    startY: 23,
-    head: headers,
-    body: tableRows,
-    theme: 'grid',
-    styles: {
-      fontSize: 6.5,
-      cellPadding: 1.8,
-      halign: 'center',
-      valign: 'middle',
-      textColor: [0, 0, 0],
-      lineColor: [120, 120, 120],
-      lineWidth: 0.1
-    },
-    headStyles: {
-      fillColor: [242, 201, 34], // Bright Yellow matching image
-      textColor: [0, 0, 0],
-      fontStyle: 'bold'
-    }
-  });
-
-  // 5. Calculate Summary Totals
+  // 4. Totals Calculation
   const data = rowsData().slice(0, 15);
   const totalLec = sumField(data, "lec");
   const pWork = sumField(data, "phyWork"), cWork = sumField(data, "chemWork"), mWork = sumField(data, "mathWork");
@@ -484,41 +465,51 @@ async function makePDF() {
   const totalPyqs = pPyq + cPyq + mPyq;
   const totalQs = pWork + cWork + mWork + pDpp + cDpp + mDpp + totalPyqs;
 
-  // 6. Bottom TOTAL Table Row
-  const finalY = pdf.lastAutoTable.finalY + 4;
-  
-  const bottomTotalRow = [[
-    "TOTAL",
-    totalLec || "",
-    pWork || 0, 0,
-    cWork || 0, 0,
-    mWork || 0, 0,
-    pDpp || 0, cDpp || 0, mDpp || 0,
-    pPyq || 0, cPyq || 0, mPyq || 0
-  ]];
-
+  // 5. Single AutoTable (Foot option se exact column width lock ho jayegi)
   pdf.autoTable({
-    startY: finalY,
-    body: bottomTotalRow,
+    startY: 19,
+    head: headers,
+    body: rows,
+    foot: [[
+      "TOTAL",
+      totalLec || "",
+      pWork || 0, 0,
+      cWork || 0, 0,
+      mWork || 0, 0,
+      pDpp || 0, cDpp || 0, mDpp || 0,
+      pPyq || 0, cPyq || 0, mPyq || 0
+    ]],
     theme: 'grid',
     styles: {
-      fontSize: 6.5,
-      cellPadding: 2,
+      fontSize: 6,
+      cellPadding: 1.5,
       halign: 'center',
       valign: 'middle',
+      textColor: 0,
+      lineColor: 150,
+      lineWidth: 0.1
+    },
+    headStyles: {
+      fillColor: [250, 204, 21], // Yellow Header
+      textColor: 0,
+      fontStyle: 'bold'
+    },
+    footStyles: {
+      fillColor: [255, 255, 255], // White background for TOTAL row
+      textColor: 0,
       fontStyle: 'bold',
-      textColor: [0, 0, 0],
-      lineColor: [120, 120, 120],
+      lineColor: 150,
       lineWidth: 0.1
     }
   });
 
-  // 7. Footer Text Block (Matching Exact Image Structure)
-  const footerY = pdf.lastAutoTable.finalY + 6;
+  // 6. Footer Text Summary
+  const footerY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 6 : 190;
   pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
   pdf.text(`Total questions: ${totalQs}`, 14, footerY);
-  pdf.text(`Total lectures: ${totalLec}   |   Total PYQs: ${totalPyqs}`, 14, footerY + 5);
+  pdf.text(`Total lectures: ${totalLec}   |   Total PYQs: ${totalPyqs}`, 14, footerY + 4);
 
-  pdf.save("370R-JEE-Advanced-Tracker.pdf");
-}
+  // Download Output
+  pdf.save("15DAY-REPORT-JEE-Advanced.pdf");
+  }
