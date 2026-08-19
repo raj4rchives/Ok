@@ -1,33 +1,15 @@
-# 370R JEE Advanced Tracker
+# 370R JEE Advanced Tracker V5
 
-GitHub Pages-ready static website.
+Features:
+- Unlimited daily study log
+- Physics/Chemistry/Maths HW + Class Illustration combined in one column
+- Subject-wise DPP and PYQ tracking
+- Overall and subject dashboard
+- Automatic calendar-month phases (Phase 1, Phase 2, ...)
+- Monthly PDF report
+- JSON export/import backup
+- Editable JEE Advanced target date + live days-left countdown
 
-## Files
-- `index.html` — page structure, dashboard and 15-day tracker
-- `style.css` — all styling and responsive layout
-- `script.js` — tracker logic, save/load, dates, subject-wise question stats and PDF export
-- `tracker-template.png` — original supplied tracker template (kept for reference)
+Note: the default countdown date is 23 May 2027 as an editable planning date. JEE Advanced 2027 official date was not found on the official JEE Advanced site in this build; change the date when officially announced.
 
-## Columns
-The tracker now records these separately:
-- Physics HW / Class Illustration / DPP / PYQ
-- Chemistry HW / Class Illustration / DPP / PYQ
-- Mathematics HW / Class Illustration / DPP / PYQ
-- Lectures
-
-Numeric entries such as `18Q` or `12/15` are counted from their first number. `done` is treated as 0 because it has no numeric question count.
-
-## Dashboard
-The dashboard automatically shows:
-- total lectures
-- total questions done
-- total PYQs
-- average questions per filled day
-- Physics, Chemistry and Maths breakdown for HW, Class Illustration, DPP and PYQ
-- subject totals and overall total
-
-## Save / Load
-Progress is stored in browser localStorage. The script also attempts to migrate data from the previous tracker version so existing dates/lectures and old combined numeric fields are not simply discarded.
-
-## GitHub Pages
-Upload all four files to the root of a GitHub repository. Then: Settings → Pages → Deploy from branch → `main` → `/ (root)` → Save.
+GitHub Pages: upload all files to repository root.
