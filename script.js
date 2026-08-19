@@ -82,7 +82,7 @@ async function makePDF(){
   const data=rowsData();
   pdf.setFont("helvetica","bold");
   pdf.setTextColor(20,20,20);
-  pdf.setFontSize(7);
+  pdf.setFontSize(9);
 
   data.forEach((r,i)=>{
     const y=(tableTop+(i+.5)*rowH)*sy+1.7;
