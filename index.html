@@ -1,39 +1,94 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>370R JEE Advanced Tracker</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>370R JEE ADVANCED TRACKER</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- jsPDF & AutoTable libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div>
-      <h1>370R JEE Advanced Tracker</h1>
-      <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
+  <div class="container">
+    <header>
+      <h1>15 DAY 370R JEE ADVANCED TRACKER</h1>
+      <div id="countdown" class="countdown">Loading Countdown...</div>
+    </header>
+
+    <div class="dashboard">
+      <div class="card">
+        <h3>Total Questions</h3>
+        <p id="totalQuestions">0</p>
+      </div>
+      <div class="card">
+        <h3>Target Status</h3>
+        <p id="targetStatus">70-80 QUESTIONS</p>
+      </div>
     </div>
+
+    <form id="trackerForm">
+      <div class="form-row">
+        <div class="input-group">
+          <label for="date">DATE</label>
+          <input type="text" id="date" placeholder="DD/MM" required>
+        </div>
+        <div class="input-group">
+          <label for="lecTotal">LEC TOTAL</label>
+          <input type="number" id="lecTotal" min="0" value="0">
+        </div>
+        <div class="input-group">
+          <label for="phyHw">PHY HW/CLASS ILLU</label>
+          <input type="number" id="phyHw" min="0" value="0">
+        </div>
+        <div class="input-group">
+          <label for="chemHw">CHEM HW/CLASS ILLU</label>
+          <input type="number" id="chemHw" min="0" value="0">
+        </div>
+        <div class="input-group">
+          <label for="mathHw">MATH HW/CLASS ILLU</label>
+          <input type="number" id="mathHw" min="0" value="0">
+        </div>
+        <div class="input-group">
+          <label for="chemDpp">CHEM DPP</label>
+          <input type="number" id="chemDpp" min="0" value="0">
+        </div>
+        <div class="input-group">
+          <label for="mathDpp">MATH DPP</label>
+          <input type="number" id="mathDpp" min="0" value="0">
+        </div>
+      </div>
+      <button type="submit" id="saveBtn">LOG ENTRY</button>
+    </form>
+
     <div class="actions">
-      <button class="secondary" id="saveBtn">Save</button>
-      <button class="secondary" id="loadBtn">Load</button>
-      <button class="danger" id="clearBtn">Clear</button>
-      <button class="primary" id="pdfBtn">Download Filled PDF</button>
+      <button id="downloadPdf">Download PDF</button>
+      <button id="resetBtn" class="danger">Reset Data</button>
+    </div>
+
+    <div class="table-container">
+      <table id="trackerTable">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>LEC TOTAL</th>
+            <th>PHY HW/CLASS ILLU</th>
+            <th>CHEM HW/CLASS ILLU</th>
+            <th>MATH HW/CLASS ILLU</th>
+            <th>CHEM DPP</th>
+            <th>MATH DPP</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Dynamic entries appear here -->
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="card">
-    <div class="settings">
-      <div class="small">
-        <label>Start date</label>
-        <input id="startDate" type="date">
-      </div>
-      <button class="secondary" id="datesBtn">Fill Dates</button>
-      <button class="secondary" id="addBtn">+ 15 Days</button>
-      <div class="small"><label>JEE Mains target date</label><input id="examDate" type="date" value="2027-01-24"></div>
-      <span class="badge">Target: 70–80 questions/day • CRACK JEE</span>
-    </div>
-    <p class="note">For Physics/Chemistry/Maths, enter the combined <b>HW / CLASS ILLU</b> question count in one cell. DPP and PYQ are entered separately. Values like <b>18Q</b> or <b>12/15</b> count as 18 and 12 questions.</p>
-  </div>
+  <script src="script.js"></script>
+</body>
+</html>
 
   <div class="countdown-card">
     <div class="countdown-label">JEE MAINS COUNTDOWN</div>
