@@ -115,5 +115,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="script.js"></script>
+<!-- Install App Popup -->
+<div id="installPopup" class="install-popup">
+  <div class="install-icon">📲</div>
+
+  <div class="install-text">
+    <strong>Install App</strong>
+    <span>Install this website as an app for a better experience.</span>
+  </div>
+
+  <button id="installBtn">Install</button>
+  <button id="closeInstall" class="close-btn">×</button>
+</div>
+
+<link rel="manifest" href="manifest.json">
+<script src="install.js"></script>
 </body>
 </html>
