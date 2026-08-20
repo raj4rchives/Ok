@@ -106,3 +106,8 @@ tr:nth-child(even){background:#0d1420}
   font-size: 22px;
   cursor: pointer;
 }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
