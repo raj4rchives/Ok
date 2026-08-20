@@ -513,3 +513,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Download Output
   pdf.save("15DAY-REPORT-JEE-Advanced.pdf");
   }
+function updateDashboard(selectedDateData) {
+  let questionsToday = 0;
+  let lecturesToday = 0;
+
+  if (selectedDateData) {
+    // Sum questions for the selected day
+    const hw = Number(selectedDateData.hw) || 0;
+    const dpp = Number(selectedDateData.dpp) || 0;
+    const pyq = Number(selectedDateData.pyq) || 0;
+    
+    questionsToday = hw + dpp + pyq;
+
+    // Get lectures for the selected day (change .lectures if your key name is different)
+    lecturesToday = Number(selectedDateData.lectures) || 0;
+  }
+
+  // Render values to the UI
+  document.getElementById('questions-today').textContent = questionsToday;
+  document.getElementById('lectures-today').textContent = lecturesToday;
+}
