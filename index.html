@@ -115,20 +115,176 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="script.js"></script>
-<!-- Install App Popup -->
+<!-- 📲 Install App Popup -->
 <div id="installPopup" class="install-popup">
-  <div class="install-icon">📲</div>
+  <div class="install-icon">📱</div>
 
-  <div class="install-text">
-    <strong>Install App</strong>
-    <span>Install this website as an app for a better experience.</span>
+  <div class="install-content">
+    <div class="install-title">Install JEE Tracker</div>
+    <div class="install-text">
+      Install the app for a faster and better experience.
+    </div>
   </div>
 
   <button id="installBtn">Install</button>
-  <button id="closeInstall" class="close-btn">×</button>
+  <button id="closeInstall" class="install-close">×</button>
 </div>
 
-<link rel="manifest" href="manifest.json">
-<script src="install.js"></script>
+<style>
+  .install-popup {
+    position: fixed;
+    left: 15px;
+    right: 15px;
+    bottom: 18px;
+    z-index: 999999;
+
+    display: none;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px;
+    border-radius: 18px;
+
+    background: rgba(20, 20, 20, 0.96);
+    color: white;
+
+    box-shadow: 0 10px 35px rgba(0,0,0,.35);
+    font-family: Arial, sans-serif;
+
+    animation: installSlide .35s ease;
+  }
+
+  .install-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    font-size: 23px;
+    flex-shrink: 0;
+  }
+
+  .install-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .install-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .install-text {
+    font-size: 12px;
+    opacity: .7;
+    line-height: 1.3;
+  }
+
+  #installBtn {
+    border: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+
+    background: white;
+    color: black;
+
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .install-close {
+    position: absolute;
+    right: 7px;
+    top: 4px;
+
+    border: none;
+    background: transparent;
+    color: white;
+
+    font-size: 20px;
+    opacity: .6;
+    cursor: pointer;
+  }
+
+  @keyframes installSlide {
+    from {
+      transform: translateY(120px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .install-popup {
+      max-width: 430px;
+      left: auto;
+    }
+  }
+</style>
+  <script>
+let deferredInstallPrompt = null;
+
+const installPopup = document.getElementById("installPopup");
+const installBtn = document.getElementById("installBtn");
+const closeInstall = document.getElementById("closeInstall");
+
+// Check if already running as installed app
+const isInstalled =
+  window.matchMedia("(display-mode: standalone)").matches ||
+  window.navigator.standalone === true;
+
+// Browser gives us the install prompt
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+
+  deferredInstallPrompt = event;
+
+  // Don't show if app is already installed
+  if (!isInstalled) {
+    setTimeout(() => {
+      installPopup.style.display = "flex";
+    }, 1500);
+  }
+});
+
+// Install button
+installBtn.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) {
+    alert("Open this website in Chrome to install the app.");
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+
+  const result = await deferredInstallPrompt.userChoice;
+
+  if (result.outcome === "accepted") {
+    console.log("App installed");
+  }
+
+  deferredInstallPrompt = null;
+  installPopup.style.display = "none";
+});
+
+// Close button
+closeInstall.addEventListener("click", () => {
+  installPopup.style.display = "none";
+});
+
+// Hide popup after installation
+window.addEventListener("appinstalled", () => {
+  installPopup.style.display = "none";
+  deferredInstallPrompt = null;
+});
+    </script>
 </body>
 </html>
