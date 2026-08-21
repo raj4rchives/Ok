@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>370R JEE Advanced Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰ <span>Menu</span></button>
+    <div>
+      <h1>370R JEE Advanced Tracker</h1>
+      <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
+    </div>
+    <div class="actions">
+      <button class="secondary" id="saveBtn">Save</button>
+      <button class="secondary" id="loadBtn">Load</button>
+      <button class="danger" id="clearBtn">Clear</button>
+      <button class="primary" id="pdfBtn">Download Filled PDF</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="settings">
+      <div class="small">
+        <label>Start date</label>
+        <input id="startDate" type="date">
+      </div>
+      <button class="secondary" id="datesBtn">Fill Dates</button>
+      <button class="secondary" id="addBtn">+ 15 Days</button>
+      <div class="small"><label>JEE Mains target date</label><input id="examDate" type="date" value="2027-01-24"></div>
+      <span class="badge">Target: 70–80 questions/day • CRACK JEE</span>
+    </div>
+    <p class="note">For Physics/Chemistry/Maths, enter the combined <b>HW / CLASS ILLU</b> question count in one cell. DPP and PYQ are entered separately. Values like <b>18Q</b> or <b>12/15</b> count as 18 and 12 questions.</p>
+  </div>
+
+  <section class="focus-dashboard card">
+    <div class="section-title">Focus Dashboard</div>
+    <div class="today-grid">
+      <div class="today-stat"><b id="todayFocusTime">0h 0m</b><span>Today focus time</span></div>
+      <div class="today-stat"><b id="todayLectureTime">0h 0m</b><span>Today lecture time</span></div>
+      <div class="today-stat"><b id="todayQuestionTime">0h 0m</b><span>Today question practice</span></div>
+      <div class="today-stat"><b id="todayQuestions">0</b><span>Today questions</span></div>
+      <div class="today-stat"><b id="todaySessions">0</b><span>Today sessions</span></div>
+    </div>
+    <div class="focus-dashboard-actions">
+      <button class="primary" id="dashboardFocusBtn">🎯 Start Focus</button>
+      <button class="secondary" id="manualLogBtn">＋ Manual Log</button>
+      <button class="secondary" id="reportBtn">📄 Download Study Report</button>
+    </div>
+    <div class="date-filter-row">
+      <label>View date <input id="focusDateFilter" type="date"></label>
+      <button class="secondary" id="clearFocusDateBtn">Show All Dates</button>
+    </div>
+    <div id="datewiseFocus" class="datewise-focus"></div>
+  </section>
+
+  <div class="countdown-card">
+    <div class="countdown-label">JEE MAINS COUNTDOWN</div>
+    <div id="countdown">—</div>
+    <div id="examDateLabel" class="countdown-sub">Set your target exam date above</div>
+  </div>
+
+  <section class="dashboard">
+    <div class="section-title">Dashboard</div>
+    <div class="stats">
+      <div class="stat"><b id="daysDone">0</b><span>Days with entries</span></div>
+      <div class="stat"><b id="lecSum">0</b><span>Total lectures</span></div>
+      <div class="stat"><b id="questionSum">0</b><span>Total questions done</span></div>
+      <div class="stat"><b id="pyqSum">0</b><span>Total PYQs</span></div>
+      <div class="stat"><b id="avgQ">0</b><span>Average questions/day</span></div>
+      <div class="stat"><b id="qTarget">0%</b><span>Average vs 70/day target</span></div>
+    </div>
+
+    <div class="card dashboard-card">
+      <h2>Subject-wise Questions</h2>
+      <div class="table-wrap dashboard-table-wrap">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>TYPE</th>
+              <th>PHYSICS</th>
+              <th>CHEMISTRY</th>
+              <th>MATHEMATICS</th>
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>HW / CLASS ILLU</td><td id="phyWorkSum">0</td><td id="chemWorkSum">0</td><td id="mathWorkSum">0</td><td id="workSum">0</td></tr>
+            <tr><td>DPP</td><td id="phyDppSum">0</td><td id="chemDppSum">0</td><td id="mathDppSum">0</td><td id="dppSum">0</td></tr>
+            <tr><td>PYQ</td><td id="phyPyqSum">0</td><td id="chemPyqSum">0</td><td id="mathPyqSum">0</td><td id="pyqDetailSum">0</td></tr>
+            <tr class="total-row"><td>TOTAL QUESTIONS</td><td id="phyTotal">0</td><td id="chemTotal">0</td><td id="mathTotal">0</td><td id="overallTotal">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="card phase-card">
+    <div class="section-title">Phase / Monthly Reports</div>
+    <div class="settings">
+      <div class="small"><label>Report month</label><input id="reportMonth" type="month"></div>
+      <button class="secondary" id="monthPdfBtn">Monthly PDF Report</button>
+      <button class="secondary" id="jsonExportBtn">Export JSON</button>
+      <label class="file-btn">Import JSON<input id="jsonImport" type="file" accept="application/json" hidden></label>
+    </div>
+    <p class="note">Each calendar month is treated as a separate phase automatically: Phase 1 = first month with data, Phase 2 = next month, etc. Monthly PDF reports contain only that month's log and summary. JSON stores all your data for backup/restore.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Unlimited Study Log</div>
+    <div class="table-wrap">
+      <table id="tracker">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>LEC TOTAL</th>
+            <th>PHY HW /<br>CLASS ILLU</th>
+            <th>CHEM HW /<br>CLASS ILLU</th>
+            <th>MATH HW /<br>CLASS ILLU</th>
+           <th>PHY DPP</th>
+            <th>CHEM DPP</th>
+            <th>MATH DPP</th>
+            <th>PHY PYQ</th>
+            <th>CHEM PYQ</th>
+            <th>MATH PYQ</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="script.js"></script>
+
+<!-- Study Menu / Focus Mode -->
+<div id="studyMenu" class="study-menu">
+  <div class="study-menu-head"><b>Study Menu</b><button id="closeMenu" class="icon-btn">×</button></div>
+  <button id="openFocus" class="menu-item">⏱️ <span><b>Focus Mode</b><small>Track lectures, questions & study time</small></span></button>
+</div>
+
+<div id="focusOverlay" class="focus-overlay">
+  <div class="focus-modal">
+    <div class="focus-head">
+      <div><b>🎯 Focus Mode</b><span id="focusStatus">Ready to focus</span></div>
+      <button id="closeFocus" class="icon-btn">×</button>
+    </div>
+
+    <div class="focus-timer" id="focusTimer">00:00:00</div>
+
+    <div class="focus-form">
+      <div><label>Subject</label>
+        <select id="focusSubject">
+          <option>Physics</option><option>Chemistry</option><option>Mathematics</option>
+        </select>
+      </div>
+      <div><label>Activity</label>
+        <select id="focusActivity">
+          <option>Questions Practice</option><option>Lecture</option><option>DPP</option>
+          <option>PYQ</option><option>HW / Class Illu</option><option>Revision</option><option>Other</option>
+        </select>
+      </div>
+      <div><label>Questions done (optional)</label><input id="focusQuestions" type="number" min="0" inputmode="numeric" placeholder="e.g. 35"></div>
+    </div>
+
+    <div class="focus-actions">
+      <button class="primary" id="startFocus">▶ Start Focus</button>
+      <button class="danger" id="stopFocus" disabled>■ Stop & Save</button>
+    </div>
+
+    <div class="focus-summary">
+      <div><b id="focusTotalTime">0h 0m</b><span>Total focus</span></div>
+      <div><b id="focusTotalQ">0</b><span>Questions</span></div>
+      <div><b id="focusSessions">0</b><span>Sessions</span></div>
+    </div>
+
+    <div class="manual-log-box">
+      <h3 class="focus-list-title">Manual Study Log</h3>
+      <div class="manual-form">
+        <div><label>Date</label><input id="manualDate" type="date"></div>
+        <div><label>Subject</label><select id="manualSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option></select></div>
+        <div><label>Activity</label><select id="manualActivity"><option>Questions Practice</option><option>Lecture</option><option>DPP</option><option>PYQ</option><option>HW / Class Illu</option><option>Revision</option><option>Other</option></select></div>
+        <div><label>Duration (minutes)</label><input id="manualMinutes" type="number" min="1" placeholder="120"></div>
+        <div><label>Questions</label><input id="manualQuestions" type="number" min="0" placeholder="40"></div>
+        <div class="manual-note"><label>Note (optional)</label><input id="manualNote" type="text" placeholder="e.g. Electrostatics PYQ"></div>
+      </div>
+      <button class="primary" id="saveManualLog">Save Manual Log</button>
+    </div>
+
+    <h3 class="focus-list-title">Study History</h3>
+    <div id="focusHistory" class="focus-history"></div>
+  </div>
+</div>
+
+<!-- Install App Popup -->
+<div id="installPopup" class="install-popup">
+  <div class="install-icon">📲</div>
+
+  <div class="install-text">
+    <strong>Install App</strong>
+    <span>Install this website as an app for a better experience.</span>
+  </div>
+
+  <button id="installBtn">Install</button>
+  <button id="closeInstall" class="close-btn">×</button>
+</div>
+
+<link rel="manifest" href="manifest.json">
+<script src="install.js"></script>
+</body>
+</html>
