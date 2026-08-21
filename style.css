@@ -45,233 +45,490 @@ tr:nth-child(even){background:#0d1420}
 .phase-card .settings{align-items:end}
 .file-btn{display:inline-flex;align-items:center;justify-content:center;background:#1b2638;color:#fff;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer;min-height:40px}
 @media(max-width:700px){#countdown{font-size:30px}}
-.install-popup {
-  position: fixed;
-  left: 50%;
-  bottom: 20px;
-  transform: translate(-50%, 150%);
-  width: calc(100% - 30px);
-  max-width: 430px;
-  background: #111;
-  color: white;
-  padding: 15px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 10px 35px rgba(0,0,0,.4);
-  z-index: 99999;
-  transition: .4s ease;
-  font-family: Arial, sans-serif;
+
+    /* =====================================================
+   FOCUS MODE — CLEAN MOBILE CSS
+   ===================================================== */
+
+#focusMode {
+  width: 100%;
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
-.install-popup.show {
-  transform: translate(-50%, 0);
+/* HEADER */
+
+#focusMode .focus-header {
+  margin-bottom: 24px;
 }
 
-.install-icon {
+#focusMode .focus-header h2 {
+  margin: 0;
   font-size: 30px;
+  font-weight: 700;
 }
 
-.install-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+#focusMode .focus-header p {
+  margin: 10px 0 0;
+  font-size: 17px;
+  opacity: 0.65;
 }
 
-.install-text strong {
+
+/* TODAY STATS */
+
+#focusMode .focus-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+#focusMode .focus-card {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-sizing: border-box;
+}
+
+#focusMode .focus-card span {
+  display: block;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+#focusMode .focus-card strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 24px;
+}
+
+
+/* TIMER BOX */
+
+#focusMode .focus-timer-box {
+  padding: 25px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#focusMode #focusTimer {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 22px;
+}
+
+
+/* TIMER CONTROLS */
+
+#focusMode .focus-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+#focusMode .focus-controls select,
+#focusMode .focus-controls input {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+
+  padding: 10px 14px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+
+  background: #111622;
+  color: inherit;
+
+  font-size: 16px;
+  outline: none;
+}
+
+#focusMode .focus-controls input {
+  grid-column: 1 / -1;
+}
+
+
+/* BUTTONS */
+
+#focusMode button {
+  min-height: 48px;
+
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 13px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  background: #f4f4f4;
+  color: #111;
+
+  transition: 0.2s ease;
+}
+
+#focusMode button:active {
+  transform: scale(0.97);
+}
+
+#focusMode #startFocusBtn {
+  grid-column: 1;
+}
+
+#focusMode #stopFocusBtn {
+  grid-column: 2;
+}
+
+#focusMode #stopFocusBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+
+/* MANUAL LOG */
+
+#focusMode .manual-log {
+  margin-top: 25px;
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  box-sizing: border-box;
+}
+
+#focusMode .manual-log h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 24px;
+}
+
+
+/* MANUAL FORM */
+
+#focusMode .manual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+#focusMode .manual-grid input,
+#focusMode .manual-grid select {
+  width: 100%;
+  min-height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 10px 14px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+
+  background: #111622;
+  color: inherit;
+
+  font-size: 16px;
+  outline: none;
+}
+
+#focusMode .manual-grid input[type="text"] {
+  grid-column: 1 / -1;
+}
+
+
+/* STUDY HISTORY FILTER */
+
+#focusMode .focus-filter {
+  margin-top: 25px;
+
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  box-sizing: border-box;
+}
+
+#focusMode .focus-filter h2 {
+  grid-column: 1 / -1;
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+#focusMode #historyDate {
+  width: 100%;
+  min-height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 10px 14px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+
+  background: #111622;
+  color: inherit;
+
   font-size: 16px;
 }
 
-.install-text span {
-  font-size: 12px;
-  color: #aaa;
+
+/* HISTORY */
+
+#focusMode #focusHistory {
+  margin-top: 20px;
 }
 
-#installBtn {
-  border: none;
-  background: #fff;
-  color: #000;
-  padding: 9px 14px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
+#focusMode .focus-history-day {
+  margin-bottom: 25px;
 }
 
-.close-btn {
-  background: transparent;
-  color: #aaa;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-}
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-}
-/* =========================================================
-   FOCUS MODE - HISTORY / DELETE
-   ========================================================= */
-
-.focus-history-day {
-  margin-top: 28px;
-}
-
-.focus-history-day h3 {
-  margin: 0 0 14px 0;
+#focusMode .focus-history-day h3 {
+  margin: 0 0 12px;
   font-size: 22px;
 }
 
 
-.focus-entry {
+/* HISTORY ENTRY */
+
+#focusMode .focus-entry {
   display: flex;
   align-items: center;
+
   gap: 14px;
 
   width: 100%;
   box-sizing: border-box;
 
-  padding: 20px;
+  padding: 18px;
 
-  margin-bottom: 10px;
+  margin-bottom: 9px;
 
-  border-radius: 18px;
+  border-radius: 16px;
 
   background: rgba(255,255,255,0.045);
-
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.09);
 }
 
-
-.focus-entry-info {
+#focusMode .focus-entry-info {
   flex: 1;
   min-width: 0;
 }
 
-
-.focus-entry-info strong {
+#focusMode .focus-entry-info strong {
   display: block;
-
-  font-size: 20px;
-
-  line-height: 1.3;
-}
-
-
-.focus-entry-info small {
-  display: block;
-
-  margin-top: 7px;
-
-  opacity: 0.6;
-
-  font-size: 14px;
-
-  word-break: break-word;
-}
-
-
-.focus-entry-time {
-  flex-shrink: 0;
-
   font-size: 18px;
+}
 
+#focusMode .focus-entry-info small {
+  display: block;
+  margin-top: 5px;
+  opacity: 0.55;
+}
+
+#focusMode .focus-entry-time {
+  flex-shrink: 0;
+  font-size: 17px;
   font-weight: 700;
-
-  white-space: nowrap;
 }
 
 
-/* DELETE BUTTON */
+/* DELETE */
 
-.delete-focus-btn {
-  flex-shrink: 0;
+#focusMode .delete-focus-btn {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
 
-  width: 44px;
-  height: 44px;
+  padding: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px solid rgba(255,80,80,0.2);
-
-  border-radius: 12px;
-
   background: rgba(255,60,60,0.10);
+  border: 1px solid rgba(255,60,60,0.18);
 
-  font-size: 19px;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease;
+  font-size: 17px;
 }
 
-
-.delete-focus-btn:hover {
+#focusMode .delete-focus-btn:hover {
   background: rgba(255,60,60,0.22);
-
-  transform: scale(1.05);
 }
 
 
-.delete-focus-btn:active {
-  transform: scale(0.95);
-}
+/* EMPTY HISTORY */
 
-
-/* EMPTY STATE */
-
-.focus-empty {
-  padding: 30px;
+#focusMode .focus-empty {
+  padding: 35px 15px;
 
   text-align: center;
 
-  opacity: 0.55;
-
-  border-radius: 16px;
+  border-radius: 18px;
 
   border: 1px dashed rgba(255,255,255,0.15);
+
+  opacity: 0.55;
 }
 
 
-/* MOBILE */
+/* =====================================================
+   MOBILE
+   ===================================================== */
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
 
-  .focus-entry {
-    padding: 15px;
-
-    gap: 10px;
-
-    border-radius: 15px;
+  #focusMode {
+    padding: 18px;
+    margin: 20px auto;
   }
 
 
-  .focus-entry-info strong {
-    font-size: 16px;
+  #focusMode .focus-header h2 {
+    font-size: 26px;
   }
 
 
-  .focus-entry-info small {
-    font-size: 12px;
-  }
-
-
-  .focus-entry-time {
+  #focusMode .focus-header p {
     font-size: 15px;
   }
 
 
-  .delete-focus-btn {
-    width: 40px;
-    height: 40px;
+  /* 2 x 2 STATS */
 
-    font-size: 17px;
+  #focusMode .focus-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+
+  #focusMode .focus-card {
+    padding: 15px;
+  }
+
+
+  #focusMode .focus-card strong {
+    font-size: 20px;
+  }
+
+
+  /* TIMER */
+
+  #focusMode .focus-timer-box {
+    padding: 18px;
+  }
+
+
+  #focusMode #focusTimer {
+    font-size: 36px;
+  }
+
+
+  /* TIMER CONTROLS */
+
+  #focusMode .focus-controls {
+    grid-template-columns: 1fr;
+  }
+
+
+  #focusMode .focus-controls select,
+  #focusMode .focus-controls input,
+  #focusMode .focus-controls button {
+    grid-column: 1;
+    width: 100%;
+  }
+
+
+  /* MANUAL */
+
+  #focusMode .manual-log {
+    padding: 18px;
+  }
+
+
+  #focusMode .manual-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  #focusMode .manual-grid input,
+  #focusMode .manual-grid select {
+    grid-column: 1;
+  }
+
+
+  /* HISTORY FILTER */
+
+  #focusMode .focus-filter {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+
+  #focusMode .focus-filter h2 {
+    grid-column: 1;
+  }
+
+
+  #focusMode #historyDate {
+    grid-column: 1;
+  }
+
+
+  #focusMode .focus-filter button {
+    width: 100%;
+  }
+
+
+  /* HISTORY ENTRY */
+
+  #focusMode .focus-entry {
+    padding: 14px;
+    gap: 9px;
+  }
+
+
+  #focusMode .focus-entry-info strong {
+    font-size: 15px;
+  }
+
+
+  #focusMode .focus-entry-info small {
+    font-size: 12px;
+  }
+
+
+  #focusMode .focus-entry-time {
+    font-size: 14px;
+  }
+
+
+  #focusMode .delete-focus-btn {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
   }
 
 }
