@@ -984,97 +984,226 @@ function clearHistoryFilter() {
 
 function downloadStudyReport() {
 
-  if (!focusLogs.length) {
+    const { jsPDF } = window.jspdf;
 
-    alert("No study data available.");
-    return;
+    // Get your study history
+    const history = JSON.parse(
+        localStorage.getItem("studyHistory") || "[]"
+    );
 
-  }
-
-
-  const headers = [
-    "Date",
-    "Subject",
-    "Activity",
-    "Minutes",
-    "Study Time",
-    "Questions",
-    "Note"
-  ];
-
-
-  const rows = focusLogs
-    .slice()
-    .sort((a, b) =>
-      a.date.localeCompare(b.date)
-    )
-    .map(log => [
-
-      log.date,
-
-      log.subject,
-
-      log.activity,
-
-      log.minutes,
-
-      formatMinutes(log.minutes),
-
-      log.questions || 0,
-
-      log.note || ""
-
-    ]);
-
-
-  const csv = [
-
-    headers,
-
-    ...rows
-
-  ]
-  .map(row =>
-    row
-      .map(value =>
-        `"${String(value)
-          .replace(/"/g, '""')}"`
-      )
-      .join(",")
-  )
-  .join("\n");
-
-
-  const blob = new Blob(
-    ["\ufeff" + csv],
-    {
-      type: "text/csv;charset=utf-8;"
+    if (!history.length) {
+        alert("No study history available!");
+        return;
     }
-  );
+
+    const doc = new jsPDF();
+
+    // =========================
+    // TITLE
+    // =========================
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+
+    doc.text("STUDY REPORT", 105, 20, {
+        align: "center"
+    });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    doc.text(
+        "Generated: " +
+        new Date().toLocaleDateString("en-IN"),
+        105,
+        28,
+        { align: "center" }
+    );
 
 
-  const url =
-    URL.createObjectURL(blob);
+    // =========================
+    // TOTALS
+    // =========================
 
-  const a =
-    document.createElement("a");
+    let totalMinutes = 0;
+    let totalQuestions = 0;
 
-  a.href = url;
+    history.forEach(item => {
 
-  a.download =
-    `study-report-${todayDate()}.csv`;
+        totalMinutes += Number(
+            item.minutes ||
+            item.Minutes ||
+            0
+        );
 
-  document.body.appendChild(a);
+        totalQuestions += Number(
+            item.questions ||
+            item.Questions ||
+            0
+        );
 
-  a.click();
+    });
 
-  a.remove();
 
-  URL.revokeObjectURL(url);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
 
+    doc.text("Study Summary", 14, 42);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    doc.text(
+        "Total Study Time: " +
+        formatStudyMinutes(totalMinutes),
+        14,
+        50
+    );
+
+    doc.text(
+        "Total Questions: " +
+        totalQuestions,
+        14,
+        57
+    );
+
+
+    // =========================
+    // TABLE
+    // =========================
+
+    const rows = history.map(item => {
+
+        return [
+
+            item.date ||
+            item.Date ||
+            "-",
+
+            item.subject ||
+            item.Subject ||
+            "-",
+
+            item.activity ||
+            item.Activity ||
+            "-",
+
+            formatStudyMinutes(
+                Number(
+                    item.minutes ||
+                    item.Minutes ||
+                    0
+                )
+            ),
+
+            item.questions ||
+            item.Questions ||
+            "0",
+
+            item.note ||
+            item.Note ||
+            "-"
+
+        ];
+
+    });
+
+
+    doc.autoTable({
+
+        startY: 65,
+
+        head: [[
+            "Date",
+            "Subject",
+            "Activity",
+            "Study Time",
+            "Questions",
+            "Note"
+        ]],
+
+        body: rows,
+
+        theme: "grid",
+
+        styles: {
+            fontSize: 8,
+            cellPadding: 3
+        },
+
+        headStyles: {
+            fontStyle: "bold"
+        },
+
+        margin: {
+            left: 10,
+            right: 10
+        }
+
+    });
+
+
+    // =========================
+    // FOOTER
+    // =========================
+
+    const pages =
+        doc.internal.getNumberOfPages();
+
+    for (let i = 1; i <= pages; i++) {
+
+        doc.setPage(i);
+
+        doc.setFontSize(8);
+
+        doc.text(
+            "Study Tracker • Page " +
+            i +
+            " of " +
+            pages,
+
+            105,
+            290,
+
+            {
+                align: "center"
+            }
+        );
+
+    }
+
+
+    // =========================
+    // DOWNLOAD PDF
+    // =========================
+
+    doc.save(
+        "study-report-" +
+        new Date()
+            .toISOString()
+            .split("T")[0] +
+        ".pdf"
+    );
 }
 
 
+// Convert minutes → hours/minutes
+function formatStudyMinutes(minutes) {
+
+    minutes = Number(minutes) || 0;
+
+    const hours = Math.floor(
+        minutes / 60
+    );
+
+    const mins = minutes % 60;
+
+    if (hours > 0) {
+        return hours + "h " + mins + "m";
+    }
+
+    return mins + "m";
+          }
 /* ---------- SECURITY ---------- */
 
 function escapeFocusText(value) {
