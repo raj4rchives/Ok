@@ -87,5 +87,22 @@
 <script>
 let deferredInstallPrompt=null;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;});
-</script>
+</script><!-- Floating Contact Button -->
+<div class="contact-widget">
+  <button class="contact-fab" onclick="toggleContactMenu()" aria-label="Contact">
+    💬
+  </button>
+
+  <div class="contact-menu" id="contactMenu">
+    <div class="contact-title">Contact Me</div>
+
+    <a href="mailto:regretafterpre@gmail.com" class="contact-option">
+      📧 <span>Email Me</span>
+    </a>
+
+    <a href="https://wa.me/6900365026" target="_blank" class="contact-option">
+      💬 <span>WhatsApp Me</span>
+    </a>
+  </div>
+</div>
 </body></html>
