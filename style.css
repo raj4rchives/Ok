@@ -15,3 +15,52 @@
 .backup-note{color:var(--muted);font-size:12px;margin:16px 0 0}
 @media(max-width:900px){.weekly-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.weekly-chart{gap:6px;padding-left:0;padding-right:0}.weekly-bar{width:44px}.weekly-bar-wrap{height:190px}.weekly-bar-label{font-size:9px}}
+/* ===== QUICK ACTIONS DARK STYLE ===== */
+
+.quick-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.quick-panel h3 {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.quick-panel .eyebrow {
+  color: var(--muted);
+}
+
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quick-actions button {
+  background: #181818 !important;
+  color: #f8fafc !important;
+  border: 1px solid #30343b !important;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-weight: 500 !important;
+  box-shadow: none;
+  transition: .2s ease;
+}
+
+.quick-actions button:hover {
+  background: #202020 !important;
+  border-color: #454a53 !important;
+  transform: translateY(-1px);
+}
+
+.quick-actions button:active {
+  transform: translateY(0);
+}
+
+.quick-actions button span,
+.quick-actions button i {
+  color: #f8fafc;
+}
