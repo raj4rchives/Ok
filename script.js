@@ -662,4 +662,3 @@ function updateMiniDashboard(){
  let f=todayFocus().reduce((s,x)=>s+x.minutes,0);if($("focusToday"))$("focusToday").textContent=fmtMin(f);
  let data=typeof rowsData==="function"?rowsData():[];let phy=data.reduce((s,r)=>s+num(r.phyWork)+num(r.phyDpp)+num(r.phyPyq),0),chem=data.reduce((s,r)=>s+num(r.chemWork)+num(r.chemDpp)+num(r.chemPyq),0),math=data.reduce((s,r)=>s+num(r.mathWork)+num(r.mathDpp)+num(r.mathPyq),0);if($("dashPhy"))$("dashPhy").textContent=phy;if($("dashChem"))$("dashChem").textContent=chem;if($("dashMath"))$("dashMath").textContent=math;if($("questionSum2")&&$("questionSum"))$("questionSum2").textContent=$("questionSum").textContent;let ex=$("examDate")?.value;if(ex){let days=Math.max(0,Math.ceil((new Date(ex+"T23:59:59")-new Date())/86400000));$("dashCountdown").textContent=days;$("dashProgress").style.width=Math.min(100,Math.max(0,100-days/200*100))+"%"}}
 })();
-document.getElementById('timerSave').addEventListener(...)
