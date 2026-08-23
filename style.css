@@ -2,21 +2,81 @@
 .dashboard-countdown-top{margin-bottom:16px;padding:20px 22px}.dashboard-countdown-top h3{font-size:52px;margin:12px 0 2px}.dashboard-countdown-top p{color:var(--muted);margin:0}.dashboard-countdown-top .progress{margin-top:18px}
 
 
-<!-- Floating Contact Button -->
-<div class="contact-widget">
-  <button class="contact-fab" onclick="toggleContactMenu()" aria-label="Contact">
-    💬
-  </button>
+/* Floating Contact Widget */
+.contact-widget {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 9999;
+  font-family: inherit;
+}
 
-  <div class="contact-menu" id="contactMenu">
-    <div class="contact-title">Contact Me</div>
+.contact-fab {
+  width: 58px;
+  height: 58px;
+  border: 3px solid #34456f;
+  border-radius: 50%;
+  background: #b9c8f0;
+  color: #34456f;
+  font-size: 25px;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 #34456f;
+  transition: 0.2s ease;
+}
 
-    <a href="mailto:regretafterpre@gmail.com" class="contact-option">
-      📧 <span>Email Me</span>
-    </a>
+.contact-fab:hover {
+  transform: translateY(-3px);
+}
 
-    <a href="https://wa.me/6900365026" target="_blank" class="contact-option">
-      💬 <span>WhatsApp Me</span>
-    </a>
-  </div>
-</div>
+.contact-fab:active {
+  transform: scale(0.94);
+}
+
+.contact-menu {
+  position: absolute;
+  right: 0;
+  bottom: 72px;
+  width: 210px;
+  padding: 14px;
+  background: #c4d0f1;
+  border: 3px solid #34456f;
+  border-radius: 20px;
+  box-shadow: 6px 6px 0 #34456f;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(0.95);
+  transition: 0.2s ease;
+}
+
+.contact-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.contact-title {
+  font-weight: 800;
+  color: #34456f;
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+
+.contact-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #34456f;
+  background: #eef1ff;
+  border: 2px solid #34456f;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-weight: 700;
+  transition: 0.15s ease;
+}
+
+.contact-option:hover {
+  transform: translateX(-3px);
+}
