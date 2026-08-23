@@ -9,7 +9,28 @@ const THEMES = {
     border: "#d4af37",
     shadow: "#000000"
   },
-
+roseDark: {
+  bg: "#12080d",
+  panel: "#1c0d14",
+  panel2: "#29121c",
+  text: "#fff1f5",
+  muted: "#b98c9b",
+  accent: "#f43f70",
+  accent2: "#fb7185",
+  line: "#5a2638",
+  input: "#160a10"
+}
+  emerald: {
+  bg: "#07120e",
+  panel: "#0d1f18",
+  panel2: "#123025",
+  text: "#f1fff8",
+  muted: "#8eafa2",
+  accent: "#10b981",
+  accent2: "#34d399",
+  line: "#245344",
+  input: "#091a14"
+}
   studyPink: {
     bg: "#f4f3ff",
     surface: "#ffffff",
@@ -44,7 +65,7 @@ const THEMES = {
   }
 };
 
-const DEFAULT_THEME = "blackGold";
+const DEFAULT_THEME = "emerald";
 
 function setTheme(themeName) {
   const theme = THEMES[themeName];
