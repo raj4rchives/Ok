@@ -653,7 +653,7 @@ const themes={
   "Steel":["#080a0c","#11161b","#1d252d","#8fa8bd","#c9d8e5"]
 };
 function setTheme(name){
- const t=themes[name]||themes["Black & Gold"];
+ const t=themes[name]||themes["Neon Violet"];
  document.documentElement.style.setProperty("--bg",t[0]);
  document.documentElement.style.setProperty("--panel",t[1]);
  document.documentElement.style.setProperty("--panel2",t[2]);
