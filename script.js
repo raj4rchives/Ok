@@ -560,7 +560,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>nav(b.dataset.go));
  $("mobileMenu").onclick=()=>$("sidebar").classList.toggle("open");
  $("themeBtn").onclick=()=>$("themeDrawer").classList.add("open");$("closeTheme").onclick=()=>$("themeDrawer").classList.remove("open");
- renderThemes();setTheme(localStorage.getItem(themeKey)||"Black & Gold");
+ renderThemes();setTheme(localStorage.getItem(themeKey)||"Emerald");
  const d=new Date();$("todayLabel").textContent=d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short",year:"numeric"});
  if($("plannerDate")&&!$("plannerDate").value)$("plannerDate").value=iso(d);
  $("plannerDate").onchange=renderTodos;$("addTodo").onclick=addTodo;$("todoInput").onkeydown=e=>{if(e.key==="Enter")addTodo()};
