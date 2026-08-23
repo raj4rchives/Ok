@@ -20,7 +20,7 @@ roseDark: {
   line: "#5a2638",
   input: "#160a10"
 }
-  emerald: {
+  Emerald: {
   bg: "#07120e",
   panel: "#0d1f18",
   panel2: "#123025",
@@ -86,4 +86,4 @@ function setTheme(themeName) {
 }
 
 const savedTheme = localStorage.getItem("jee-theme") || DEFAULT_THEME;
-setTheme(savedTheme);
+setTheme(Emerald);
