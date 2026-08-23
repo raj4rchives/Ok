@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#050505">
+<title>JEE Tracker • Raj Sharma</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">J</div><div><h1>JEE Tracker</h1><p>Study smarter. Track everything.</p></div></div>
+    <div class="top-actions">
+      <button class="theme-btn" id="themeBtn">🎨 Theme</button>
+      <button class="mobile-menu" id="mobileMenu">☰</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="nav-title">MENU</div>
+      <button class="nav-item active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+      <button class="nav-item" data-page="tracker">📚 <span>Study Tracker</span></button>
+      <button class="nav-item" data-page="focus">🎯 <span>Focus Mode</span></button>
+      <button class="nav-item" data-page="planner">📝 <span>Daily Planner</span></button>
+      <button class="nav-item" data-page="weekly">📊 <span>Weekly Report</span></button>
+      <button class="nav-item" data-page="backup">💾 <span>JSON Backup</span></button>
+      <div class="sidebar-bottom"><span>JEE • 2027</span><small>Founder<br><b>Raj Sharma</b></small></div>
+    </aside>
+
+    <main class="content">
+      <section class="page active" id="page-dashboard">
+        <div class="hero"><div><span class="eyebrow">YOUR COMMAND CENTER</span><h2>Welcome back 👋</h2><p>Everything you need to stay consistent, in one clean dashboard.</p></div><div class="hero-date" id="todayLabel"></div></div>
+        <div class="panel countdown-panel dashboard-countdown-top"><span class="eyebrow">JEE MAINS</span><h3 id="dashCountdown">—</h3><p>Days remaining</p><div class="progress"><i id="dashProgress"></i></div></div>
+        <div class="stats">
+          <div class="stat-card"><span>📅</span><b id="daysDone">0</b><small>Study days</small></div>
+          <div class="stat-card"><span>▶</span><b id="lecSum">0</b><small>Lectures</small></div>
+          <div class="stat-card"><span>✦</span><b id="questionSum">0</b><small>Questions</small></div>
+          <div class="stat-card"><span>🎯</span><b id="focusToday">0m</b><small>Focus today</small></div>
+        </div>
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><div><span class="eyebrow">STUDY</span><h3>Subject-wise Questions</h3></div><button class="ghost" data-go="tracker">Open Tracker →</button></div>
+            <div class="subject-grid">
+              <div><span>Physics</span><strong id="dashPhy">0</strong><i></i></div>
+              <div><span>Chemistry</span><strong id="dashChem">0</strong><i></i></div>
+              <div><span>Mathematics</span><strong id="dashMath">0</strong><i></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel quick-panel"><div><span class="eyebrow">QUICK ACTIONS</span><h3>What are you doing now?</h3></div><div class="quick-actions"><button data-go="tracker">📚 Log Study</button><button data-go="focus">🎯 Start Focus</button><button data-go="planner">📝 Plan Today</button></div></div>
+      </section>
+
+      <section class="page" id="page-tracker">
+        <div class="page-head"><div><span class="eyebrow">STUDY TRACKER</span><h2>Lectures & Questions</h2><p>Log your daily JEE work without clutter.</p></div><button class="primary" id="pdfBtn">↓ Download 30-Day PDF</button></div>
+        <div class="tracker-tools panel">
+          <div><label>Start date</label><input id="startDate" type="date"></div><button class="secondary" id="datesBtn">Fill Dates</button><button class="secondary" id="addBtn">+ 30 Days</button>
+          <div><label>JEE Mains target</label><input id="examDate" type="date" value="2027-01-24"></div>
+          <button class="ghost" id="saveBtn">Save</button><button class="ghost" id="loadBtn">Load</button><button class="danger" id="clearBtn">Clear</button>
+        </div>
+        <div class="stats compact"><div class="stat-card"><b id="questionSum2">0</b><small>Total questions</small></div><div class="stat-card"><b id="pyqSum">0</b><small>PYQs</small></div><div class="stat-card"><b id="avgQ">0</b><small>Avg/day</small></div><div class="stat-card"><b id="qTarget">0%</b><small>vs 70/day</small></div></div>
+        <div class="panel table-panel"><div class="table-title"><h3>Daily Study Log</h3><span>Tip: enter 18Q or 12/15</span></div><div class="table-wrap"><table id="tracker"><thead><tr><th>DATE</th><th>LEC</th><th>PHY HW/ILLU</th><th>CHEM HW/ILLU</th><th>MATH HW/ILLU</th><th>PHY DPP</th><th>CHEM DPP</th><th>MATH DPP</th><th>PHY PYQ</th><th>CHEM PYQ</th><th>MATH PYQ</th></tr></thead><tbody></tbody></table></div></div>
+      </section>
+
+      <section class="page" id="page-focus">
+        <div class="page-head"><div><span class="eyebrow">FOCUS MODE</span><h2>Deep work, no distractions.</h2><p>Log the time you actually studied.</p></div></div>
+        <div class="focus-grid">
+          <div class="panel timer-panel"><span class="eyebrow">FOCUS TIMER</span><div id="timerDisplay">00:00:00</div><div class="timer-state" id="timerState">Ready when you are.</div><div class="timer-controls"><button class="primary" id="timerStart">▶ Start</button><button class="secondary" id="timerPause">Ⅱ Pause</button><button class="danger" id="timerReset">↺ Reset</button><button class="secondary" id="timerSave">💾 Save</button></div><div class="timer-form"><select id="focusSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Other</option></select><select id="focusActivity"><option>Questions</option><option>Lecture</option><option>Revision</option><option>PYQ</option></select><input id="focusNote" placeholder="Optional note"></div></div>
+          <div class="panel"><div class="panel-head"><div><span class="eyebrow">TODAY</span><h3>Focus summary</h3></div></div><div class="focus-big" id="focusBig">0m</div><div class="mini-stats"><div><b id="focusSessions">0</b><span>Sessions</span></div><div><b id="focusQuestions">0</b><span>Questions</span></div></div><button class="secondary full" id="manualFocusBtn">+ Add manual focus log</button></div>
+        </div>
+        <div class="panel"><div class="panel-head"><div><span class="eyebrow">HISTORY</span><h3>Focus logs</h3></div></div><div id="focusLogs" class="logs"></div></div>
+      </section>
+
+      <section class="page" id="page-weekly">
+        <div class="page-head">
+          <div><span class="eyebrow">WEEKLY REPORT</span><h2>Last 7 days.</h2><p>Weekly lectures and question performance.</p></div>
+        </div>
+        <div class="stats compact weekly-stats">
+          <div class="stat-card"><b id="weeklyLec">0</b><small>Total lectures</small></div>
+          <div class="stat-card"><b id="weeklyQuestions">0</b><small>Total questions</small></div>
+          <div class="stat-card"><b id="weeklyPhy">0</b><small>Physics questions</small></div>
+          <div class="stat-card"><b id="weeklyChem">0</b><small>Chemistry questions</small></div>
+          <div class="stat-card"><b id="weeklyMath">0</b><small>Mathematics questions</small></div>
+        </div>
+        <div class="panel weekly-chart-panel">
+          <div class="panel-head"><div><span class="eyebrow">CHART</span><h3>Weekly performance</h3></div><span class="count-pill" id="weeklyRange">Last 7 days</span></div>
+          <div id="weeklyChart" class="weekly-chart"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-backup">
+        <div class="page-head">
+          <div><span class="eyebrow">DATA BACKUP</span><h2>JSON Backup</h2><p>Save or restore your tracker data as a JSON file.</p></div>
+        </div>
+        <div class="panel backup-panel">
+          <div class="backup-actions">
+            <button class="primary" id="fullJsonExportBtn">↓ Download JSON Backup</button>
+            <label class="secondary backup-file">↑ Restore JSON Backup<input id="fullJsonImport" type="file" accept=".json,application/json"></label>
+          </div>
+          <p class="backup-note">Backup includes study tracker, focus logs, planner data and theme settings.</p>
+        </div>
+      </section>
+
+      <section class="page" id="page-planner">
+        <div class="page-head"><div><span class="eyebrow">DAILY PLANNER</span><h2>Plan your day.</h2><p>Date-wise todos that stay saved on your device.</p></div></div>
+        <div class="planner-bar panel"><input id="plannerDate" type="date"><input id="todoInput" placeholder="Add a task…"><select id="todoType"><option>Study</option><option>Revision</option><option>Questions</option><option>Personal</option></select><button class="primary" id="addTodo">+ Add</button></div>
+        <div class="planner-layout"><div class="panel"><div class="panel-head"><div><span class="eyebrow">TASKS</span><h3 id="plannerTitle">Today's Plan</h3></div><span class="count-pill" id="todoCount">0</span></div><div id="todoList" class="todo-list"></div></div><div class="panel planner-side"><span class="eyebrow">PROGRESS</span><div class="planner-ring" id="plannerRing">0%</div><p id="plannerProgressText">0 of 0 tasks complete</p></div></div>
+      </section>
+
+      <footer>Built with focus by <b>Raj Sharma</b> · JEE Tracker</footer>
+    </main>
+  </div>
+</div>
+
+<div class="theme-drawer" id="themeDrawer"><div class="theme-head"><b>Choose Theme</b><button id="closeTheme">×</button></div><div class="theme-grid" id="themeGrid"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="script.js"></script>
+<script>
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;});
+</script>
+</body></html>
