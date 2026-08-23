@@ -537,7 +537,10 @@ function updateDashboard(selectedDateData) {
 /* ================= REDESIGNED APP ================= */
 (function(){
 const $=id=>document.getElementById(id);
-const focusKey="jee_focus_v1", todoKey="jee_todos_v1", themeKey="jee_theme_v1";
+const focusKey="jee_focus_v1";
+const todoKey="jee_todos_v2";
+const themeKey="jee_theme_v1";
+const todoBackupKey="jee_todos_backup_v1";
 const themes={
   "Black & Gold":["#070707","#101010","#171717","#f4c542","#ffd86b"],
   "Pink & White":["#fff7fb","#ffffff","#ffe8f2","#e83e8c","#ff76b7"],
@@ -587,9 +590,49 @@ function updateTimer(){let s=Math.max(0,elapsed),h=Math.floor(s/3600),m=Math.flo
 function startTimer(){if(timerRunning)return;timerRunning=true;timerStartedAt=Date.now();$("timerState").textContent="Focused — keep going."; }
 function pauseTimer(){if(!timerRunning)return;elapsed=Math.floor((Date.now()-timerStartedAt)/1000)+pausedSeconds;pausedSeconds=elapsed;timerRunning=false;$("timerState").textContent="Paused."; }
 function resetTimer(){if(elapsed>=60){let mins=Math.round(elapsed/60);let a=readFocus();a.push({id:Date.now(),date:iso(new Date()),minutes:mins,questions:0,subject:$("focusSubject").value,activity:$("focusActivity").value,note:$("focusNote").value});writeFocus(a);renderFocus();}timerRunning=false;elapsed=0;pausedSeconds=0;$("timerState").textContent="Ready when you are.";updateTimer();$("focusNote").value=""}
-function readTodos(){try{return JSON.parse(localStorage.getItem(todoKey)||"[]")}catch{return[]}}
-function writeTodos(x){localStorage.setItem(todoKey,JSON.stringify(x))}
-function addTodo(){let text=$("todoInput").value.trim();if(!text)return;let a=readTodos();a.push({id:Date.now(),date:$("plannerDate").value||iso(new Date()),text,type:$("todoType").value,done:false});writeTodos(a);$("todoInput").value="";renderTodos()}
+ function readTodos(){
+  try {
+    const data = JSON.parse(localStorage.getItem(todoKey) || "[]");
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    const backup = JSON.parse(
+      localStorage.getItem(todoBackupKey) || "[]"
+    );
+
+    return Array.isArray(backup) ? backup : [];
+
+  } catch {
+    try {
+      const backup = JSON.parse(
+        localStorage.getItem(todoBackupKey) || "[]"
+      );
+
+      return Array.isArray(backup) ? backup : [];
+
+    } catch {
+      return [];
+    }
+  }
+}
+
+function writeTodos(data){
+  if (!Array.isArray(data)) return;
+
+  // Main storage
+  localStorage.setItem(
+    todoKey,
+    JSON.stringify(data)
+  );
+
+  // Backup storage
+  localStorage.setItem(
+    todoBackupKey,
+    JSON.stringify(data)
+  );
+}
 window.toggleTodo=id=>{let a=readTodos();let x=a.find(v=>v.id===id);if(x)x.done=!x.done;writeTodos(a);renderTodos()}
 window.deleteTodo=id=>{writeTodos(readTodos().filter(x=>x.id!==id));renderTodos()}
 function renderTodos(){if(!$("todoList"))return;let date=$("plannerDate").value||iso(new Date()),a=readTodos().filter(x=>x.date===date),done=a.filter(x=>x.done).length, pct=a.length?Math.round(done/a.length*100):0;$("plannerTitle").textContent=new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short"});$("todoCount").textContent=a.length;$("plannerRing").textContent=pct+"%";$("plannerProgressText").textContent=`${done} of ${a.length} tasks complete`;$("todoList").innerHTML=a.length?a.map(x=>`<div class="todo ${x.done?"done":""}"><button class="check" onclick="toggleTodo(${x.id})">${x.done?"✓":""}</button><div><b>${esc(x.text)}</b><small>${esc(x.type)}</small></div><button class="todo-del" onclick="deleteTodo(${x.id})">×</button></div>`).join(""):`<div class="empty">No tasks for this date. Add your first task above.</div>`}
