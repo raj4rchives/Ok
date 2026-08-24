@@ -525,3 +525,68 @@ body[data-theme] .menu-feature-btn,body[data-theme] .focus-controls{background:v
 body[data-theme="midnight"]{--bg:#dfe9ff;--panel:#f5f8ff;--line:#536a94;--text:#243454;--muted:#637696;--accent:#6f8cff;--accent2:#4e69d6;--stat-bg:#e8efff;--todo-bg:#f8faff;--badge-bg:#d8e4ff;--danger-text:#a74362;--input-bg:#fff;--button-bg:#e8efff}
 body[data-theme="neon"]{--bg:#eefbe9;--panel:#ffffff;--line:#4e7560;--text:#203a2a;--muted:#66806f;--accent:#64d979;--accent2:#39b85b;--stat-bg:#e3f6e7;--todo-bg:#fbfffc;--badge-bg:#d2f0d9;--danger-text:#a74764;--input-bg:#fff;--button-bg:#e3f6e7}
 body[data-theme="ember"]{--bg:#fff2ec;--panel:#ffffff;--line:#895f50;--text:#50342c;--muted:#98766b;--accent:#ff7a45;--accent2:#e65b28;--stat-bg:#ffebe2;--todo-bg:#fffaf7;--badge-bg:#ffd9c8;--danger-text:#aa4560;--input-bg:#fff;--button-bg:#ffebe2}
+
+/* ===== TOP CORNER CONTROLS ===== */
+.top-menu-btn{
+  position:fixed!important;
+  left:12px!important;
+  top:12px!important;
+  z-index:100001!important;
+  width:52px!important;
+  height:52px!important;
+  min-width:52px!important;
+  padding:0!important;
+  border-radius:15px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:20px!important;
+}
+.top-theme-btn{
+  position:fixed!important;
+  right:12px!important;
+  top:12px!important;
+  z-index:100001!important;
+  min-width:52px!important;
+  height:52px!important;
+  padding:0 12px!important;
+  border-radius:15px!important;
+}
+.backup-panel{
+  border:1px solid var(--line,#38445d);
+  border-radius:18px;
+  padding:18px;
+  background:var(--stat-bg,#f5f6fb);
+}
+.backup-panel h3{margin-top:0}
+.backup-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
+.backup-import-label{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.backup-status{
+  margin-top:13px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:var(--badge-bg,#e9edf5);
+  color:var(--text,#222);
+  font-size:12px;
+}
+@media(max-width:600px){
+  .top-menu-btn{left:8px!important;top:8px!important}
+  .top-theme-btn{right:8px!important;top:8px!important}
+}
+/* Weekly report + manual focus */
+.weekly-toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:14px}
+.weekly-stats{margin-bottom:14px}
+.weekly-chart-card{border:1px solid var(--line,#38445d);border-radius:16px;padding:14px;margin:12px 0;background:var(--stat-bg,#f5f6fb);overflow:hidden}
+.weekly-chart-card h3{margin:0 0 8px;font-size:15px}
+.weekly-chart-card canvas{display:block;width:100%;height:190px}
+@media(max-width:600px){.weekly-chart-card{padding:10px}.weekly-chart-card canvas{height:170px}}

@@ -571,8 +571,8 @@ function escapeFeatureText(value) {
 function openFeature(name) {
   const overlay = document.getElementById("featureOverlay");
   const title = document.getElementById("featurePageTitle");
-  const views = ["menu","themes","todo","focus"];
-  const titles = {menu:"Menu",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode"};
+  const views = ["menu","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
   overlay.hidden = false;
   views.forEach(v => {
     const el = document.getElementById(v + "View");
@@ -582,6 +582,7 @@ function openFeature(name) {
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
+  if (name === "weekly") renderWeeklyReport();
 }
 function closeFeature() {
   const overlay = document.getElementById("featureOverlay");
@@ -619,13 +620,13 @@ function applyTheme(theme) {
   updateThemeButtons();
 }
 function updateThemeButtons() {
-  const theme = document.body.dataset.theme || "peach";
+  const theme = document.body.dataset.theme || "classic";
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.theme === theme);
   });
 }
 function initThemes() {
-  applyTheme(localStorage.getItem(THEME_KEY) || "peach");
+  applyTheme(localStorage.getItem(THEME_KEY) || "classic");
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
@@ -747,6 +748,74 @@ function saveFocusLog(){
   });
   saveFocusLogs(logs);resetFocus();renderFocus();
 }
+function saveManualFocusLog(){
+  const minutes=Number(document.getElementById("focusManualMinutes")?.value)||0;
+  if(minutes<1){alert("Manual focus time minutes me enter karo.");return;}
+  const date=document.getElementById("focusManualDate")?.value || localISODate();
+  const logs=getFocusLogs();
+  logs.push({
+    id:Date.now()+Math.random(),date,minutes,
+    subject:document.getElementById("focusSubject")?.value || "Other",
+    activity:document.getElementById("focusActivity")?.value || "Other",
+    questions:Number(document.getElementById("focusQuestions")?.value)||0,
+    note:document.getElementById("focusNote")?.value.trim() || "Manual time",
+    createdAt:Date.now(),manual:true
+  });
+  saveFocusLogs(logs);
+  const input=document.getElementById("focusManualMinutes"); if(input) input.value="";
+  renderFocus();
+}
+
+function weekDates(end){
+  const d=new Date(end+"T00:00:00");
+  const out=[];
+  for(let i=6;i>=0;i--){
+    const x=new Date(d);x.setDate(d.getDate()-i);
+    out.push(x.toISOString().slice(0,10));
+  }
+  return out;
+}
+function drawWeeklyChart(id, labels, values, suffix=""){
+  const c=document.getElementById(id); if(!c)return;
+  const ctx=c.getContext("2d"), dpr=window.devicePixelRatio||1;
+  const w=c.clientWidth||600,h=190;
+  c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:34,r:12,t:14,b:34}, cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const max=Math.max(1,...values), step=cw/Math.max(1,values.length);
+  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--line")||"#bbb";
+  ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke();
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--text")||"#333";
+  ctx.font="11px sans-serif";
+  values.forEach((v,i)=>{
+    const x=pad.l+i*step+step*.18, bw=step*.64, bh=(v/max)*ch, y=pad.t+ch-bh;
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--accent")||"#6b78a8";
+    ctx.fillRect(x,y,bw,bh);
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--text")||"#333";
+    ctx.textAlign="center";ctx.fillText(String(v)+suffix,x+bw/2,Math.max(11,y-4));
+    ctx.fillText(labels[i],x+bw/2,h-12);
+  });
+}
+function renderWeeklyReport(){
+  const input=document.getElementById("weeklyEndDate");
+  if(!input)return;
+  const end=input.value||localISODate();
+  const dates=weekDates(end), rows=rowsData(), logs=getFocusLogs(), todos=getTodos();
+  const questions=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.phyWork)+num(r.chemWork)+num(r.mathWork)+num(r.phyDpp)+num(r.chemDpp)+num(r.mathDpp)+num(r.phyPyq)+num(r.chemPyq)+num(r.mathPyq),0));
+  const lectures=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.lec),0));
+  const focus=dates.map(date=>logs.filter(x=>x.date===date).reduce((sum,x)=>sum+(Number(x.minutes)||0),0));
+  const weekTodos=todos.filter(x=>dates.includes(x.date));
+  const done=weekTodos.filter(x=>x.completed).length;
+  put("weeklyQuestions",questions.reduce((a,b)=>a+b,0));
+  put("weeklyLectures",lectures.reduce((a,b)=>a+b,0));
+  put("weeklyFocus",formatMinutes(focus.reduce((a,b)=>a+b,0)));
+  put("weeklyTasks",(weekTodos.length?Math.round(done/weekTodos.length*100):0)+"%");
+  const labels=dates.map(d=>new Date(d+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"}));
+  drawWeeklyChart("weeklyQuestionsChart",labels,questions);
+  drawWeeklyChart("weeklyLecturesChart",labels,lectures);
+  drawWeeklyChart("weeklyFocusChart",labels,focus,"m");
+}
+
 function renderFocus(){
   const date=document.getElementById("focusFilterDate")?.value || localISODate();
   const logs=getFocusLogs(), daily=logs.filter(x=>x.date===date);
@@ -790,9 +859,19 @@ function initFocus(){
   document.getElementById("focusPauseBtn")?.addEventListener("click",pauseFocus);
   document.getElementById("focusResetBtn")?.addEventListener("click",resetFocus);
   document.getElementById("focusSaveBtn")?.addEventListener("click",saveFocusLog);
+  document.getElementById("focusManualSaveBtn")?.addEventListener("click",saveManualFocusLog);
+  const md=document.getElementById("focusManualDate"); if(md)md.value=localISODate();
   document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
   f?.addEventListener("change",renderFocus);
   updateFocusClock();
+}
+
+function initWeeklyReport(){
+  const d=document.getElementById("weeklyEndDate");
+  if(d)d.value=localISODate();
+  document.getElementById("weeklyThisWeekBtn")?.addEventListener("click",()=>{if(d)d.value=localISODate();renderWeeklyReport();});
+  d?.addEventListener("change",renderWeeklyReport);
+  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)renderWeeklyReport();});
 }
 
 /* ---------- Start ---------- */
@@ -801,4 +880,84 @@ document.addEventListener("DOMContentLoaded",()=>{
   initThemes();
   initTodo();
   initFocus();
+  initWeeklyReport();
+  initBackup();
 });
+
+/* ---------- Full JSON backup / import ---------- */
+const BACKUP_VERSION = 1;
+
+function collectAllBackupData(){
+  const data = {};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key) continue;
+    try{
+      data[key]=JSON.parse(localStorage.getItem(key));
+    }catch(e){
+      data[key]=localStorage.getItem(key);
+    }
+  }
+  return {
+    app:"370R JEE Tracker",
+    backupVersion:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    localStorage:data
+  };
+}
+
+function exportAllJson(){
+  const backup=collectAllBackupData();
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+  a.download=`370R-JEE-Tracker-Backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  const s=document.getElementById("backupStatus");
+  if(s)s.textContent="✅ Full JSON backup downloaded successfully.";
+}
+
+function importAllJson(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const backup=JSON.parse(reader.result);
+      if(!backup || typeof backup!=="object" || !backup.localStorage || typeof backup.localStorage!=="object"){
+        throw new Error("Invalid backup format");
+      }
+
+      const confirmed=confirm(
+        "Import this backup?\\n\\nThis will replace the current saved tracker data on this browser with the backup data."
+      );
+      if(!confirmed)return;
+
+      Object.keys(backup.localStorage).forEach(key=>{
+        const value=backup.localStorage[key];
+        localStorage.setItem(key,typeof value==="string"?value:JSON.stringify(value));
+      });
+
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="✅ Backup imported. Reloading tracker...";
+      setTimeout(()=>location.reload(),500);
+    }catch(e){
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="❌ Invalid JSON backup. Nothing was changed.";
+      console.error(e);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function initBackup(){
+  document.getElementById("exportJsonBtn")?.addEventListener("click",exportAllJson);
+  document.getElementById("importJsonInput")?.addEventListener("change",e=>{
+    importAllJson(e.target.files?.[0]);
+    e.target.value="";
+  });
+}

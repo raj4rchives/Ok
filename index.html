@@ -53,6 +53,9 @@
       </div>
 
       <div id="menuView" class="feature-view">
+        <button class="menu-feature-btn" data-open-feature="backup">
+          <span>💾</span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
+        </button>
         <button class="menu-feature-btn" data-open-feature="themes">
           <span>🎨</span><div><b>Themes</b><small>29 different colour styles</small></div>
         </button>
@@ -61,6 +64,9 @@
         </button>
         <button class="menu-feature-btn" data-open-feature="focus">
           <span>⏱️</span><div><b>Focus Mode</b><small>Timer + study logs + analysis</small></div>
+        </button>
+        <button class="menu-feature-btn" data-open-feature="weekly">
+          <span>📊</span><div><b>Weekly Report</b><small>Questions • Lectures • Focus time chart</small></div>
         </button>
       </div>
 
@@ -121,6 +127,35 @@
         <div class="todo-list" id="todoList"><div class="todo-empty">No tasks for this date. Add your first task ✨</div></div>
       </div>
 
+      <div id="weeklyView" class="feature-view" hidden>
+        <div class="weekly-toolbar">
+          <div class="small"><label>Week ending</label><input id="weeklyEndDate" type="date"></div>
+          <button class="secondary" id="weeklyThisWeekBtn">This Week</button>
+        </div>
+        <div class="todo-analysis weekly-stats">
+          <div class="todo-stat"><b id="weeklyQuestions">0</b><span>Questions</span></div>
+          <div class="todo-stat"><b id="weeklyLectures">0</b><span>Lectures</span></div>
+          <div class="todo-stat"><b id="weeklyFocus">0m</b><span>Focus time</span></div>
+          <div class="todo-stat"><b id="weeklyTasks">0%</b><span>TODO completion</span></div>
+        </div>
+        <div class="weekly-chart-card"><h3>Questions / day</h3><canvas id="weeklyQuestionsChart" height="190"></canvas></div>
+        <div class="weekly-chart-card"><h3>Lectures / day</h3><canvas id="weeklyLecturesChart" height="190"></canvas></div>
+        <div class="weekly-chart-card"><h3>Focus time / day</h3><canvas id="weeklyFocusChart" height="190"></canvas></div>
+      </div>
+
+      <div id="backupView" class="feature-view" hidden>
+        <div class="backup-panel">
+          <h3>💾 Backup & Import All Data</h3>
+          <p class="note">Backup includes tracker entries, TODOs, Focus logs and your selected theme. Your existing data is not changed unless you import a backup.</p>
+          <div class="backup-actions">
+            <button class="primary" id="exportJsonBtn">⬇️ Export JSON Backup</button>
+            <label class="secondary backup-import-label" for="importJsonInput">⬆️ Import JSON Backup</label>
+            <input id="importJsonInput" type="file" accept=".json,application/json" hidden>
+          </div>
+          <div class="backup-status" id="backupStatus">Ready.</div>
+        </div>
+      </div>
+
       <div id="focusView" class="feature-view" hidden>
         <div class="focus-controls">
           <div class="focus-clock" id="focusClock">00:00:00</div>
@@ -129,12 +164,15 @@
             <div><label>Activity</label><select id="focusActivity"><option>Lecture</option><option>Questions</option><option>Revision</option><option>DPP</option><option>PYQ</option><option>Other</option></select></div>
             <div><label>Questions</label><input id="focusQuestions" type="number" min="0" value="0"></div>
             <div><label>Note</label><input id="focusNote" type="text" maxlength="100" placeholder="Optional"></div>
+            <div><label>Manual time (minutes)</label><input id="focusManualMinutes" type="number" min="1" placeholder="e.g. 90"></div>
+            <div><label>Manual log date</label><input id="focusManualDate" type="date"></div>
           </div>
           <div class="focus-buttons">
             <button class="primary" id="focusStartBtn">▶ Start</button>
             <button class="secondary" id="focusPauseBtn">Ⅱ Pause</button>
             <button class="secondary" id="focusResetBtn">↻ Reset</button>
             <button class="primary" id="focusSaveBtn">Save Focus Log</button>
+            <button class="secondary" id="focusManualSaveBtn">➕ Save Manual Time</button>
           </div>
         </div>
         <div class="todo-analysis focus-analysis">
