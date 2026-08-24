@@ -619,13 +619,13 @@ function applyTheme(theme) {
   updateThemeButtons();
 }
 function updateThemeButtons() {
-  const theme = document.body.dataset.theme || "classic";
+  const theme = document.body.dataset.theme || "peach";
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.theme === theme);
   });
 }
 function initThemes() {
-  applyTheme(localStorage.getItem(THEME_KEY) || "classic");
+  applyTheme(localStorage.getItem(THEME_KEY) || "peach");
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
