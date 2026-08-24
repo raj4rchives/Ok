@@ -53,9 +53,6 @@
       </div>
 
       <div id="menuView" class="feature-view">
-        <button class="menu-feature-btn" data-open-feature="backup">
-          <span>💾</span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
-        </button>
         <button class="menu-feature-btn" data-open-feature="themes">
           <span>🎨</span><div><b>Themes</b><small>29 different colour styles</small></div>
         </button>
@@ -122,19 +119,6 @@
           <div class="todo-stat"><b id="todoRate">0%</b><span>Completion</span></div>
         </div>
         <div class="todo-list" id="todoList"><div class="todo-empty">No tasks for this date. Add your first task ✨</div></div>
-      </div>
-
-      <div id="backupView" class="feature-view" hidden>
-        <div class="backup-panel">
-          <h3>💾 Backup & Import All Data</h3>
-          <p class="note">Backup includes tracker entries, TODOs, Focus logs and your selected theme. Your existing data is not changed unless you import a backup.</p>
-          <div class="backup-actions">
-            <button class="primary" id="exportJsonBtn">⬇️ Export JSON Backup</button>
-            <label class="secondary backup-import-label" for="importJsonInput">⬆️ Import JSON Backup</label>
-            <input id="importJsonInput" type="file" accept=".json,application/json" hidden>
-          </div>
-          <div class="backup-status" id="backupStatus">Ready.</div>
-        </div>
       </div>
 
       <div id="focusView" class="feature-view" hidden>
