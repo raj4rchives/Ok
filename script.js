@@ -582,7 +582,7 @@ function openFeature(name) {
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
-  if (name === "weekly") requestAnimationFrame(() => renderWeeklyReport());
+  if (name === "weekly") renderWeeklyReport();
 }
 function closeFeature() {
   const overlay = document.getElementById("featureOverlay");
@@ -748,23 +748,32 @@ function saveFocusLog(){
   });
   saveFocusLogs(logs);resetFocus();renderFocus();
 }
-function saveManualFocusLog(){
-  const minutes=Number(document.getElementById("focusManualMinutes")?.value)||0;
-  if(minutes<1){alert("Manual focus time minutes me enter karo.");return;}
-  const date=document.getElementById("focusManualDate")?.value || localISODate();
+function saveManualFocusLog(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  const minutesEl=document.getElementById("focusManualMinutes");
+  const dateEl=document.getElementById("focusManualDate");
+  const minutes=parseInt(minutesEl?.value,10);
+  if(!Number.isFinite(minutes) || minutes<1){
+    alert("Manual focus time me 1 ya usse zyada minutes enter karo.");
+    minutesEl?.focus();
+    return false;
+  }
+  const date=dateEl?.value || localISODate();
+  const subject=document.getElementById("focusSubject")?.value || "Other";
+  const activity=document.getElementById("focusActivity")?.value || "Other";
+  const questions=parseInt(document.getElementById("focusQuestions")?.value,10)||0;
+  const note=document.getElementById("focusNote")?.value.trim() || "Manual time";
   const logs=getFocusLogs();
-  logs.push({
-    id:Date.now()+Math.random(),date,minutes,
-    subject:document.getElementById("focusSubject")?.value || "Other",
-    activity:document.getElementById("focusActivity")?.value || "Other",
-    questions:Number(document.getElementById("focusQuestions")?.value)||0,
-    note:document.getElementById("focusNote")?.value.trim() || "Manual time",
-    createdAt:Date.now(),manual:true
-  });
+  logs.push({id:Date.now()+Math.random(),date,minutes,subject,activity,questions,note,createdAt:Date.now(),manual:true});
   saveFocusLogs(logs);
-  const input=document.getElementById("focusManualMinutes"); if(input) input.value="";
+  if(minutesEl) minutesEl.value="";
+  if(document.getElementById("focusFilterDate")) document.getElementById("focusFilterDate").value=date;
   renderFocus();
+  if(!document.getElementById("weeklyView")?.hidden) renderWeeklyReport();
+  alert(`✅ ${formatMinutes(minutes)} focus time saved for ${date}.`);
+  return false;
 }
+window.saveManualFocusLog=saveManualFocusLog;
 
 function weekDates(end){
   const d=new Date(end+"T00:00:00");
@@ -776,69 +785,17 @@ function weekDates(end){
   return out;
 }
 function drawWeeklyChart(id, labels, values, suffix=""){
-  const c=document.getElementById(id); if(!c)return;
-  const rect=c.getBoundingClientRect();
-  const w=Math.max(280, Math.floor(rect.width || c.parentElement?.clientWidth || 600));
-  const h=Math.max(170, Math.floor(parseInt(getComputedStyle(c).height)||190));
-  const dpr=window.devicePixelRatio||1;
-  c.width=Math.floor(w*dpr); c.height=Math.floor(h*dpr);
-  c.style.width=w+"px"; c.style.height=h+"px";
-  const ctx=c.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,w,h);
-
-  const root=getComputedStyle(document.documentElement);
-  const body=getComputedStyle(document.body);
-  const css=(name,fallback)=>{
-    const a=root.getPropertyValue(name).trim();
-    const b=body.getPropertyValue(name).trim();
-    return a || b || fallback;
-  };
-  const text=css("--text","#333");
-  const line=css("--line","#c8c8c8");
-  const accent=css("--accent","#7c5cff");
-
-  const pad={l:36,r:10,t:18,b:38};
-  const cw=Math.max(1,w-pad.l-pad.r), ch=Math.max(1,h-pad.t-pad.b);
+  const box=document.getElementById(id); if(!box)return;
   const max=Math.max(1,...values.map(v=>Number(v)||0));
-  const step=cw/Math.max(1,values.length);
-
-  // grid + baseline
-  ctx.lineWidth=1;
-  ctx.strokeStyle=line;
-  ctx.globalAlpha=.65;
-  for(let g=0;g<=4;g++){
-    const y=pad.t+ch-(g/4)*ch;
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
-  }
-  ctx.globalAlpha=1;
-
-  ctx.font="11px sans-serif";
-  ctx.textAlign="right";
-  ctx.fillStyle=text;
-  for(let g=0;g<=4;g++){
-    const val=Math.round(max*g/4);
-    const y=pad.t+ch-(g/4)*ch;
-    ctx.fillText(String(val)+(suffix&&g===4?suffix:""),pad.l-6,y+4);
-  }
-
-  values.forEach((raw,i)=>{
-    const v=Math.max(0,Number(raw)||0);
-    const bw=Math.max(12,step*.58);
-    const x=pad.l+i*step+(step-bw)/2;
-    const bh=v>0?Math.max(3,(v/max)*ch):0;
-    const y=pad.t+ch-bh;
-    if(bh>0){
-      ctx.fillStyle=accent;
-      ctx.fillRect(x,y,bw,bh);
-    }
-    ctx.fillStyle=text;
-    ctx.textAlign="center";
-    ctx.font="bold 11px sans-serif";
-    ctx.fillText(String(v)+(suffix||""),x+bw/2,Math.max(12,y-5));
-    ctx.font="11px sans-serif";
-    ctx.fillText(labels[i]||"",x+bw/2,h-12);
-  });
+  box.innerHTML=values.map((value,i)=>{
+    const v=Number(value)||0;
+    const pct=Math.max(0,Math.min(100,(v/max)*100));
+    return `<div class="weekly-bar-col">
+      <div class="weekly-bar-value">${escapeFeatureText(String(v)+suffix)}</div>
+      <div class="weekly-bar-track"><div class="weekly-bar-fill" style="height:${pct}%"></div></div>
+      <div class="weekly-bar-label">${escapeFeatureText(labels[i])}</div>
+    </div>`;
+  }).join("");
 }
 
 function renderWeeklyReport(){
@@ -904,7 +861,10 @@ function initFocus(){
   document.getElementById("focusPauseBtn")?.addEventListener("click",pauseFocus);
   document.getElementById("focusResetBtn")?.addEventListener("click",resetFocus);
   document.getElementById("focusSaveBtn")?.addEventListener("click",saveFocusLog);
-  document.getElementById("focusManualSaveBtn")?.addEventListener("click",saveManualFocusLog);
+  const manualBtn=document.getElementById("focusManualSaveBtn");
+  if(manualBtn){
+    manualBtn.onclick=saveManualFocusLog;
+  }
   const md=document.getElementById("focusManualDate"); if(md)md.value=localISODate();
   document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
   f?.addEventListener("change",renderFocus);
@@ -916,7 +876,7 @@ function initWeeklyReport(){
   if(d)d.value=localISODate();
   document.getElementById("weeklyThisWeekBtn")?.addEventListener("click",()=>{if(d)d.value=localISODate();renderWeeklyReport();});
   d?.addEventListener("change",renderWeeklyReport);
-  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)requestAnimationFrame(renderWeeklyReport);});
+  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)renderWeeklyReport();});
 }
 
 /* ---------- Start ---------- */
