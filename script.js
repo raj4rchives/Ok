@@ -197,12 +197,12 @@ function updateStats() {
   const chemPyq = sumField(data, "chemPyq");
   const mathPyq = sumField(data, "mathPyq");
 
-  const phy = phyWork + phyPyq;
+  const phy = phyWork + phyDpp + phyPyq;
   const chem = chemWork + chemDpp + chemPyq;
   const math = mathWork + mathDpp + mathPyq;
   const overall = phy + chem + math;
   const pyq = phyPyq + chemPyq + mathPyq;
-  const dpp = chemDpp + mathDpp;
+  const dpp = phyDpp + chemDpp + mathDpp;
   const avg = done ? Math.round(overall / done) : 0;
   const target = done ? Math.min(100, Math.round(overall / (done * 70) * 100)) : 0;
 
@@ -214,7 +214,7 @@ function updateStats() {
   put("qTarget", target + "%");
 
   put("phyWorkSum", phyWork); put("chemWorkSum", chemWork); put("mathWorkSum", mathWork); put("workSum", phyWork + chemWork + mathWork);
-  put("phyDppSum", 0); put("chemDppSum", chemDpp); put("mathDppSum", mathDpp); put("dppSum", dpp);
+  put("phyDppSum", phyDpp); put("chemDppSum", chemDpp); put("mathDppSum", mathDpp); put("dppSum", dpp);
   put("phyPyqSum", phyPyq); put("chemPyqSum", chemPyq); put("mathPyqSum", mathPyq); put("pyqDetailSum", pyq);
   put("phyTotal", phy); put("chemTotal", chem); put("mathTotal", math); put("overallTotal", overall);
 }
@@ -323,7 +323,77 @@ async function makeMonthlyPDF() {
   
   const body = rows.map(r => [r.date, r.lec, r.phyWork, r.chemWork, r.mathWork, r.chemDpp, r.mathDpp, r.phyPyq, r.chemPyq, r.mathPyq]);
   if (pdf.autoTable) pdf.autoTable({ startY: yy, head: [['DATE', 'LEC', 'PHY HW/ILLU', 'CHEM HW/ILLU', 'MATH HW/ILLU', 'CHEM DPP', 'MATH DPP', 'PHY PYQ', 'CHEM PYQ', 'MATH PYQ']], body, theme: 'grid', styles: { fontSize: 7 } });
-  
+  // ================= WEEKLY REPORT HELPERS =================
+
+function iso(date) {
+  const d = new Date(date);
+  return d.toISOString().slice(0, 10);
+}
+
+function weeklyRows() {
+  const data = rowsData();
+
+  const dates = data
+    .map(r => r.date)
+    .filter(Boolean)
+    .sort();
+
+  let endDate = dates.length
+    ? new Date(dates[dates.length - 1] + "T00:00:00")
+    : new Date();
+
+  const day = endDate.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+
+  const monday = new Date(endDate);
+  monday.setDate(endDate.getDate() + diff);
+
+  const result = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+
+    const date = iso(d);
+    const r = data.find(x => x.date === date) || {};
+
+    const phyWork = num(r.phyWork);
+    const chemWork = num(r.chemWork);
+    const mathWork = num(r.mathWork);
+
+    const phyDpp = num(r.phyDpp);
+    const chemDpp = num(r.chemDpp);
+    const mathDpp = num(r.mathDpp);
+
+    const phyPyq = num(r.phyPyq);
+    const chemPyq = num(r.chemPyq);
+    const mathPyq = num(r.mathPyq);
+
+    const phy = phyWork + phyDpp + phyPyq;
+    const chem = chemWork + chemDpp + chemPyq;
+    const math = mathWork + mathDpp + mathPyq;
+
+    result.push({
+      date,
+      lec: num(r.lec),
+      phyWork,
+      chemWork,
+      mathWork,
+      phyDpp,
+      chemDpp,
+      mathDpp,
+      phyPyq,
+      chemPyq,
+      mathPyq,
+      phy,
+      chem,
+      math,
+      total: phy + chem + math
+    });
+  }
+
+  return result;
+}
   pdf.save(`JEE-Tracker-Phase-${phaseNumber(key)}-${key}.pdf`);
 }
 
