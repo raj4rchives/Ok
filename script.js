@@ -45,7 +45,7 @@ function combine(a, b) {
 function makeRows() {
   if (!tbody) return;
   tbody.innerHTML = "";
-  addRows(30);
+  addRows(15);
 }
 
 function addRows(count = 15) {
@@ -197,12 +197,12 @@ function updateStats() {
   const chemPyq = sumField(data, "chemPyq");
   const mathPyq = sumField(data, "mathPyq");
 
-  const phy = phyWork + phyDpp + phyPyq;
+  const phy = phyWork + phyPyq;
   const chem = chemWork + chemDpp + chemPyq;
   const math = mathWork + mathDpp + mathPyq;
   const overall = phy + chem + math;
   const pyq = phyPyq + chemPyq + mathPyq;
-  const dpp = phyDpp + chemDpp + mathDpp;
+  const dpp = chemDpp + mathDpp;
   const avg = done ? Math.round(overall / done) : 0;
   const target = done ? Math.min(100, Math.round(overall / (done * 70) * 100)) : 0;
 
@@ -214,7 +214,7 @@ function updateStats() {
   put("qTarget", target + "%");
 
   put("phyWorkSum", phyWork); put("chemWorkSum", chemWork); put("mathWorkSum", mathWork); put("workSum", phyWork + chemWork + mathWork);
-  put("phyDppSum", phyDpp); put("chemDppSum", chemDpp); put("mathDppSum", mathDpp); put("dppSum", dpp);
+  put("phyDppSum", 0); put("chemDppSum", chemDpp); put("mathDppSum", mathDpp); put("dppSum", dpp);
   put("phyPyqSum", phyPyq); put("chemPyqSum", chemPyq); put("mathPyqSum", mathPyq); put("pyqDetailSum", pyq);
   put("phyTotal", phy); put("chemTotal", chem); put("mathTotal", math); put("overallTotal", overall);
 }
@@ -323,163 +323,8 @@ async function makeMonthlyPDF() {
   
   const body = rows.map(r => [r.date, r.lec, r.phyWork, r.chemWork, r.mathWork, r.chemDpp, r.mathDpp, r.phyPyq, r.chemPyq, r.mathPyq]);
   if (pdf.autoTable) pdf.autoTable({ startY: yy, head: [['DATE', 'LEC', 'PHY HW/ILLU', 'CHEM HW/ILLU', 'MATH HW/ILLU', 'CHEM DPP', 'MATH DPP', 'PHY PYQ', 'CHEM PYQ', 'MATH PYQ']], body, theme: 'grid', styles: { fontSize: 7 } });
-  // ================= WEEKLY REPORT HELPERS =================
-
-function iso(date) {
-  const d = new Date(date);
-  return d.toISOString().slice(0, 10);
-}
-
-function weeklyRows() {
-  const data = rowsData();
-
-  const dates = data
-    .map(r => r.date)
-    .filter(Boolean)
-    .sort();
-
-  let endDate = dates.length
-    ? new Date(dates[dates.length - 1] + "T00:00:00")
-    : new Date();
-
-  const day = endDate.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-
-  const monday = new Date(endDate);
-  monday.setDate(endDate.getDate() + diff);
-
-  const result = [];
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-
-    const date = iso(d);
-    const r = data.find(x => x.date === date) || {};
-
-    const phyWork = num(r.phyWork);
-    const chemWork = num(r.chemWork);
-    const mathWork = num(r.mathWork);
-
-    const phyDpp = num(r.phyDpp);
-    const chemDpp = num(r.chemDpp);
-    const mathDpp = num(r.mathDpp);
-
-    const phyPyq = num(r.phyPyq);
-    const chemPyq = num(r.chemPyq);
-    const mathPyq = num(r.mathPyq);
-
-    const phy = phyWork + phyDpp + phyPyq;
-    const chem = chemWork + chemDpp + chemPyq;
-    const math = mathWork + mathDpp + mathPyq;
-
-    result.push({
-      date,
-      lec: num(r.lec),
-      phyWork,
-      chemWork,
-      mathWork,
-      phyDpp,
-      chemDpp,
-      mathDpp,
-      phyPyq,
-      chemPyq,
-      mathPyq,
-      phy,
-      chem,
-      math,
-      total: phy + chem + math
-    });
-  }
-
-  return result;
-}
+  
   pdf.save(`JEE-Tracker-Phase-${phaseNumber(key)}-${key}.pdf`);
-}
-
-function makeWeeklyPDF() {
-  try {
-    const days = weeklyRows();
-    const totals = days.reduce((a,d)=>({
-      lec:a.lec+d.lec, total:a.total+d.total, phy:a.phy+d.phy,
-      chem:a.chem+d.chem, math:a.math+d.math
-    }),{lec:0,total:0,phy:0,chem:0,math:0});
-
-    const jsPDFLib = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
-    if (!jsPDFLib) {
-      alert('PDF library load nahi hui. Internet on karke page refresh karo.');
-      return;
-    }
-
-    const pdf = new jsPDFLib({orientation:'landscape',unit:'mm',format:'a4'});
-    const range = `${days[0].date} to ${days[6].date}`;
-
-    pdf.setFont('helvetica','bold');
-    pdf.setFontSize(18);
-    pdf.text('370R JEE Tracker — Weekly Report',14,16);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica','normal');
-    pdf.text(`Week: ${range}   Study days: ${days.filter(d => d.lec || d.total).length}   Lectures: ${totals.lec}   Total Questions: ${totals.total}   Avg Q/day: ${Math.round(totals.total/7)}`,14,24);
-
-    pdf.setFontSize(11);
-    pdf.setFont('helvetica','bold');
-    pdf.text('Subject summary',14,34);
-
-    const summary = [
-      ['TOTAL QUESTIONS',totals.phy,totals.chem,totals.math,totals.total],
-      ['LECTURES','—','—','—',totals.lec]
-    ];
-
-    if (typeof pdf.autoTable === 'function') {
-      pdf.autoTable({
-        startY:38,
-        head:[['TYPE','PHYSICS','CHEMISTRY','MATHEMATICS','TOTAL']],
-        body:summary,
-        theme:'grid',
-        styles:{fontSize:9,halign:'center'},
-        headStyles:{fillColor:[250,204,21],textColor:20}
-      });
-    } else {
-      pdf.setFontSize(9);
-      pdf.text(`Questions — Physics: ${totals.phy}   Chemistry: ${totals.chem}   Mathematics: ${totals.math}   Total: ${totals.total}`,14,42);
-      pdf.text(`Lectures: ${totals.lec}`,14,48);
-    }
-
-    let yy = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 10 : 58;
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica','bold');
-    pdf.text('Daily log',14,yy);
-    yy += 5;
-
-    const body = days.map(d=>[d.date,d.lec,d.phy,d.chem,d.math,d.total]);
-    if (typeof pdf.autoTable === 'function') {
-      pdf.autoTable({
-        startY:yy,
-        head:[['DATE','LEC','PHYSICS QUESTIONS','CHEMISTRY QUESTIONS','MATHEMATICS QUESTIONS','TOTAL QUESTIONS']],
-        body,
-        theme:'grid',
-        styles:{fontSize:8,halign:'center'},
-        headStyles:{fillColor:[250,204,21],textColor:20,fontSize:8}
-      });
-    } else {
-      let y=yy+6;
-      pdf.setFontSize(8);
-      days.forEach(d=>{
-        pdf.text(`${d.date}   Lec: ${d.lec}   Physics: ${d.phy}   Chemistry: ${d.chem}   Mathematics: ${d.math}   Total: ${d.total}`,14,y);
-        y+=7;
-      });
-    }
-
-    const footerY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 8 : 190;
-    pdf.setFont('helvetica','bold');
-    pdf.setFontSize(9);
-    pdf.text(`Total lectures: ${totals.lec}   |   Total questions: ${totals.total}   |   Physics: ${totals.phy}   |   Chemistry: ${totals.chem}   |   Mathematics: ${totals.math}`,14,Math.min(footerY,200));
-
-    pdf.save(`JEE-Tracker-Weekly-Report-${iso(new Date())}.pdf`);
-  } catch (err) {
-    console.error('Weekly PDF error:',err);
-    alert('Weekly PDF generate nahi ho paya. Page refresh karke dobara try karo.');
-  }
 }
 
 async function makePDF() {
@@ -534,23 +379,11 @@ document.addEventListener("DOMContentLoaded", () => {
   bindClick("#loadBtn", load);
   bindClick("#clearBtn", clearAll);
   bindClick("#datesBtn", fillDates);
-  bindClick("#addBtn", () => addRows(30));
+  bindClick("#addBtn", () => addRows(15));
   bindClick("#pdfBtn", makePDF);
-  bindClick("#weeklyPdfBtn", makeWeeklyPDF);
   bindClick("#monthPdfBtn", makeMonthlyPDF);
   bindClick("#jsonExportBtn", exportJSON);
-  const weeklyBtn = document.querySelector("#weeklyPdfBtn");
-
-if (weeklyBtn) {
-  weeklyBtn.addEventListener("click", function () {
-    try {
-      makeWeeklyPDF();
-    } catch (e) {
-      console.error(e);
-      alert("Weekly Report Error: " + e.message);
-    }
-  });
-}
+  
   const jsonImport = document.querySelector("#jsonImport");
   if (jsonImport) jsonImport.addEventListener("change", e => { if (e.target.files[0]) importJSON(e.target.files[0]); });
   
@@ -588,7 +421,7 @@ if (weeklyBtn) {
   pdf.setFontSize(13);
   pdf.text("370R JEE ADVANCED TRACKER", 14, 12);
   pdf.setFontSize(8);
-  pdf.text("30-DAY QUESTION & LECTURE LOG", 14, 16);
+  pdf.text("15-DAY QUESTION & LECTURE LOG", 14, 16);
 
   // 2. Yellow Headers (14 Columns)
   const headers = [[
@@ -601,7 +434,7 @@ if (weeklyBtn) {
   ]];
 
   // 3. Extract 15 Rows
-  const rows = [...tbody.children].slice(0, 30).map(tr => {
+  const rows = [...tbody.children].slice(0, 15).map(tr => {
     const getVal = f => {
       const inp = tr.querySelector(`[data-f="${f}"]`);
       return inp ? inp.value : "";
@@ -623,7 +456,7 @@ if (weeklyBtn) {
   });
 
   // 4. Totals Calculation
-  const data = rowsData().slice(0, 30);
+  const data = rowsData().slice(0, 15);
   const totalLec = sumField(data, "lec");
   const pWork = sumField(data, "phyWork"), cWork = sumField(data, "chemWork"), mWork = sumField(data, "mathWork");
   const pDpp = sumField(data, "phyDpp"), cDpp = sumField(data, "chemDpp"), mDpp = sumField(data, "mathDpp");
@@ -678,7 +511,7 @@ if (weeklyBtn) {
   pdf.text(`Total lectures: ${totalLec}   |   Total PYQs: ${totalPyqs}`, 14, footerY + 4);
 
   // Download Output
-  pdf.save("30DAY-REPORT-JEE-Advanced.pdf");
+  pdf.save("15DAY-REPORT-JEE-Advanced.pdf");
   }
 function updateDashboard(selectedDateData) {
   let questionsToday = 0;
@@ -701,207 +534,350 @@ function updateDashboard(selectedDateData) {
   document.getElementById('lectures-today').textContent = lecturesToday;
 }
 
-/* ================= REDESIGNED APP ================= */
-(function(){
-const $=id=>document.getElementById(id);
-const focusKey="jee_focus_v1", todoKey="jee_todos_v1", themeKey="jee_theme_v1";
-const themes={
-  "Black & Gold":["#070707","#101010","#171717","#f4c542","#ffd86b"],
-  "Dark Red & Gold":["#090303","#140606","#220b0b","#c99a16","#f0c94a"],
-  "Midnight Blue":["#050912","#0b1220","#111d32","#4f8cff","#8bb5ff"],
-  "Royal Purple":["#0b0614","#130b20","#211236","#9b5cff","#c79cff"],
-  "Emerald Night":["#04100b","#091a12","#103022","#22c58b","#70e0b8"],
-  "Crimson":["#120405","#1d080a","#321013","#f04458","#ff8794"],
-  "Ocean Deep":["#031014","#071c25","#0d303d","#19b9dc","#72e5f7"],
-  "Cyber Cyan":["#020b0e","#06171b","#09272d","#00d9ff","#74efff"],
-  "Neon Violet":["#08040f","#12091d","#211032","#c24cff","#e19cff"],
-  "Dark Orange":["#100704","#1b0d07","#30170b","#ff7a18","#ffb15c"],
-  "Deep Teal":["#03100f","#071a18","#0d2b27","#13c4b5","#72eee3"],
-  "Forest":["#050c05","#0b170b","#142617","#68b84b","#a6df82"],
-  "Ruby":["#100306","#1b070d","#310e19","#e52e63","#ff79a0"],
-  "Indigo":["#050613","#0b0d21","#14183a","#6475ff","#9da8ff"],
-  "Plum":["#0e0610","#190b1b","#2b1230","#d04bcb","#ee92e9"],
-  "Copper":["#0d0805","#19100a","#2b1b10","#c9783b","#e9ad70"],
-  "Ice":["#040b10","#081720","#102b3a","#56c7ff","#a6e4ff"],
-  "Lime Night":["#070c03","#101a06","#1b2c0b","#a8d62d","#d6f56a"],
-  "Magenta Dark":["#0d030b","#1b0717","#30102a","#ed3fb9","#ff8ddd"],
-  "Sapphire":["#030711","#071126","#0d1d3d","#3d82ff","#82b0ff"],
-  "Golden Night":["#0d0a03","#1b1407","#30240b","#e0a52a","#ffd66b"],
-  "Volcanic":["#100503","#1d0905","#33130a","#ff5a1f","#ff9a63"],
-  "Arctic Night":["#05090b","#0b1519","#12262d","#5de0d0","#a5fff5"],
-  "Neon Green":["#020a04","#061609","#0c2710","#38e46f","#8affad"],
-  "Galaxy":["#06040f","#0d0920","#19133a","#7d5cff","#c1aaff"],
-  "Steel":["#080a0c","#11161b","#1d252d","#8fa8bd","#c9d8e5"]
-};
-function setTheme(name){
- const t=themes[name]||themes["Neon Violet"];
- document.documentElement.style.setProperty("--bg",t[0]);
- document.documentElement.style.setProperty("--panel",t[1]);
- document.documentElement.style.setProperty("--panel2",t[2]);
- document.documentElement.style.setProperty("--accent",t[3]);
- document.documentElement.style.setProperty("--accent2",t[4]);
- document.documentElement.style.setProperty("--text","#f8fafc");
- document.documentElement.style.setProperty("--muted","#a4adbb");
- document.documentElement.style.setProperty("--line","#2a2d34");
- document.documentElement.style.setProperty("--input",t[0]);
- localStorage.setItem(themeKey,name);
-}
-function renderThemes(){const g=$("themeGrid"); if(!g)return; g.innerHTML=Object.keys(themes).map(n=>`<button class="theme-swatch" data-theme="${n}"><i style="background:${themes[n][3]}"></i><span>${n}</span></button>`).join("");g.onclick=e=>{let b=e.target.closest("[data-theme]");if(b){setTheme(b.dataset.theme);$("themeDrawer").classList.remove("open")}}}
 
-function weeklyRows(){
-  const end=new Date(); end.setHours(0,0,0,0);
-  const days=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date(end); d.setDate(end.getDate()-i);
-    const key=iso(d);
-    const rows=typeof rowsData==="function"?rowsData().filter(r=>r.date===key):[];
-    const sum=f=>rows.reduce((s,r)=>s+num(r[f]),0);
-    const phy=sum("phyWork")+sum("phyDpp")+sum("phyPyq");
-    const chem=sum("chemWork")+sum("chemDpp")+sum("chemPyq");
-    const math=sum("mathWork")+sum("mathDpp")+sum("mathPyq");
-    days.push({date:key,label:d.toLocaleDateString(undefined,{day:"numeric",month:"short"}),lec:sum("lec"),phy,chem,math,total:phy+chem+math});
+
+/* =========================================================
+   MENU + 29 THEMES + DAILY TODO + FOCUS MODE
+   These features use separate localStorage keys and do not
+   alter the existing tracker data.
+   ========================================================= */
+
+const THEME_KEY = "jee370rThemeV2";
+const TODO_KEY = "jee370rDailyTodoV1";
+const FOCUS_KEY = "jee370rFocusLogsV1";
+
+function localISODate(d = new Date()) {
+  const x = new Date(d);
+  const offset = x.getTimezoneOffset();
+  return new Date(x.getTime() - offset * 60000).toISOString().slice(0,10);
+}
+function put(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+function safeJSON(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) || "null");
+    return v ?? fallback;
+  } catch(e) { return fallback; }
+}
+function escapeFeatureText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[ch]));
+}
+
+/* ---------- Feature menu ---------- */
+function openFeature(name) {
+  const overlay = document.getElementById("featureOverlay");
+  const title = document.getElementById("featurePageTitle");
+  const views = ["menu","themes","todo","focus","backup"];
+  const titles = {menu:"Menu",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",backup:"💾 Backup & Import"};
+  overlay.hidden = false;
+  views.forEach(v => {
+    const el = document.getElementById(v + "View");
+    if (el) el.hidden = v !== name;
+  });
+  title.textContent = titles[name] || "Menu";
+  if (name === "themes") updateThemeButtons();
+  if (name === "todo") renderTodoList();
+  if (name === "focus") renderFocus();
+}
+function closeFeature() {
+  const overlay = document.getElementById("featureOverlay");
+  if (overlay) overlay.hidden = true;
+}
+function initFeatureMenu() {
+  // Use document-level delegation so the controls keep working even if the
+  // original tracker script rebinds other buttons later.
+  document.addEventListener("click", e => {
+    const themeBtn = e.target.closest("#topThemeBtn");
+    const menuBtn = e.target.closest("#topMenuBtn");
+    const closeBtn = e.target.closest("#featureClose");
+    const featureBtn = e.target.closest("[data-open-feature]");
+    if (themeBtn) { e.preventDefault(); e.stopPropagation(); openFeature("themes"); return; }
+    if (menuBtn) { e.preventDefault(); e.stopPropagation(); openFeature("menu"); return; }
+    if (closeBtn) { e.preventDefault(); e.stopPropagation(); closeFeature(); return; }
+    if (featureBtn) { e.preventDefault(); e.stopPropagation(); openFeature(featureBtn.dataset.openFeature); return; }
+    if (e.target.id === "featureOverlay") closeFeature();
+  }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
+}
+
+/* ---------- 29 themes ---------- */
+const THEMES = [
+  "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
+  "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
+  "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
+  "grape","ice"
+];
+
+function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = "classic";
+  document.body.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeButtons();
+}
+function updateThemeButtons() {
+  const theme = document.body.dataset.theme || "classic";
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.theme === theme);
+  });
+}
+function initThemes() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "classic");
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+  });
+}
+
+/* ---------- Daily TODO ---------- */
+function getTodos() { return safeJSON(TODO_KEY, []); }
+function saveTodos(data) { localStorage.setItem(TODO_KEY, JSON.stringify(data)); }
+
+function todoStats(date) {
+  const all = getTodos();
+  const daily = date ? all.filter(t => t.date === date) : all;
+  const total = daily.length;
+  const completed = daily.filter(t => t.completed).length;
+  return {all,daily,total,completed,pending:total-completed,rate:total ? Math.round(completed/total*100) : 0};
+}
+function renderTodoList() {
+  const filter = document.getElementById("todoFilterDate");
+  const list = document.getElementById("todoList");
+  if (!filter || !list) return;
+  const date = filter.value || localISODate();
+  const s = todoStats(date);
+  put("todoTotal",s.total); put("todoCompleted",s.completed);
+  put("todoPending",s.pending); put("todoRate",s.rate+"%");
+  if (!s.daily.length) {
+    list.innerHTML = '<div class="todo-empty">No tasks for this date. Add your first task ✨</div>';
+    return;
   }
-  return days;
+  list.innerHTML = s.daily.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(t => `
+    <div class="todo-item ${t.completed ? "done" : ""}">
+      <input class="todo-check" type="checkbox" ${t.completed?"checked":""} data-todo-check="${t.id}">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(t.task)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${escapeFeatureText(t.category)}</span><span>${t.date}</span></div>
+      </div>
+      <button class="todo-delete" data-todo-delete="${t.id}">🗑️</button>
+    </div>`).join("");
+
+  list.querySelectorAll("[data-todo-check]").forEach(box => box.addEventListener("change", () => {
+    const todos=getTodos(), item=todos.find(t=>String(t.id)===String(box.dataset.todoCheck));
+    if(item){item.completed=box.checked;saveTodos(todos);renderTodoList();}
+  }));
+  list.querySelectorAll("[data-todo-delete]").forEach(btn => btn.addEventListener("click", () => {
+    saveTodos(getTodos().filter(t=>String(t.id)!==String(btn.dataset.todoDelete)));
+    renderTodoList();
+  }));
 }
-function renderWeeklyReport(){
-  if(!$("weeklyChart"))return;
-  const days=weeklyRows();
-  const totals=days.reduce((a,d)=>({lec:a.lec+d.lec,total:a.total+d.total,phy:a.phy+d.phy,chem:a.chem+d.chem,math:a.math+d.math}),{lec:0,total:0,phy:0,chem:0,math:0});
-  $("weeklyLec").textContent=totals.lec;
-  $("weeklyQuestions").textContent=totals.total;
-  $("weeklyPhy").textContent=totals.phy;
-  $("weeklyChem").textContent=totals.chem;
-  $("weeklyMath").textContent=totals.math;
-  $("weeklyRange").textContent=`${days[0].label} – ${days[6].label}`;
-  const values=[
-    ["Lectures",totals.lec],
-    ["Questions",totals.total],
-    ["Physics",totals.phy],
-    ["Chemistry",totals.chem],
-    ["Mathematics",totals.math]
-  ];
-  const max=Math.max(1,...values.map(x=>x[1]));
-  $("weeklyChart").innerHTML=values.map(([label,value])=>{
-    const h=Math.max(4,Math.round(value/max*180));
-    return `<div class="weekly-bar-wrap"><b class="weekly-bar-value">${value}</b><i class="weekly-bar" style="--bar-h:${h}px"></i><span class="weekly-bar-label">${label}</span></div>`;
-  }).join("");
+function addTodo() {
+  const date=document.getElementById("todoDate")?.value || localISODate();
+  const task=document.getElementById("todoTask")?.value.trim() || "";
+  const category=document.getElementById("todoCategory")?.value || "Other";
+  if(!task){alert("Task likho pehle.");return;}
+  const todos=getTodos();
+  todos.push({id:Date.now()+Math.random(),date,task,category,completed:false,createdAt:Date.now()});
+  saveTodos(todos);
+  document.getElementById("todoFilterDate").value=date;
+  document.getElementById("todoTask").value="";
+  renderTodoList();
 }
-function exportFullJSON(){
-  const payload={
-    type:"jee-tracker-full-backup",
-    version:1,
+function downloadTodoPDF() {
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("todoFilterDate")?.value || localISODate();
+  const s=todoStats(date);
+  if(!s.daily.length){alert("Is date ke liye koi TODO task nahi hai.");return;}
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);
+  pdf.text("370R JEE Tracker — Daily TODO",14,16);
+  pdf.setFontSize(11);pdf.text(date,14,23);
+  pdf.setFontSize(10);pdf.text(`Total: ${s.total}   Completed: ${s.completed}   Pending: ${s.pending}   Completion: ${s.rate}%`,14,31);
+  let y=38;
+  const body=s.daily.map((t,i)=>[i+1,t.completed?"DONE":"PENDING",t.category,t.task]);
+  if(pdf.autoTable) pdf.autoTable({startY:y,head:[["#","STATUS","CATEGORY","TASK"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Daily-TODO-${date}.pdf`);
+}
+function initTodo() {
+  const today=localISODate();
+  const d=document.getElementById("todoDate"), f=document.getElementById("todoFilterDate");
+  if(d)d.value=today;if(f)f.value=today;
+  document.getElementById("addTodoBtn")?.addEventListener("click",addTodo);
+  document.getElementById("todoTask")?.addEventListener("keydown",e=>{if(e.key==="Enter")addTodo();});
+  f?.addEventListener("change",renderTodoList);
+  document.getElementById("todayTodoBtn")?.addEventListener("click",()=>{if(d)d.value=today;if(f)f.value=today;renderTodoList();});
+  document.getElementById("todoPdfBtn")?.addEventListener("click",downloadTodoPDF);
+}
+
+/* ---------- Focus Mode ---------- */
+let focusTimer=null, focusSeconds=0, focusRunning=false, focusStartedAt=null;
+function getFocusLogs(){return safeJSON(FOCUS_KEY,[]);}
+function saveFocusLogs(x){localStorage.setItem(FOCUS_KEY,JSON.stringify(x));}
+function formatHMS(sec){
+  sec=Math.max(0,Math.floor(sec));
+  const h=String(Math.floor(sec/3600)).padStart(2,"0");
+  const m=String(Math.floor(sec%3600/60)).padStart(2,"0");
+  const s=String(sec%60).padStart(2,"0");
+  return `${h}:${m}:${s}`;
+}
+function formatMinutes(min){min=Math.round(min);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min}m`;}
+function updateFocusClock(){put("focusClock",formatHMS(focusSeconds));}
+function startFocus(){
+  if(focusRunning)return;
+  focusRunning=true;
+  if(!focusStartedAt)focusStartedAt=Date.now()-focusSeconds*1000;
+  focusTimer=setInterval(()=>{focusSeconds=Math.floor((Date.now()-focusStartedAt)/1000);updateFocusClock();},1000);
+}
+function pauseFocus(){focusRunning=false;clearInterval(focusTimer);focusTimer=null;}
+function resetFocus(){pauseFocus();focusSeconds=0;focusStartedAt=null;updateFocusClock();}
+function saveFocusLog(){
+  const minutes=Math.round(focusSeconds/60);
+  if(minutes<1){alert("At least 1 minute ka focus log save karo.");return;}
+  const logs=getFocusLogs();
+  logs.push({
+    id:Date.now()+Math.random(),date:localISODate(),minutes,
+    subject:document.getElementById("focusSubject").value,
+    activity:document.getElementById("focusActivity").value,
+    questions:Number(document.getElementById("focusQuestions").value)||0,
+    note:document.getElementById("focusNote").value.trim(),
+    createdAt:Date.now()
+  });
+  saveFocusLogs(logs);resetFocus();renderFocus();
+}
+function renderFocus(){
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs(), daily=logs.filter(x=>x.date===date);
+  const today=logs.filter(x=>x.date===localISODate());
+  const mins=arr=>arr.reduce((a,x)=>a+(Number(x.minutes)||0),0);
+  put("focusTodayMinutes",formatMinutes(mins(today)));
+  put("focusTodayQuestions",today.reduce((a,x)=>a+(Number(x.questions)||0),0));
+  put("focusTotalMinutes",formatMinutes(mins(logs)));
+  put("focusLogCount",logs.length);
+  const list=document.getElementById("focusList"); if(!list)return;
+  if(!daily.length){list.innerHTML='<div class="todo-empty">No focus logs for this date.</div>';return;}
+  list.innerHTML=daily.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(x=>`
+    <div class="todo-item focus-item">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(x.subject)} · ${escapeFeatureText(x.activity)} · ${formatMinutes(x.minutes)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${x.questions||0} questions</span><span>${escapeFeatureText(x.note||"")}</span></div>
+      </div>
+      <button class="todo-delete" data-focus-delete="${x.id}">🗑️</button>
+    </div>`).join("");
+  list.querySelectorAll("[data-focus-delete]").forEach(btn=>btn.addEventListener("click",()=>{
+    saveFocusLogs(getFocusLogs().filter(x=>String(x.id)!==String(btn.dataset.focusDelete)));renderFocus();
+  }));
+}
+function downloadFocusPDF(){
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs().filter(x=>x.date===date);
+  if(!logs.length){alert("Is date ke liye koi focus log nahi hai.");return;}
+  const total=logs.reduce((a,x)=>a+x.minutes,0), qs=logs.reduce((a,x)=>a+x.questions,0);
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("370R JEE Tracker — Focus Report",14,16);
+  pdf.setFontSize(11);pdf.text(`${date}  •  Focus: ${formatMinutes(total)}  •  Questions: ${qs}`,14,24);
+  const body=logs.map((x,i)=>[i+1,x.subject,x.activity,formatMinutes(x.minutes),x.questions,x.note||""]);
+  if(pdf.autoTable)pdf.autoTable({startY:32,head:[["#","SUBJECT","ACTIVITY","TIME","Q","NOTE"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Focus-${date}.pdf`);
+}
+function initFocus(){
+  const f=document.getElementById("focusFilterDate");if(f)f.value=localISODate();
+  document.getElementById("focusStartBtn")?.addEventListener("click",startFocus);
+  document.getElementById("focusPauseBtn")?.addEventListener("click",pauseFocus);
+  document.getElementById("focusResetBtn")?.addEventListener("click",resetFocus);
+  document.getElementById("focusSaveBtn")?.addEventListener("click",saveFocusLog);
+  document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
+  f?.addEventListener("change",renderFocus);
+  updateFocusClock();
+}
+
+/* ---------- Start ---------- */
+document.addEventListener("DOMContentLoaded",()=>{
+  initFeatureMenu();
+  initThemes();
+  initTodo();
+  initFocus();
+  initBackup();
+});
+
+/* ---------- Full JSON backup / import ---------- */
+const BACKUP_VERSION = 1;
+
+function collectAllBackupData(){
+  const data = {};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key) continue;
+    try{
+      data[key]=JSON.parse(localStorage.getItem(key));
+    }catch(e){
+      data[key]=localStorage.getItem(key);
+    }
+  }
+  return {
+    app:"370R JEE Tracker",
+    backupVersion:BACKUP_VERSION,
     exportedAt:new Date().toISOString(),
-    localStorage:{
-      jee370rTrackerV3:localStorage.getItem("jee370rTrackerV3"),
-      jee370rTrackerV2:localStorage.getItem("jee370rTrackerV2"),
-      jee370rTrackerV1:localStorage.getItem("jee370rTrackerV1"),
-      jee_focus_v1:localStorage.getItem("jee_focus_v1"),
-      jee_todos_v1:localStorage.getItem("jee_todos_v1"),
-      jee_theme_v1:localStorage.getItem("jee_theme_v1")
+    localStorage:data
+  };
+}
+
+function exportAllJson(){
+  const backup=collectAllBackupData();
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+  a.download=`370R-JEE-Tracker-Backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  const s=document.getElementById("backupStatus");
+  if(s)s.textContent="✅ Full JSON backup downloaded successfully.";
+}
+
+function importAllJson(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const backup=JSON.parse(reader.result);
+      if(!backup || typeof backup!=="object" || !backup.localStorage || typeof backup.localStorage!=="object"){
+        throw new Error("Invalid backup format");
+      }
+
+      const confirmed=confirm(
+        "Import this backup?\\n\\nThis will replace the current saved tracker data on this browser with the backup data."
+      );
+      if(!confirmed)return;
+
+      Object.keys(backup.localStorage).forEach(key=>{
+        const value=backup.localStorage[key];
+        localStorage.setItem(key,typeof value==="string"?value:JSON.stringify(value));
+      });
+
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="✅ Backup imported. Reloading tracker...";
+      setTimeout(()=>location.reload(),500);
+    }catch(e){
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="❌ Invalid JSON backup. Nothing was changed.";
+      console.error(e);
     }
   };
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`jee-tracker-backup-${iso(new Date())}.json`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  reader.readAsText(file);
 }
-function importFullJSON(file){
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const x=JSON.parse(r.result);
-      if(!x || x.type!=="jee-tracker-full-backup" || !x.localStorage)throw new Error("Invalid backup");
-      const allowed=["jee370rTrackerV3","jee370rTrackerV2","jee370rTrackerV1","jee_focus_v1","jee_todos_v1","jee_theme_v1"];
-      allowed.forEach(k=>{
-        if(Object.prototype.hasOwnProperty.call(x.localStorage,k)){
-          const v=x.localStorage[k];
-          if(v==null)localStorage.removeItem(k); else localStorage.setItem(k,v);
-        }
-      });
-      const saved=migrateData();
-      if(saved){
-        const startEl=$("startDate"),examEl=$("examDate");
-        if(startEl)startEl.value=saved.startDate||"";
-        if(examEl)examEl.value=saved.examDate||examEl.value;
-        setData(saved.rows);
-      }
-      if($("themeGrid"))setTheme(localStorage.getItem("jee_theme_v1")||"Dark Red & Gold");
-      renderFocus();renderTodos();renderWeeklyReport();updateMiniDashboard();updateStats();
-      alert("JSON backup restored successfully.");
-    }catch(e){alert("Invalid JSON backup.");}
-  };
-  r.readAsText(file);
+
+function initBackup(){
+  document.getElementById("exportJsonBtn")?.addEventListener("click",exportAllJson);
+  document.getElementById("importJsonInput")?.addEventListener("change",e=>{
+    importAllJson(e.target.files?.[0]);
+    e.target.value="";
+  });
 }
-function nav(page){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.querySelector("#page-"+page)?.classList.add("active");document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.page===page));$("sidebar").classList.remove("open"); if(page==="focus")renderFocus();if(page==="planner")renderTodos();if(page==="weekly")renderWeeklyReport();}
-document.addEventListener("DOMContentLoaded",()=>{
- document.querySelectorAll(".nav-item").forEach(b=>b.onclick=()=>nav(b.dataset.page));
- document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>nav(b.dataset.go));
- $("mobileMenu").onclick=()=>$("sidebar").classList.toggle("open");
- $("themeBtn").onclick=()=>$("themeDrawer").classList.add("open");$("closeTheme").onclick=()=>$("themeDrawer").classList.remove("open");
- renderThemes();setTheme(localStorage.getItem(themeKey)||"Dark Red & Gold");
- const d=new Date();$("todayLabel").textContent=d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short",year:"numeric"});
- if($("plannerDate")&&!$("plannerDate").value)$("plannerDate").value=iso(d);
- $("plannerDate").onchange=renderTodos;$("addTodo").onclick=addTodo;$("todoInput").onkeydown=e=>{if(e.key==="Enter")addTodo()};
- $("weeklyPdfBtn").onclick=makeWeeklyPDF;
- $("fullJsonExportBtn").onclick=exportFullJSON;
- $("fullJsonImport").onchange=e=>{if(e.target.files[0]){importFullJSON(e.target.files[0]);e.target.value="";}};
- $("manualFocusBtn").onclick=manualFocus;
- $("timerStart").onclick=startTimer;$("timerPause").onclick=pauseTimer;$("timerReset").onclick=resetTimer;$("timerSave").onclick=saveTimer;
- setInterval(()=>{if(timerRunning){elapsed=Math.floor((Date.now()-timerStartedAt)/1000)+pausedSeconds;updateTimer();saveTimerState()}},1000);
- setInterval(updateMiniDashboard,1000);updateMiniDashboard();renderFocus();renderTodos();renderWeeklyReport();restoreTimerState();
-});
-function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-function readFocus(){try{return JSON.parse(localStorage.getItem(focusKey)||"[]")}catch{return[]}}
-function writeFocus(x){localStorage.setItem(focusKey,JSON.stringify(x))}
-function fmtMin(m){m=Math.max(0,Math.round(m));return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`}
-function todayFocus(){let t=iso(new Date());return readFocus().filter(x=>x.date===t)}
-function renderFocus(){
- let logs=readFocus().sort((a,b)=>b.id-a.id), today=todayFocus(), mins=today.reduce((s,x)=>s+x.minutes,0);
- $("focusBig").textContent=fmtMin(mins);$("focusToday").textContent=fmtMin(mins);$("focusSessions").textContent=today.length;$("focusQuestions").textContent=today.reduce((s,x)=>s+(+x.questions||0),0);
- $("focusLogs").innerHTML=logs.length?logs.slice(0,40).map(x=>`<div class="focus-log"><div><b>${esc(x.subject)} · ${esc(x.activity)}</b><small>${x.date}${x.note?" · "+esc(x.note):""}${x.questions?" · "+x.questions+" questions":""}</small></div><strong>${fmtMin(x.minutes)}</strong><button onclick="deleteFocus(${x.id})">×</button></div>`).join(""):`<div class="empty">No focus logs yet. Start your first session.</div>`;
-}
-function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-window.deleteFocus=id=>{writeFocus(readFocus().filter(x=>x.id!==id));renderFocus();updateMiniDashboard()}
-function manualFocus(){let m=prompt("Focus minutes?");if(!m||isNaN(m)||+m<=0)return;let q=prompt("Questions completed? (optional)","0");let a=readFocus();a.push({id:Date.now(),date:iso(new Date()),minutes:+m,questions:+q||0,subject:$("focusSubject").value,activity:$("focusActivity").value,note:$("focusNote").value});writeFocus(a);$("focusNote").value="";renderFocus();updateMiniDashboard()}
-let timerRunning=false,timerStartedAt=0,pausedSeconds=0,elapsed=0;
-const timerKey="jee_focus_timer_v1";
-function saveTimerState(){
-  localStorage.setItem(timerKey,JSON.stringify({timerRunning,timerStartedAt,pausedSeconds,elapsed,subject:$("focusSubject")?.value||"Physics",activity:$("focusActivity")?.value||"Questions",note:$("focusNote")?.value||""}));
-}
-function restoreTimerState(){
-  try{
-    const x=JSON.parse(localStorage.getItem(timerKey)||"null"); if(!x)return;
-    timerRunning=!!x.timerRunning; timerStartedAt=+x.timerStartedAt||0; pausedSeconds=+x.pausedSeconds||0; elapsed=+x.elapsed||0;
-    if($("focusSubject"))$("focusSubject").value=x.subject||"Physics";
-    if($("focusActivity"))$("focusActivity").value=x.activity||"Questions";
-    if($("focusNote"))$("focusNote").value=x.note||"";
-    if(timerRunning) elapsed=Math.floor((Date.now()-timerStartedAt)/1000)+pausedSeconds;
-    $("timerState").textContent=timerRunning?"Focused — restored.":"Paused — restored.";
-    updateTimer();
-  }catch{}
-}
-function updateTimer(){let s=Math.max(0,elapsed),h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;$("timerDisplay").textContent=[h,m,sec].map(x=>String(x).padStart(2,"0")).join(":")}
-function startTimer(){if(timerRunning)return;timerRunning=true;timerStartedAt=Date.now();$("timerState").textContent="Focused — keep going.";saveTimerState();}
-function pauseTimer(){if(!timerRunning)return;elapsed=Math.floor((Date.now()-timerStartedAt)/1000)+pausedSeconds;pausedSeconds=elapsed;timerRunning=false;$("timerState").textContent="Paused.";saveTimerState();}
-function saveTimer(){
-  if(timerRunning) elapsed=Math.floor((Date.now()-timerStartedAt)/1000)+pausedSeconds;
-  if(elapsed<60){alert("At least 1 minute of focus is required to save.");return;}
-  const mins=Math.round(elapsed/60),a=readFocus();
-  a.push({id:Date.now(),date:iso(new Date()),minutes:mins,questions:0,subject:$("focusSubject").value,activity:$("focusActivity").value,note:$("focusNote").value});
-  writeFocus(a);renderFocus();updateMiniDashboard();
-  timerRunning=false;elapsed=0;pausedSeconds=0;timerStartedAt=0;localStorage.removeItem(timerKey);
-  $("timerState").textContent="Saved successfully.";updateTimer();$("focusNote").value="";
-}
-function resetTimer(){timerRunning=false;elapsed=0;pausedSeconds=0;timerStartedAt=0;localStorage.removeItem(timerKey);$("timerState").textContent="Ready when you are.";updateTimer();$("focusNote").value=""}
-function readTodos(){try{return JSON.parse(localStorage.getItem(todoKey)||"[]")}catch{return[]}}
-function writeTodos(x){localStorage.setItem(todoKey,JSON.stringify(x))}
-function addTodo(){let text=$("todoInput").value.trim();if(!text)return;let a=readTodos();a.push({id:Date.now(),date:$("plannerDate").value||iso(new Date()),text,type:$("todoType").value,done:false});writeTodos(a);$("todoInput").value="";renderTodos()}
-window.toggleTodo=id=>{let a=readTodos();let x=a.find(v=>v.id===id);if(x)x.done=!x.done;writeTodos(a);renderTodos()}
-window.deleteTodo=id=>{writeTodos(readTodos().filter(x=>x.id!==id));renderTodos()}
-function renderTodos(){if(!$("todoList"))return;let date=$("plannerDate").value||iso(new Date()),a=readTodos().filter(x=>x.date===date),done=a.filter(x=>x.done).length, pct=a.length?Math.round(done/a.length*100):0;$("plannerTitle").textContent=new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"short"});$("todoCount").textContent=a.length;$("plannerRing").textContent=pct+"%";$("plannerProgressText").textContent=`${done} of ${a.length} tasks complete`;$("todoList").innerHTML=a.length?a.map(x=>`<div class="todo ${x.done?"done":""}"><button class="check" onclick="toggleTodo(${x.id})">${x.done?"✓":""}</button><div><b>${esc(x.text)}</b><small>${esc(x.type)}</small></div><button class="todo-del" onclick="deleteTodo(${x.id})">×</button></div>`).join(""):`<div class="empty">No tasks for this date. Add your first task above.</div>`}
-function updateMiniDashboard(){
- let f=todayFocus().reduce((s,x)=>s+x.minutes,0);if($("focusToday"))$("focusToday").textContent=fmtMin(f);
- let data=typeof rowsData==="function"?rowsData():[];let phy=data.reduce((s,r)=>s+num(r.phyWork)+num(r.phyDpp)+num(r.phyPyq),0),chem=data.reduce((s,r)=>s+num(r.chemWork)+num(r.chemDpp)+num(r.chemPyq),0),math=data.reduce((s,r)=>s+num(r.mathWork)+num(r.mathDpp)+num(r.mathPyq),0);if($("dashPhy"))$("dashPhy").textContent=phy;if($("dashChem"))$("dashChem").textContent=chem;if($("dashMath"))$("dashMath").textContent=math;if($("questionSum2")&&$("questionSum"))$("questionSum2").textContent=$("questionSum").textContent;let ex=$("examDate")?.value;if(ex){let days=Math.max(0,Math.ceil((new Date(ex+"T23:59:59")-new Date())/86400000));$("dashCountdown").textContent=days;$("dashProgress").style.width=Math.min(100,Math.max(0,100-days/200*100))+"%"}}
-})();
