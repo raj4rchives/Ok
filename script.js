@@ -582,7 +582,7 @@ function openFeature(name) {
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
-  if (name === "weekly") renderWeeklyReport();
+  if (name === "weekly") requestAnimationFrame(() => renderWeeklyReport());
 }
 function closeFeature() {
   const overlay = document.getElementById("featureOverlay");
@@ -777,25 +777,70 @@ function weekDates(end){
 }
 function drawWeeklyChart(id, labels, values, suffix=""){
   const c=document.getElementById(id); if(!c)return;
-  const ctx=c.getContext("2d"), dpr=window.devicePixelRatio||1;
-  const w=c.clientWidth||600,h=190;
-  c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  const rect=c.getBoundingClientRect();
+  const w=Math.max(280, Math.floor(rect.width || c.parentElement?.clientWidth || 600));
+  const h=Math.max(170, Math.floor(parseInt(getComputedStyle(c).height)||190));
+  const dpr=window.devicePixelRatio||1;
+  c.width=Math.floor(w*dpr); c.height=Math.floor(h*dpr);
+  c.style.width=w+"px"; c.style.height=h+"px";
+  const ctx=c.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,w,h);
-  const pad={l:34,r:12,t:14,b:34}, cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-  const max=Math.max(1,...values), step=cw/Math.max(1,values.length);
-  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--line")||"#bbb";
-  ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ch);ctx.lineTo(pad.l+cw,pad.t+ch);ctx.stroke();
-  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--text")||"#333";
+
+  const root=getComputedStyle(document.documentElement);
+  const body=getComputedStyle(document.body);
+  const css=(name,fallback)=>{
+    const a=root.getPropertyValue(name).trim();
+    const b=body.getPropertyValue(name).trim();
+    return a || b || fallback;
+  };
+  const text=css("--text","#333");
+  const line=css("--line","#c8c8c8");
+  const accent=css("--accent","#7c5cff");
+
+  const pad={l:36,r:10,t:18,b:38};
+  const cw=Math.max(1,w-pad.l-pad.r), ch=Math.max(1,h-pad.t-pad.b);
+  const max=Math.max(1,...values.map(v=>Number(v)||0));
+  const step=cw/Math.max(1,values.length);
+
+  // grid + baseline
+  ctx.lineWidth=1;
+  ctx.strokeStyle=line;
+  ctx.globalAlpha=.65;
+  for(let g=0;g<=4;g++){
+    const y=pad.t+ch-(g/4)*ch;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
   ctx.font="11px sans-serif";
-  values.forEach((v,i)=>{
-    const x=pad.l+i*step+step*.18, bw=step*.64, bh=(v/max)*ch, y=pad.t+ch-bh;
-    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--accent")||"#6b78a8";
-    ctx.fillRect(x,y,bw,bh);
-    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--text")||"#333";
-    ctx.textAlign="center";ctx.fillText(String(v)+suffix,x+bw/2,Math.max(11,y-4));
-    ctx.fillText(labels[i],x+bw/2,h-12);
+  ctx.textAlign="right";
+  ctx.fillStyle=text;
+  for(let g=0;g<=4;g++){
+    const val=Math.round(max*g/4);
+    const y=pad.t+ch-(g/4)*ch;
+    ctx.fillText(String(val)+(suffix&&g===4?suffix:""),pad.l-6,y+4);
+  }
+
+  values.forEach((raw,i)=>{
+    const v=Math.max(0,Number(raw)||0);
+    const bw=Math.max(12,step*.58);
+    const x=pad.l+i*step+(step-bw)/2;
+    const bh=v>0?Math.max(3,(v/max)*ch):0;
+    const y=pad.t+ch-bh;
+    if(bh>0){
+      ctx.fillStyle=accent;
+      ctx.fillRect(x,y,bw,bh);
+    }
+    ctx.fillStyle=text;
+    ctx.textAlign="center";
+    ctx.font="bold 11px sans-serif";
+    ctx.fillText(String(v)+(suffix||""),x+bw/2,Math.max(12,y-5));
+    ctx.font="11px sans-serif";
+    ctx.fillText(labels[i]||"",x+bw/2,h-12);
   });
 }
+
 function renderWeeklyReport(){
   const input=document.getElementById("weeklyEndDate");
   if(!input)return;
@@ -871,7 +916,7 @@ function initWeeklyReport(){
   if(d)d.value=localISODate();
   document.getElementById("weeklyThisWeekBtn")?.addEventListener("click",()=>{if(d)d.value=localISODate();renderWeeklyReport();});
   d?.addEventListener("change",renderWeeklyReport);
-  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)renderWeeklyReport();});
+  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)requestAnimationFrame(renderWeeklyReport);});
 }
 
 /* ---------- Start ---------- */
