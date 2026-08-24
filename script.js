@@ -539,7 +539,18 @@ document.addEventListener("DOMContentLoaded", () => {
   bindClick("#weeklyPdfBtn", makeWeeklyPDF);
   bindClick("#monthPdfBtn", makeMonthlyPDF);
   bindClick("#jsonExportBtn", exportJSON);
-  
+  const weeklyBtn = document.querySelector("#weeklyPdfBtn");
+
+if (weeklyBtn) {
+  weeklyBtn.addEventListener("click", function () {
+    try {
+      makeWeeklyPDF();
+    } catch (e) {
+      console.error(e);
+      alert("Weekly Report Error: " + e.message);
+    }
+  });
+}
   const jsonImport = document.querySelector("#jsonImport");
   if (jsonImport) jsonImport.addEventListener("change", e => { if (e.target.files[0]) importJSON(e.target.files[0]); });
   
