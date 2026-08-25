@@ -616,19 +616,19 @@ const THEMES = [
 ];
 
 function applyTheme(theme) {
-  if (!THEMES.includes(theme)) theme = "classic";
+  if (!THEMES.includes(theme)) theme = "royal-dark";
   document.body.dataset.theme = theme;
   localStorage.setItem(THEME_KEY, theme);
   updateThemeButtons();
 }
 function updateThemeButtons() {
-  const theme = document.body.dataset.theme || "classic";
+  const theme = document.body.dataset.theme || "royal-dark";
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.theme === theme);
   });
 }
 function initThemes() {
-  applyTheme(localStorage.getItem(THEME_KEY) || "classic");
+  applyTheme(localStorage.getItem(THEME_KEY) || "royal-dark");
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
