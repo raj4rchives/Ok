@@ -10,20 +10,19 @@
 </head>
 <body>
 <div class="wrap">
-  <header class="tracker-header">
-    <button class="header-menu" id="topMenuBtn" type="button" onclick="openFeature('menu')" aria-label="Open menu">☰<span>Menu</span></button>
+  <div class="top">
     <h1>370R JEE Advanced Tracker</h1>
-    <button class="header-themes" id="topThemeBtn" type="button" onclick="openFeature('themes')">🎨 <span>Themes</span></button>
-  </header>
+    <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
+  </div>
 
-  <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
-
-  <div class="actions tracker-actions">
+  <div class="actions">
+    <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')">🎨 Themes</button>
+    <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="openFeature('menu')">☰ Menu</button>
     <button class="secondary" id="saveBtn">Save</button>
     <button class="secondary" id="loadBtn">Load</button>
     <button class="danger" id="clearBtn">Clear</button>
+    <button class="primary pdf-action" id="pdfBtn">Download Filled PDF</button>
   </div>
-  <button class="primary pdf-action" id="pdfBtn">Download Filled PDF</button>
 
   <div class="card">
     <div class="settings">
@@ -266,7 +265,7 @@
     </div>
   </div>
 
-  <footer class="site-footer">Founded by <strong>raj Sharma</strong> <span>♥</span></footer>
+  <footer class="site-footer">Founded by raj Sharma <span>♥</span></footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
