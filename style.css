@@ -602,3 +602,71 @@ body[data-theme="ember"]{--bg:#fff2ec;--panel:#ffffff;--line:#895f50;--text:#503
 .weekly-bar-fill{width:100%; min-height:0; background:var(--accent,#6b78a8); border-radius:9px 9px 3px 3px; transition:height .25s ease;}
 .weekly-bar-label{font-size:10px; color:var(--muted,#777); white-space:nowrap;}
 @media(max-width:600px){.weekly-bars{height:170px}.weekly-bar-track{height:115px;width:min(30px,70%)}.weekly-bar-label{font-size:9px}}
+
+
+/* ===== MOBILE TOP ACTION BAR — clean 5-button layout ===== */
+.top-theme-btn,.top-menu-btn{font-weight:800}
+.top-btn-icon{display:inline-block}
+.top-btn-label{display:inline-block}
+
+@media(max-width:700px){
+  .top{
+    display:block;
+    margin-bottom:18px;
+  }
+  .top>div:first-child{
+    margin-bottom:14px;
+  }
+  .top h1{
+    font-size:22px;
+    line-height:1.15;
+  }
+  .top .sub{
+    font-size:14px;
+    line-height:1.45;
+    margin-top:7px;
+  }
+  .actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    align-items:stretch;
+  }
+  .actions button{
+    width:100%;
+    min-width:0;
+    min-height:72px;
+    padding:10px 5px;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    line-height:1.15;
+    font-size:14px;
+    flex:none;
+  }
+  .actions .top-theme-btn,
+  .actions .top-menu-btn{
+    flex-direction:column;
+    gap:5px;
+  }
+  .top-btn-icon{
+    font-size:20px;
+    line-height:1;
+  }
+  .top-btn-label{
+    font-size:14px;
+  }
+  .actions #pdfBtn{
+    grid-column:1 / -1;
+    min-height:58px;
+    font-size:16px;
+    margin-top:2px;
+  }
+}
+
+@media(min-width:701px){
+  .top-btn-icon{margin-right:5px}
+}
