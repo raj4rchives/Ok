@@ -605,12 +605,14 @@ function initFeatureMenu() {
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
 }
 
-/* ---------- 29 themes ---------- */
+/* ---------- 48 themes ---------- */
 const THEMES = [
   "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
   "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
   "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
-  "grape","ice"
+  "grape","ice","amoled","dracula","tokyo-night","nord-dark","solar-dark",
+  "deep-ocean","cyberpunk","synthwave","matrix","crimson","royal-dark","obsidian",
+  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night"
 ];
 
 function applyTheme(theme) {
