@@ -256,8 +256,7 @@ function exportJSON() {
   const startEl = document.querySelector('#startDate');
   const examEl = document.querySelector('#examDate');
   const payload = {
-    version: 6,
-    syllabus: syllabusSafe(),
+    version: 5,
     exportedAt: new Date().toISOString(),
     startDate: startEl ? startEl.value : "",
     examDate: examEl ? examEl.value : "",
@@ -282,7 +281,6 @@ function importJSON(file) {
       if (startEl) startEl.value = x.startDate || '';
       if (examEl && x.examDate) examEl.value = x.examDate;
       setData(x.rows);
-      if (x.syllabus && Array.isArray(x.syllabus.chapters)) saveSyllabus({version:1,chapters:x.syllabus.chapters.map(normalizeChapter)});
       save();
       alert('JSON imported successfully.');
     } catch (e) {
@@ -569,183 +567,513 @@ function escapeFeatureText(value) {
   }[ch]));
 }
 
-/* ---------- Syllabus Tracker ---------- */
-const SYLLABUS_KEY = "370R_JEE_SYLLABUS_V2";
+/* ---------- Feature menu ---------- */
+function openFeature(name) {
+  const overlay = document.getElementById("featureOverlay");
+  const title = document.getElementById("featurePageTitle");
+  const views = ["menu","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
+  overlay.hidden = false;
+  views.forEach(v => {
+    const el = document.getElementById(v + "View");
+    if (el) el.hidden = v !== name;
+  });
+  title.textContent = titles[name] || "Menu";
+  if (name === "themes") updateThemeButtons();
+  if (name === "todo") renderTodoList();
+  if (name === "focus") renderFocus();
+  if (name === "weekly") renderWeeklyReport();
+}
+function closeFeature() {
+  const overlay = document.getElementById("featureOverlay");
+  if (overlay) overlay.hidden = true;
+}
+function initFeatureMenu() {
+  // Use document-level delegation so the controls keep working even if the
+  // original tracker script rebinds other buttons later.
+  document.addEventListener("click", e => {
+    const themeBtn = e.target.closest("#topThemeBtn");
+    const menuBtn = e.target.closest("#topMenuBtn");
+    const closeBtn = e.target.closest("#featureClose");
+    const featureBtn = e.target.closest("[data-open-feature]");
+    if (themeBtn) { e.preventDefault(); e.stopPropagation(); openFeature("themes"); return; }
+    if (menuBtn) { e.preventDefault(); e.stopPropagation(); openFeature("menu"); return; }
+    if (closeBtn) { e.preventDefault(); e.stopPropagation(); closeFeature(); return; }
+    if (featureBtn) { e.preventDefault(); e.stopPropagation(); openFeature(featureBtn.dataset.openFeature); return; }
+    if (e.target.id === "featureOverlay") closeFeature();
+  }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
+}
+
+/* ---------- 48 themes ---------- */
+const THEMES = [
+  "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
+  "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
+  "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
+  "grape","ice","amoled","dracula","tokyo-night","nord-dark","solar-dark",
+  "deep-ocean","cyberpunk","synthwave","matrix","crimson","royal-dark","obsidian",
+  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night"
+];
+
+function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = "royal-dark";
+  document.body.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeButtons();
+}
+function updateThemeButtons() {
+  const theme = document.body.dataset.theme || "royal-dark";
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.theme === theme);
+  });
+}
+function initThemes() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "royal-dark");
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+  });
+}
+
+/* ---------- Daily TODO ---------- */
+function getTodos() { return safeJSON(TODO_KEY, []); }
+function saveTodos(data) { localStorage.setItem(TODO_KEY, JSON.stringify(data)); }
+
+function todoStats(date) {
+  const all = getTodos();
+  const daily = date ? all.filter(t => t.date === date) : all;
+  const total = daily.length;
+  const completed = daily.filter(t => t.completed).length;
+  return {all,daily,total,completed,pending:total-completed,rate:total ? Math.round(completed/total*100) : 0};
+}
+function renderTodoList() {
+  const filter = document.getElementById("todoFilterDate");
+  const list = document.getElementById("todoList");
+  if (!filter || !list) return;
+  const date = filter.value || localISODate();
+  const s = todoStats(date);
+  put("todoTotal",s.total); put("todoCompleted",s.completed);
+  put("todoPending",s.pending); put("todoRate",s.rate+"%");
+  if (!s.daily.length) {
+    list.innerHTML = '<div class="todo-empty">No tasks for this date. Add your first task ✨</div>';
+    return;
+  }
+  list.innerHTML = s.daily.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(t => `
+    <div class="todo-item ${t.completed ? "done" : ""}">
+      <input class="todo-check" type="checkbox" ${t.completed?"checked":""} data-todo-check="${t.id}">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(t.task)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${escapeFeatureText(t.category)}</span><span>${t.date}</span></div>
+      </div>
+      <button class="todo-delete" data-todo-delete="${t.id}">🗑️</button>
+    </div>`).join("");
+
+  list.querySelectorAll("[data-todo-check]").forEach(box => box.addEventListener("change", () => {
+    const todos=getTodos(), item=todos.find(t=>String(t.id)===String(box.dataset.todoCheck));
+    if(item){item.completed=box.checked;saveTodos(todos);renderTodoList();}
+  }));
+  list.querySelectorAll("[data-todo-delete]").forEach(btn => btn.addEventListener("click", () => {
+    saveTodos(getTodos().filter(t=>String(t.id)!==String(btn.dataset.todoDelete)));
+    renderTodoList();
+  }));
+}
+function addTodo() {
+  const date=document.getElementById("todoDate")?.value || localISODate();
+  const task=document.getElementById("todoTask")?.value.trim() || "";
+  const category=document.getElementById("todoCategory")?.value || "Other";
+  if(!task){alert("Task likho pehle.");return;}
+  const todos=getTodos();
+  todos.push({id:Date.now()+Math.random(),date,task,category,completed:false,createdAt:Date.now()});
+  saveTodos(todos);
+  document.getElementById("todoFilterDate").value=date;
+  document.getElementById("todoTask").value="";
+  renderTodoList();
+}
+function downloadTodoPDF() {
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("todoFilterDate")?.value || localISODate();
+  const s=todoStats(date);
+  if(!s.daily.length){alert("Is date ke liye koi TODO task nahi hai.");return;}
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);
+  pdf.text("370R JEE Tracker — Daily TODO",14,16);
+  pdf.setFontSize(11);pdf.text(date,14,23);
+  pdf.setFontSize(10);pdf.text(`Total: ${s.total}   Completed: ${s.completed}   Pending: ${s.pending}   Completion: ${s.rate}%`,14,31);
+  let y=38;
+  const body=s.daily.map((t,i)=>[i+1,t.completed?"DONE":"PENDING",t.category,t.task]);
+  if(pdf.autoTable) pdf.autoTable({startY:y,head:[["#","STATUS","CATEGORY","TASK"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Daily-TODO-${date}.pdf`);
+}
+function initTodo() {
+  const today=localISODate();
+  const d=document.getElementById("todoDate"), f=document.getElementById("todoFilterDate");
+  if(d)d.value=today;if(f)f.value=today;
+  document.getElementById("addTodoBtn")?.addEventListener("click",addTodo);
+  document.getElementById("todoTask")?.addEventListener("keydown",e=>{if(e.key==="Enter")addTodo();});
+  f?.addEventListener("change",renderTodoList);
+  document.getElementById("todayTodoBtn")?.addEventListener("click",()=>{if(d)d.value=today;if(f)f.value=today;renderTodoList();});
+  document.getElementById("todoPdfBtn")?.addEventListener("click",downloadTodoPDF);
+}
+
+/* ---------- Focus Mode ---------- */
+let focusTimer=null, focusSeconds=0, focusRunning=false, focusStartedAt=null;
+function getFocusLogs(){return safeJSON(FOCUS_KEY,[]);}
+function saveFocusLogs(x){localStorage.setItem(FOCUS_KEY,JSON.stringify(x));}
+function formatHMS(sec){
+  sec=Math.max(0,Math.floor(sec));
+  const h=String(Math.floor(sec/3600)).padStart(2,"0");
+  const m=String(Math.floor(sec%3600/60)).padStart(2,"0");
+  const s=String(sec%60).padStart(2,"0");
+  return `${h}:${m}:${s}`;
+}
+function formatMinutes(min){min=Math.round(min);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min}m`;}
+function updateFocusClock(){put("focusClock",formatHMS(focusSeconds));}
+function startFocus(){
+  if(focusRunning)return;
+  focusRunning=true;
+  if(!focusStartedAt)focusStartedAt=Date.now()-focusSeconds*1000;
+  focusTimer=setInterval(()=>{focusSeconds=Math.floor((Date.now()-focusStartedAt)/1000);updateFocusClock();},1000);
+}
+function pauseFocus(){focusRunning=false;clearInterval(focusTimer);focusTimer=null;}
+function resetFocus(){pauseFocus();focusSeconds=0;focusStartedAt=null;updateFocusClock();}
+function saveFocusLog(){
+  const minutes=Math.round(focusSeconds/60);
+  if(minutes<1){alert("At least 1 minute ka focus log save karo.");return;}
+  const logs=getFocusLogs();
+  logs.push({
+    id:Date.now()+Math.random(),date:localISODate(),minutes,
+    subject:document.getElementById("focusSubject").value,
+    activity:document.getElementById("focusActivity").value,
+    questions:Number(document.getElementById("focusQuestions").value)||0,
+    note:document.getElementById("focusNote").value.trim(),
+    createdAt:Date.now()
+  });
+  saveFocusLogs(logs);resetFocus();renderFocus();
+}
+function saveManualFocusLog(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  const minutesEl=document.getElementById("focusManualMinutes");
+  const dateEl=document.getElementById("focusManualDate");
+  const minutes=parseInt(minutesEl?.value,10);
+  if(!Number.isFinite(minutes) || minutes<1){
+    alert("Manual focus time me 1 ya usse zyada minutes enter karo.");
+    minutesEl?.focus();
+    return false;
+  }
+  const date=dateEl?.value || localISODate();
+  const subject=document.getElementById("focusSubject")?.value || "Other";
+  const activity=document.getElementById("focusActivity")?.value || "Other";
+  const questions=parseInt(document.getElementById("focusQuestions")?.value,10)||0;
+  const note=document.getElementById("focusNote")?.value.trim() || "Manual time";
+  const logs=getFocusLogs();
+  logs.push({id:Date.now()+Math.random(),date,minutes,subject,activity,questions,note,createdAt:Date.now(),manual:true});
+  saveFocusLogs(logs);
+  if(minutesEl) minutesEl.value="";
+  if(document.getElementById("focusFilterDate")) document.getElementById("focusFilterDate").value=date;
+  renderFocus();
+  if(!document.getElementById("weeklyView")?.hidden) renderWeeklyReport();
+  alert(`✅ ${formatMinutes(minutes)} focus time saved for ${date}.`);
+  return false;
+}
+window.saveManualFocusLog=saveManualFocusLog;
+
+function weekDates(end){
+  const d=new Date(end+"T00:00:00");
+  const out=[];
+  for(let i=6;i>=0;i--){
+    const x=new Date(d);x.setDate(d.getDate()-i);
+    out.push(x.toISOString().slice(0,10));
+  }
+  return out;
+}
+function drawWeeklyChart(id, labels, values, suffix=""){
+  const box=document.getElementById(id); if(!box)return;
+  const max=Math.max(1,...values.map(v=>Number(v)||0));
+  box.innerHTML=values.map((value,i)=>{
+    const v=Number(value)||0;
+    const pct=Math.max(0,Math.min(100,(v/max)*100));
+    return `<div class="weekly-bar-col">
+      <div class="weekly-bar-value">${escapeFeatureText(String(v)+suffix)}</div>
+      <div class="weekly-bar-track"><div class="weekly-bar-fill" style="height:${pct}%"></div></div>
+      <div class="weekly-bar-label">${escapeFeatureText(labels[i])}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderWeeklyReport(){
+  const input=document.getElementById("weeklyEndDate");
+  if(!input)return;
+  const end=input.value||localISODate();
+  const dates=weekDates(end), rows=rowsData(), logs=getFocusLogs(), todos=getTodos();
+  const questions=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.phyWork)+num(r.chemWork)+num(r.mathWork)+num(r.phyDpp)+num(r.chemDpp)+num(r.mathDpp)+num(r.phyPyq)+num(r.chemPyq)+num(r.mathPyq),0));
+  const lectures=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.lec),0));
+  const focus=dates.map(date=>logs.filter(x=>x.date===date).reduce((sum,x)=>sum+(Number(x.minutes)||0),0));
+  const weekTodos=todos.filter(x=>dates.includes(x.date));
+  const done=weekTodos.filter(x=>x.completed).length;
+  put("weeklyQuestions",questions.reduce((a,b)=>a+b,0));
+  put("weeklyLectures",lectures.reduce((a,b)=>a+b,0));
+  put("weeklyFocus",formatMinutes(focus.reduce((a,b)=>a+b,0)));
+  put("weeklyTasks",(weekTodos.length?Math.round(done/weekTodos.length*100):0)+"%");
+  const labels=dates.map(d=>new Date(d+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"}));
+  drawWeeklyChart("weeklyQuestionsChart",labels,questions);
+  drawWeeklyChart("weeklyLecturesChart",labels,lectures);
+  drawWeeklyChart("weeklyFocusChart",labels,focus,"m");
+}
+
+function renderFocus(){
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs(), daily=logs.filter(x=>x.date===date);
+  const today=logs.filter(x=>x.date===localISODate());
+  const mins=arr=>arr.reduce((a,x)=>a+(Number(x.minutes)||0),0);
+  put("focusTodayMinutes",formatMinutes(mins(today)));
+  put("focusTodayQuestions",today.reduce((a,x)=>a+(Number(x.questions)||0),0));
+  put("focusTotalMinutes",formatMinutes(mins(logs)));
+  put("focusLogCount",logs.length);
+  const list=document.getElementById("focusList"); if(!list)return;
+  if(!daily.length){list.innerHTML='<div class="todo-empty">No focus logs for this date.</div>';return;}
+  list.innerHTML=daily.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(x=>`
+    <div class="todo-item focus-item">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(x.subject)} · ${escapeFeatureText(x.activity)} · ${formatMinutes(x.minutes)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${x.questions||0} questions</span><span>${escapeFeatureText(x.note||"")}</span></div>
+      </div>
+      <button class="todo-delete" data-focus-delete="${x.id}">🗑️</button>
+    </div>`).join("");
+  list.querySelectorAll("[data-focus-delete]").forEach(btn=>btn.addEventListener("click",()=>{
+    saveFocusLogs(getFocusLogs().filter(x=>String(x.id)!==String(btn.dataset.focusDelete)));renderFocus();
+  }));
+}
+function downloadFocusPDF(){
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs().filter(x=>x.date===date);
+  if(!logs.length){alert("Is date ke liye koi focus log nahi hai.");return;}
+  const total=logs.reduce((a,x)=>a+x.minutes,0), qs=logs.reduce((a,x)=>a+x.questions,0);
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("370R JEE Tracker — Focus Report",14,16);
+  pdf.setFontSize(11);pdf.text(`${date}  •  Focus: ${formatMinutes(total)}  •  Questions: ${qs}`,14,24);
+  const body=logs.map((x,i)=>[i+1,x.subject,x.activity,formatMinutes(x.minutes),x.questions,x.note||""]);
+  if(pdf.autoTable)pdf.autoTable({startY:32,head:[["#","SUBJECT","ACTIVITY","TIME","Q","NOTE"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Focus-${date}.pdf`);
+}
+function initFocus(){
+  const f=document.getElementById("focusFilterDate");if(f)f.value=localISODate();
+  document.getElementById("focusStartBtn")?.addEventListener("click",startFocus);
+  document.getElementById("focusPauseBtn")?.addEventListener("click",pauseFocus);
+  document.getElementById("focusResetBtn")?.addEventListener("click",resetFocus);
+  document.getElementById("focusSaveBtn")?.addEventListener("click",saveFocusLog);
+  const manualBtn=document.getElementById("focusManualSaveBtn");
+  if(manualBtn){
+    manualBtn.onclick=saveManualFocusLog;
+  }
+  const md=document.getElementById("focusManualDate"); if(md)md.value=localISODate();
+  document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
+  f?.addEventListener("change",renderFocus);
+  updateFocusClock();
+}
+
+function initWeeklyReport(){
+  const d=document.getElementById("weeklyEndDate");
+  if(d)d.value=localISODate();
+  document.getElementById("weeklyThisWeekBtn")?.addEventListener("click",()=>{if(d)d.value=localISODate();renderWeeklyReport();});
+  d?.addEventListener("change",renderWeeklyReport);
+  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)renderWeeklyReport();});
+}
+
+/* ---------- Syllabus Tracker: configurable chapters + A4 printable sheet ---------- */
+const SYLLABUS_KEY = "370R_JEE_SYLLABUS_V3";
 const SYLLABUS_SUBJECTS = ["Physics", "Chemistry", "Mathematics"];
 const SYLLABUS_TASKS = ["jm", "adv", "mbbs", "opp", "hw", "module", "pyq", "advProb", "r1", "r2", "r3"];
-const SYLLABUS_TASK_LABELS = {jm:"JM Lec",adv:"Adv Lec",mbbs:"MBBS",opp:"OPP",hw:"HW",module:"Module",pyq:"PYQ",advProb:"Adv Prob",r1:"R1",r2:"R2",r3:"R3"};
+const SYLLABUS_TASK_LABELS = {jm:"JM Lec", adv:"Adv Lec", mbbs:"MBBS", opp:"OPP", hw:"HW", module:"Module", pyq:"PYQ", advProb:"Adv Prob", r1:"R1", r2:"R2", r3:"R3"};
 
-function normalizeChapter(c){
-  const total=Math.max(1,Math.min(100,parseInt(c.total,10)||1));
-  return {id:String(c.id||("ch_"+Date.now()+"_"+Math.random().toString(36).slice(2))),subject:c.subject,name:String(c.name||"").trim(),total};
-}
-function syllabusSafe(){
-  const fallback={version:2,chapters:[]};
+function syllabusData(){
   try{
-    let x=JSON.parse(localStorage.getItem(SYLLABUS_KEY)||"null");
-    // Keep compatibility with the previous syllabus tracker data.
-    if(!x){
-      x=JSON.parse(localStorage.getItem("370R_JEE_SYLLABUS_V1")||"null");
-    }
-    if(!x || !Array.isArray(x.chapters)) return fallback;
-    x.chapters=x.chapters.map(normalizeChapter).filter(c=>SYLLABUS_SUBJECTS.includes(c.subject)&&c.name);
-    return {version:2,chapters:x.chapters};
-  }catch(e){return fallback;}
+    const raw = localStorage.getItem(SYLLABUS_KEY) || localStorage.getItem("370R_JEE_SYLLABUS_V2") || localStorage.getItem("370R_JEE_SYLLABUS_V1");
+    const x = raw ? JSON.parse(raw) : {chapters:[]};
+    const chapters = Array.isArray(x.chapters) ? x.chapters : [];
+    return {version:3, chapters:chapters.map(c=>({
+      id:String(c.id || ("ch_"+Date.now()+Math.random().toString(36).slice(2))),
+      subject:SYLLABUS_SUBJECTS.includes(c.subject) ? c.subject : "Physics",
+      name:String(c.name||"").trim(),
+      total:Math.max(1,Math.min(100,parseInt(c.total,10)||1))
+    })).filter(c=>c.name)};
+  }catch(e){ return {version:3,chapters:[]}; }
 }
-function saveSyllabus(data){localStorage.setItem(SYLLABUS_KEY,JSON.stringify(data));}
-function syllabusEsc(v){return escapeFeatureText(v);}
-
+function saveSyllabusData(d){ localStorage.setItem(SYLLABUS_KEY, JSON.stringify(d)); }
 function renderSyllabus(){
   const list=document.getElementById("syllabusList"); if(!list)return;
-  const d=syllabusSafe();
-  if(!d.chapters.length){
-    list.innerHTML='<div class="sy-empty">No chapters yet. Add your first chapter above.</div>';
-    return;
-  }
-  const groups=SYLLABUS_SUBJECTS.map(s=>[s,d.chapters.filter(c=>c.subject===s)]).filter(([,cs])=>cs.length);
-  list.innerHTML=groups.map(([subject,chapters])=>`
-    <section class="sy-subject">
-      <div class="sy-subject-head"><h3>${syllabusEsc(subject).toUpperCase()}</h3><span>${chapters.length} chapter${chapters.length>1?'s':''}</span></div>
-      <div class="sy-simple-table-wrap"><table class="sy-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total Lectures</th><th>PDF</th></tr></thead><tbody>
-      ${chapters.map((c,i)=>`<tr><td>${i+1}</td><td>${syllabusEsc(c.name)}</td><td>${c.total}</td><td><button class="sy-delete" type="button" data-sy-action="delete" data-id="${c.id}" title="Delete chapter">🗑️</button></td></tr>`).join('')}
-      </tbody></table></div>
-    </section>`).join('');
+  const d=syllabusData();
+  if(!d.chapters.length){ list.innerHTML='<div class="sy-empty">No chapters yet. Add your first chapter above.</div>'; return; }
+  const esc=s=>escapeFeatureText(s);
+  list.innerHTML=SYLLABUS_SUBJECTS.map(subject=>{
+    const rows=d.chapters.filter(c=>c.subject===subject); if(!rows.length)return "";
+    return `<section class="sy-subject"><div class="sy-subject-head"><h3>${esc(subject)}</h3><span>${rows.length} chapter${rows.length>1?'s':''}</span></div><div class="sy-simple-table-wrap"><table class="sy-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total Lectures</th><th>Action</th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.total}</td><td><button class="sy-delete" data-sy-delete="${esc(c.id)}" type="button">Delete</button></td></tr>`).join("")}</tbody></table></div></section>`;
+  }).join("");
 }
-
 function addSyllabusChapter(){
-  const subject=document.getElementById('syllabusSubject')?.value;
-  const name=document.getElementById('syllabusChapterName')?.value.trim();
-  const total=Math.floor(Number(document.getElementById('syllabusTotalLectures')?.value));
-  if(!SYLLABUS_SUBJECTS.includes(subject)||!name||!Number.isFinite(total)||total<1||total>100){
-    alert('Subject, Chapter Name aur Total Lectures (1–100) sahi se bharo.');
-    return;
+  const subject=document.getElementById("syllabusSubject")?.value;
+  const name=document.getElementById("syllabusChapterName")?.value.trim();
+  const total=Number(document.getElementById("syllabusTotalLectures")?.value);
+  if(!SYLLABUS_SUBJECTS.includes(subject) || !name || !Number.isInteger(total) || total<1 || total>100){
+    alert("Subject, Chapter Name aur Total Lectures (1–100) sahi se bharo."); return;
   }
-  const d=syllabusSafe();
-  d.chapters.push(normalizeChapter({subject,name,total}));
-  saveSyllabus(d);
-  document.getElementById('syllabusChapterName').value='';
-  document.getElementById('syllabusTotalLectures').value='';
-  renderSyllabus();
+  const d=syllabusData();
+  d.chapters.push({id:"ch_"+Date.now()+"_"+Math.random().toString(36).slice(2),subject,name,total});
+  saveSyllabusData(d); renderSyllabus();
+  document.getElementById("syllabusChapterName").value="";
+  document.getElementById("syllabusTotalLectures").value="";
+  document.getElementById("syllabusChapterName").focus();
 }
-function syllabusAction(e){
-  const input=e.target.closest('[data-sy-action]'); if(!input)return;
-  if(input.dataset.syAction==='delete'){
-    const d=syllabusSafe(), id=input.dataset.id, c=d.chapters.find(x=>x.id===id);
-    if(!c)return;
-    if(!confirm(`Delete “${c.name}”?`))return;
-    d.chapters=d.chapters.filter(x=>x.id!==id);
-    saveSyllabus(d); renderSyllabus();
-  }
-}
-function clearSyllabus(){
-  const d=syllabusSafe();
-  if(!d.chapters.length){alert('Syllabus already empty.');return;}
-  if(confirm('Clear the complete syllabus?')){saveSyllabus({version:2,chapters:[]});renderSyllabus();}
-}
-
 function initSyllabus(){
-  document.getElementById('syllabusAddBtn')?.addEventListener('click',addSyllabusChapter);
-  document.getElementById('syllabusChapterName')?.addEventListener('keydown',e=>{if(e.key==='Enter')addSyllabusChapter();});
-  document.getElementById('syllabusList')?.addEventListener('click',syllabusAction);
-  document.getElementById('syllabusClearBtn')?.addEventListener('click',clearSyllabus);
-  document.getElementById('syllabusBackBtn')?.addEventListener('click',()=>openFeature('menu'));
-  document.getElementById('syllabusPdfBtn')?.addEventListener('click',downloadSyllabusPDF);
+  document.getElementById("syllabusAddBtn")?.addEventListener("click",addSyllabusChapter);
+  document.getElementById("syllabusChapterName")?.addEventListener("keydown",e=>{if(e.key==="Enter")addSyllabusChapter();});
+  document.getElementById("syllabusList")?.addEventListener("click",e=>{
+    const b=e.target.closest("[data-sy-delete]"); if(!b)return;
+    const id=b.dataset.syDelete, d=syllabusData(), c=d.chapters.find(x=>x.id===id); if(!c)return;
+    if(confirm(`Delete “${c.name}”?`)){d.chapters=d.chapters.filter(x=>x.id!==id);saveSyllabusData(d);renderSyllabus();}
+  });
+  document.getElementById("syllabusClearBtn")?.addEventListener("click",()=>{
+    if(!syllabusData().chapters.length)return;
+    if(confirm("Clear the complete syllabus?")){saveSyllabusData({version:3,chapters:[]});renderSyllabus();}
+  });
+  document.getElementById("syllabusBackBtn")?.addEventListener("click",()=>openFeature("menu"));
+  document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
   renderSyllabus();
 }
-
-function drawPdfCheckbox(pdf,x,y,size=4){
-  pdf.setDrawColor(85,85,85); pdf.setLineWidth(0.25); pdf.rect(x,y,size,size);
-}
-
+function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(80,80,80); pdf.setLineWidth(0.25); pdf.rect(x,y,size,size); }
 function downloadSyllabusPDF(){
-  const Lib=window.jspdf?.jsPDF||window.jsPDF;
-  if(!Lib){alert('PDF library missing. Internet connection is required for the PDF library.');return;}
-  const d=syllabusSafe();
-  if(!d.chapters.length){alert('Pehle syllabus me chapters add karo.');return;}
-
-  // A4 landscape: designed specifically for printing and manual offline ticking.
-  const pdf=new Lib({orientation:'landscape',unit:'mm',format:'a4'});
-  const W=297, M=7;
-  const headers=['#','Chapter Name','Lecture Tracker','Total Lec','Lec Comp',...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
-  // Fits A4 landscape without cutting the right-side tracker columns.
-  const widths=[7,42,72,10,11,...SYLLABUS_TASKS.map(()=>13)];
-
-  function title(subject){
-    pdf.setTextColor(25,25,25);
-    pdf.setFont('helvetica','bold'); pdf.setFontSize(15); pdf.text('JEE SYLLABUS TRACKER',M,9);
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5); pdf.text('Offline Printable • Tick lectures, practice and revision by hand',M,13);
-    pdf.setFont('helvetica','bold'); pdf.setFontSize(10.5); pdf.text(subject.toUpperCase(),M,19);
-  }
-
-  function drawPdfCheckbox(pdf,x,y,size=3.4){
-    pdf.setDrawColor(70,70,70); pdf.setLineWidth(0.25); pdf.rect(x,y,size,size);
-  }
-
-  let first=true;
+  const JsPDF=window.jspdf?.jsPDF || window.jsPDF;
+  if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
+  const d=syllabusData(); if(!d.chapters.length){alert("Pehle chapters add karo.");return;}
+  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+  const M=7, usable=297-14;
+  const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
+  // Sum = 280mm, safely inside 283mm usable width.
+  const widths=[7,44,67,9,10,...SYLLABUS_TASKS.map(()=>13)];
+  let page=0;
   for(const subject of SYLLABUS_SUBJECTS){
-    const chapters=d.chapters.filter(c=>c.subject===subject);
-    if(!chapters.length)continue;
-    if(!first)pdf.addPage(); first=false;
-    title(subject);
-
-    const rows=chapters.map((c,i)=>[
-      String(i+1), c.name, '', String(c.total), '', ...SYLLABUS_TASKS.map(()=>'')
-    ]);
-
+    const chapters=d.chapters.filter(c=>c.subject===subject); if(!chapters.length)continue;
+    if(page++)pdf.addPage();
+    pdf.setFont("helvetica","bold"); pdf.setFontSize(15); pdf.setTextColor(25,25,25); pdf.text("JEE SYLLABUS TRACKER",M,9);
+    pdf.setFont("helvetica","normal"); pdf.setFontSize(6.5); pdf.text("Offline Printable • Tick everything by hand",M,13);
+    pdf.setFont("helvetica","bold"); pdf.setFontSize(10.5); pdf.text(subject.toUpperCase(),M,19);
+    const rows=chapters.map((c,i)=>[String(i+1),c.name,"",String(c.total),"",...SYLLABUS_TASKS.map(()=>"")]);
     pdf.autoTable({
-      startY:22,
-      margin:{left:M,right:M,top:6,bottom:7},
-      tableWidth:W-M*2,
-      head:[headers], body:rows, theme:'grid',
-      styles:{
-        font:'helvetica',fontSize:5.8,cellPadding:1.3,overflow:'linebreak',
-        valign:'middle',halign:'center',lineWidth:0.18,lineColor:[145,145,145],
-        textColor:[30,30,30]
-      },
-      headStyles:{fontStyle:'bold',fontSize:5.8,halign:'center',valign:'middle',fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.4},
-      columnStyles:Object.fromEntries(widths.map((w,i)=>[i,{cellWidth:w,halign:i===1?'left':'center'}])),
-
-      // Give the lecture cell enough height for wrapped rows of [box] L1 [box] L2...
+      startY:22, margin:{left:M,right:M,top:6,bottom:7}, tableWidth:usable, head:[headers], body:rows, theme:"grid",
+      styles:{font:"helvetica",fontSize:5.6,cellPadding:1.2,overflow:"linebreak",valign:"middle",halign:"center",lineWidth:0.18,lineColor:[145,145,145],textColor:[30,30,30]},
+      headStyles:{fontStyle:"bold",fontSize:5.5,halign:"center",valign:"middle",fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.2},
+      columnStyles:Object.fromEntries(widths.map((w,i)=>[i,{cellWidth:w,halign:i===1?"left":"center"}])),
       didParseCell:data=>{
-        if(data.section==='body' && data.column.index===2){
-          const total=chapters[data.row.index]?.total||0;
-          const perLine=8;
-          const lines=Math.max(1,Math.ceil(total/perLine));
-          data.cell.styles.minCellHeight=Math.max(7,lines*6.2);
+        if(data.section==="body" && data.column.index===2){
+          const total=chapters[data.row.index].total; const lines=Math.ceil(total/6);
+          data.cell.styles.minCellHeight=Math.max(8,lines*6.2+1.5);
         }
       },
-
       didDrawCell:data=>{
-        if(data.section!=='body')return;
-
-        // Lecture tracker: [box] L1  [box] L2  [box] L3 ...
+        if(data.section!=="body")return;
         if(data.column.index===2){
-          const total=chapters[data.row.index]?.total||0;
-          const perLine=8;
-          const box=3.1, step=8.5, lineH=6.0;
+          const total=chapters[data.row.index].total, perLine=6, box=3.0, step=10.5, lineH=6.2;
           for(let n=0;n<total;n++){
-            const line=Math.floor(n/perLine), pos=n%perLine;
-            const x=data.cell.x+2+pos*step;
-            const y=data.cell.y+1.2+line*lineH;
-            if(y+box>data.cell.y+data.cell.height-0.4)continue;
-            drawPdfCheckbox(pdf,x,y,box);
-            pdf.setFont('helvetica','normal');pdf.setFontSize(4.7);pdf.setTextColor(55,55,55);
-            pdf.text(`L${n+1}`,x+4.0,y+2.6);
+            const line=Math.floor(n/perLine), pos=n%perLine, x=data.cell.x+2+pos*step, y=data.cell.y+1.3+line*lineH;
+            if(y+box>data.cell.y+data.cell.height-0.3)continue;
+            pdfBox(pdf,x,y,box); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.4); pdf.setTextColor(55,55,55); pdf.text(`L${n+1}`,x+3.8,y+2.5);
           }
         }
-
-        // Every other tracker column gets a centered empty checkbox.
         if(data.column.index>=5){
-          const box=4.1;
-          drawPdfCheckbox(pdf,
-            data.cell.x+(data.cell.width-box)/2,
-            data.cell.y+(data.cell.height-box)/2,
-            box
-          );
+          const box=4.0; pdfBox(pdf,data.cell.x+(data.cell.width-box)/2,data.cell.y+(data.cell.height-box)/2,box);
         }
       }
     });
   }
+  pdf.save("JEE-Syllabus-Tracker-A4-Landscape.pdf");
+}
 
-  pdf.save('JEE-Syllabus-Tracker-A4-Landscape.pdf');
+/* ---------- Start ---------- */
+document.addEventListener("DOMContentLoaded",()=>{
+  initFeatureMenu();
+  initSyllabus();
+  initThemes();
+  initTodo();
+  initFocus();
+  initWeeklyReport();
+  initBackup();
+});
+
+/* ---------- Full JSON backup / import ---------- */
+const BACKUP_VERSION = 1;
+
+function collectAllBackupData(){
+  const data = {};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key) continue;
+    try{
+      data[key]=JSON.parse(localStorage.getItem(key));
+    }catch(e){
+      data[key]=localStorage.getItem(key);
+    }
+  }
+  return {
+    app:"370R JEE Tracker",
+    backupVersion:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    localStorage:data
+  };
+}
+
+function exportAllJson(){
+  const backup=collectAllBackupData();
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+  a.download=`370R-JEE-Tracker-Backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  const s=document.getElementById("backupStatus");
+  if(s)s.textContent="✅ Full JSON backup downloaded successfully.";
+}
+
+function importAllJson(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const backup=JSON.parse(reader.result);
+      if(!backup || typeof backup!=="object" || !backup.localStorage || typeof backup.localStorage!=="object"){
+        throw new Error("Invalid backup format");
+      }
+
+      const confirmed=confirm(
+        "Import this backup?\\n\\nThis will replace the current saved tracker data on this browser with the backup data."
+      );
+      if(!confirmed)return;
+
+      Object.keys(backup.localStorage).forEach(key=>{
+        const value=backup.localStorage[key];
+        localStorage.setItem(key,typeof value==="string"?value:JSON.stringify(value));
+      });
+
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="✅ Backup imported. Reloading tracker...";
+      setTimeout(()=>location.reload(),500);
+    }catch(e){
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="❌ Invalid JSON backup. Nothing was changed.";
+      console.error(e);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function initBackup(){
+  document.getElementById("exportJsonBtn")?.addEventListener("click",exportAllJson);
+  document.getElementById("importJsonInput")?.addEventListener("change",e=>{
+    importAllJson(e.target.files?.[0]);
+    e.target.value="";
+  });
 }
