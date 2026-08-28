@@ -885,7 +885,7 @@ function initWeeklyReport(){
 const SYLLABUS_KEY = "370R_JEE_SYLLABUS_V3";
 const SYLLABUS_SUBJECTS = ["Physics", "Chemistry", "Mathematics"];
 const SYLLABUS_TASKS = ["jm", "adv", "mbbs", "opp", "hw", "module", "pyq", "advProb", "r1", "r2", "r3"];
-const SYLLABUS_TASK_LABELS = {jm:"JM Lec", adv:"Adv Lec", mbbs:"MBBS", opp:"OPP", hw:"HW", module:"Module", pyq:"PYQ", advProb:"Adv Prob", r1:"R1", r2:"R2", r3:"R3"};
+const SYLLABUS_TASK_LABELS = {jm:"JM Level", adv:"Adv Level", opp:"DPP", hw:"HW", module:"Module", pyq:"PYQ", advProb:"Adv Pyq", r1:"R1", r2:"R2", r3:"R3"};
 
 function syllabusData(){
   try{
@@ -908,7 +908,7 @@ function renderSyllabus(){
   const esc=s=>escapeFeatureText(s);
   list.innerHTML=SYLLABUS_SUBJECTS.map(subject=>{
     const rows=d.chapters.filter(c=>c.subject===subject); if(!rows.length)return "";
-    return `<section class="sy-subject"><div class="sy-subject-head"><h3>${esc(subject)}</h3><span>${rows.length} chapter${rows.length>1?'s':''}</span></div><div class="sy-simple-table-wrap"><table class="sy-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total Lectures</th><th>Action</th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.total}</td><td><button class="sy-delete" data-sy-delete="${esc(c.id)}" type="button">Delete</button></td></tr>`).join("")}</tbody></table></div></section>`;
+    return `<section class="sy-subject"><div class="sy-subject-head"><h2>${esc(subject)}</h2><span>${rows.length} chapter${rows.length>1?'s':''}</span></div><div class="sy-simple-table-wrap"><table class="sy-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total Lectures</th><th>Action</th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.total}</td><td><button class="sy-delete" data-sy-delete="${esc(c.id)}" type="button">Delete</button></td></tr>`).join("")}</tbody></table></div></section>`;
   }).join("");
 }
 function addSyllabusChapter(){
