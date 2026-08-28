@@ -885,7 +885,7 @@ function initWeeklyReport(){
 const SYLLABUS_KEY = "370R_JEE_SYLLABUS_V3";
 const SYLLABUS_SUBJECTS = ["Physics", "Chemistry", "Mathematics"];
 const SYLLABUS_TASKS = ["jm", "adv", "mbbs", "opp", "hw", "module", "pyq", "advProb", "r1", "r2", "r3"];
-const SYLLABUS_TASK_LABELS = {jm:"MAINS LEVEL", adv:"ADV LEVEL", mbbs:"SHORT NOTES", opp:"DPP", hw:"HW", module:"Module", pyq:"PYQ", advProb:"TEST", r1:"R1", r2:"R2", r3:"R3"};
+const SYLLABUS_TASK_LABELS = {jm:"MAINS LEVEL", adv:"ADV LEVEL", mbbs:"SHORT NOTES", opp:"DPP", hw:"HW", module:"MODULE", pyq:"PYQ", advProb:"TEST", r1:"R1", r2:"R2", r3:"R3"};
 
 function syllabusData(){
   try{
