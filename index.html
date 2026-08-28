@@ -77,11 +77,11 @@
         <div class="syllabus-toolbar">
           <button class="secondary" id="syllabusBackBtn" type="button">← Menu</button>
           <div class="syllabus-actions">
-            <button class="secondary" id="syllabusDemoBtn" type="button">Load Sample</button>
             <button class="secondary" id="syllabusClearBtn" type="button">Clear Syllabus</button>
-            <button class="primary" id="syllabusPdfBtn" type="button">📄 Download Syllabus PDF</button>
+            <button class="primary" id="syllabusPdfBtn" type="button">📄 Download Printable PDF</button>
           </div>
         </div>
+
         <div class="syllabus-form card">
           <div class="small"><label>Subject</label>
             <select id="syllabusSubject"><option value="Physics">Physics</option><option value="Chemistry">Chemistry</option><option value="Mathematics">Mathematics</option></select>
@@ -90,9 +90,8 @@
           <div class="small"><label>Total Lectures</label><input id="syllabusTotalLectures" type="number" min="1" max="100" step="1" placeholder="e.g. 13"></div>
           <button class="primary syllabus-add-btn" id="syllabusAddBtn" type="button">+ Add Chapter</button>
         </div>
-        <div class="syllabus-stats" id="syllabusStats"></div>
+        <p class="note">बस Subject, Chapter Name और Total Lectures डालो. फिर <b>Download Printable PDF</b> करो — PDF में खाली lecture/task checkboxes वाला clean chart मिलेगा, जिसे print करके offline track कर सकते हो.</p>
         <div id="syllabusList" class="syllabus-list"></div>
-        <p class="note">Tip: lecture circles are individual checkboxes. PYQ and R1/R2/R3 can be ticked independently. Everything is saved automatically on this device.</p>
       </div>
 
       <div id="themesView" class="feature-view" hidden>
