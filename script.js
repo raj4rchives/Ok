@@ -659,29 +659,26 @@ function drawPdfCheckbox(pdf,x,y,size=4){
 
 function downloadSyllabusPDF(){
   const Lib=window.jspdf?.jsPDF||window.jsPDF;
-  if(!Lib){alert('PDF library missing.');return;}
+  if(!Lib){alert('PDF library missing. Internet connection is required for the PDF library.');return;}
   const d=syllabusSafe();
   if(!d.chapters.length){alert('Pehle syllabus me chapters add karo.');return;}
 
-  // A3 landscape = enough width to print the full tracker cleanly.
-  const pdf=new Lib({orientation:'landscape',unit:'mm',format:'a3'});
-  const W=420,H=297,M=10;
-  const headers=['#','Chapter Name','Lecture Circle Tracker','Total Lec','Lec Comp',...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
-  const widths=[8,60,110,13,14,13,13,14,13,13,16,13,18,12,12,12];
+  // A4 landscape: designed specifically for printing and manual offline ticking.
+  const pdf=new Lib({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=297, M=7;
+  const headers=['#','Chapter Name','Lecture Tracker','Total Lec','Lec Comp',...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
+  // Fits A4 landscape without cutting the right-side tracker columns.
+  const widths=[7,42,72,10,11,...SYLLABUS_TASKS.map(()=>13)];
 
   function title(subject){
-    pdf.setTextColor(30,30,30);
-    pdf.setFont('helvetica','bold'); pdf.setFontSize(18); pdf.text('JEE SYLLABUS TRACKER',M,11);
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.text('Lecture • JEE Main • Advanced • PYQ • Revision — Printable Offline Sheet',M,16);
-    pdf.setFont('helvetica','bold'); pdf.setFontSize(13); pdf.text(subject.toUpperCase(),M,24);
+    pdf.setTextColor(25,25,25);
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(15); pdf.text('JEE SYLLABUS TRACKER',M,9);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5); pdf.text('Offline Printable • Tick lectures, practice and revision by hand',M,13);
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(10.5); pdf.text(subject.toUpperCase(),M,19);
   }
 
-  function lectureLines(total){
-    const perLine=12, lines=[];
-    for(let i=0;i<total;i+=perLine){
-      lines.push(Array.from({length:Math.min(perLine,total-i)},(_,j)=>`L${i+j+1}`).join('   '));
-    }
-    return lines.join('\n');
+  function drawPdfCheckbox(pdf,x,y,size=3.4){
+    pdf.setDrawColor(70,70,70); pdf.setLineWidth(0.25); pdf.rect(x,y,size,size);
   }
 
   let first=true;
@@ -690,51 +687,65 @@ function downloadSyllabusPDF(){
     if(!chapters.length)continue;
     if(!first)pdf.addPage(); first=false;
     title(subject);
+
     const rows=chapters.map((c,i)=>[
-      String(i+1), c.name, lectureLines(c.total), String(c.total), '', ...SYLLABUS_TASKS.map(()=>"")
+      String(i+1), c.name, '', String(c.total), '', ...SYLLABUS_TASKS.map(()=>'')
     ]);
 
     pdf.autoTable({
-      startY:28, margin:{left:M,right:M,top:8,bottom:10}, tableWidth:W-M*2,
+      startY:22,
+      margin:{left:M,right:M,top:6,bottom:7},
+      tableWidth:W-M*2,
       head:[headers], body:rows, theme:'grid',
-      styles:{font:'helvetica',fontSize:7,cellPadding:2,overflow:'linebreak',valign:'middle',halign:'center',lineWidth:0.2,lineColor:[150,150,150]},
-      headStyles:{fontStyle:'bold',fontSize:7,halign:'center',valign:'middle',fillColor:[240,240,240],textColor:[30,30,30]},
+      styles:{
+        font:'helvetica',fontSize:5.8,cellPadding:1.3,overflow:'linebreak',
+        valign:'middle',halign:'center',lineWidth:0.18,lineColor:[145,145,145],
+        textColor:[30,30,30]
+      },
+      headStyles:{fontStyle:'bold',fontSize:5.8,halign:'center',valign:'middle',fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.4},
       columnStyles:Object.fromEntries(widths.map((w,i)=>[i,{cellWidth:w,halign:i===1?'left':'center'}])),
+
+      // Give the lecture cell enough height for wrapped rows of [box] L1 [box] L2...
+      didParseCell:data=>{
+        if(data.section==='body' && data.column.index===2){
+          const total=chapters[data.row.index]?.total||0;
+          const perLine=8;
+          const lines=Math.max(1,Math.ceil(total/perLine));
+          data.cell.styles.minCellHeight=Math.max(7,lines*6.2);
+        }
+      },
+
       didDrawCell:data=>{
         if(data.section!=='body')return;
-        // Lecture tracker: draw L1...Ln as real empty boxes with labels.
+
+        // Lecture tracker: [box] L1  [box] L2  [box] L3 ...
         if(data.column.index===2){
           const total=chapters[data.row.index]?.total||0;
-          const perLine=12;
-          const box=3.3, labelGap=1.0, step=8.2, lineH=5.2;
-          const lines=Math.ceil(total/perLine);
+          const perLine=8;
+          const box=3.1, step=8.5, lineH=6.0;
           for(let n=0;n<total;n++){
             const line=Math.floor(n/perLine), pos=n%perLine;
-            const x=data.cell.x+2+pos*step, y=data.cell.y+1+line*lineH;
-            if(y+box>data.cell.y+data.cell.height-0.5)break;
+            const x=data.cell.x+2+pos*step;
+            const y=data.cell.y+1.2+line*lineH;
+            if(y+box>data.cell.y+data.cell.height-0.4)continue;
             drawPdfCheckbox(pdf,x,y,box);
-            pdf.setFont('helvetica','normal');pdf.setFontSize(4.7);pdf.setTextColor(70,70,70);
-            pdf.text(`L${n+1}`,x-0.2,y+box+2.2);
+            pdf.setFont('helvetica','normal');pdf.setFontSize(4.7);pdf.setTextColor(55,55,55);
+            pdf.text(`L${n+1}`,x+4.0,y+2.6);
           }
         }
-        // Every printable task column gets an empty checkbox.
+
+        // Every other tracker column gets a centered empty checkbox.
         if(data.column.index>=5){
-          const box=4.2;
-          drawPdfCheckbox(pdf,data.cell.x+(data.cell.width-box)/2,data.cell.y+(data.cell.height-box)/2,box);
+          const box=4.1;
+          drawPdfCheckbox(pdf,
+            data.cell.x+(data.cell.width-box)/2,
+            data.cell.y+(data.cell.height-box)/2,
+            box
+          );
         }
       }
     });
   }
 
-  // Small instruction/footer page only when useful; no giant blank blocks.
-  pdf.addPage();
-  pdf.setFont('helvetica','bold');pdf.setFontSize(18);pdf.text('JEE SYLLABUS TRACKER — OFFLINE SHEET',M,14);
-  pdf.setFont('helvetica','normal');pdf.setFontSize(10);
-  pdf.text('Print this sheet and tick each lecture, PYQ, task and revision cycle by hand.',M,22);
-  pdf.setFontSize(9);
-  pdf.text('Legend: JM Lec = JEE Main Lectures • Adv Lec = JEE Advanced Lectures • MBBS = Mind Maps / Short Notes',M,32);
-  pdf.text('OPP = Online Practice Problems • HW = Homework Sheet • Module = Coaching Module • PYQ = Past Year Questions',M,38);
-  pdf.text('Adv Prob = Advanced Level Problem Book • R1 / R2 / R3 = Revision Cycles 1, 2 and 3',M,44);
-  pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.text('Printed for offline tracking — keep this page with your study desk.',M,58);
-  pdf.save('JEE-Syllabus-Tracker-Printable.pdf');
+  pdf.save('JEE-Syllabus-Tracker-A4-Landscape.pdf');
 }
