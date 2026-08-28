@@ -954,7 +954,7 @@ function downloadSyllabusPDF(){
   const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
   const M=7, usable=297-14;
   const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
-  const widths=[7,45,57,9,10,...SYLLABUS_TASKS.map(()=>13)];
+  const widths=[7,52,55,13,11,...SYLLABUS_TASKS.map(()=>13)];
 
   let firstPage=true;
 
@@ -994,20 +994,21 @@ function downloadSyllabusPDF(){
         lineColor:[145,145,145],textColor:[30,30,30]
       },
       headStyles:{
-        fontStyle:"bold",fontSize:5.5,halign:"center",valign:"middle",
+        fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
         fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.2
       },
       columnStyles:Object.fromEntries(
         widths.map((w,i)=>[
           i,{cellWidth:w,halign:i===1?"left":"center",
-          fontSize:i===1?7:5.6,fontStyle:i===1?"bold":"normal"}
+          fontSize:i===1?9.2:(i===3?8.4:5.6),
+          fontStyle:(i===1||i===3)?"bold":"normal"}
         ])
       ),
       didParseCell:data=>{
         if(data.section==="body" && data.column.index===2){
           const total=chapters[data.row.index].total;
           const lines=Math.ceil(total/5);
-          data.cell.styles.minCellHeight=Math.max(8,lines*7.0+1.5);
+          data.cell.styles.minCellHeight=Math.max(10,lines*7.0+2.5);
         }
       },
       didDrawCell:data=>{
