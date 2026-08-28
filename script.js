@@ -950,7 +950,7 @@ function downloadSyllabusPDF(){
   const M=7, usable=297-14;
   const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
   // Sum = 280mm, safely inside 283mm usable width.
-  const widths=[7,44,67,9,10,...SYLLABUS_TASKS.map(()=>13)];
+  const widths=[7,45,57,9,10,...SYLLABUS_TASKS.map(()=>13)];
   let page=0;
   for(const subject of SYLLABUS_SUBJECTS){
     const chapters=d.chapters.filter(c=>c.subject===subject); if(!chapters.length)continue;
@@ -961,23 +961,23 @@ function downloadSyllabusPDF(){
     const rows=chapters.map((c,i)=>[String(i+1),c.name,"",String(c.total),"",...SYLLABUS_TASKS.map(()=>"")]);
     pdf.autoTable({
       startY:22, margin:{left:M,right:M,top:6,bottom:7}, tableWidth:usable, head:[headers], body:rows, theme:"grid",
-      styles:{font:"helvetica",fontSize:5.6,cellPadding:1.2,overflow:"linebreak",valign:"middle",halign:"center",lineWidth:0.18,lineColor:[145,145,145],textColor:[30,30,30]},
+      styles:{font:"helvetica",fontSize:5.6,cellPadding:1.0,overflow:"linebreak",valign:"middle",halign:"center",lineWidth:0.18,lineColor:[145,145,145],textColor:[30,30,30]},
       headStyles:{fontStyle:"bold",fontSize:5.5,halign:"center",valign:"middle",fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.2},
-      columnStyles:Object.fromEntries(widths.map((w,i)=>[i,{cellWidth:w,halign:i===1?"left":"center"}])),
+      columnStyles:Object.fromEntries(widths.map((w,i)=>[i,{cellWidth:w,halign:i===1?"left":"center",fontSize:i===1?7:5.6,fontStyle:i===1?"bold":"normal"}])),
       didParseCell:data=>{
         if(data.section==="body" && data.column.index===2){
-          const total=chapters[data.row.index].total; const lines=Math.ceil(total/6);
+          const total=chapters[data.row.index].total; const lines=Math.ceil(total/5);
           data.cell.styles.minCellHeight=Math.max(8,lines*6.2+1.5);
         }
       },
       didDrawCell:data=>{
         if(data.section!=="body")return;
         if(data.column.index===2){
-          const total=chapters[data.row.index].total, perLine=6, box=3.0, step=10.5, lineH=6.2;
+          const total=chapters[data.row.index].total, perLine=5, box=3.2, step=12.0, lineH=6.2;
           for(let n=0;n<total;n++){
             const line=Math.floor(n/perLine), pos=n%perLine, x=data.cell.x+2+pos*step, y=data.cell.y+1.3+line*lineH;
             if(y+box>data.cell.y+data.cell.height-0.3)continue;
-            pdfBox(pdf,x,y,box); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.4); pdf.setTextColor(55,55,55); pdf.text(`L${n+1}`,x+3.8,y+2.5);
+            pdfBox(pdf,x,y,box); pdf.setFont("helvetica","normal"); pdf.setFontSize(4.2); pdf.setTextColor(55,55,55); pdf.text(`L${n+1}`,x+4.0,y+2.5);
           }
         }
         if(data.column.index>=5){
