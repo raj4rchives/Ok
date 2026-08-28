@@ -652,37 +652,141 @@ function initSyllabus(){
   document.getElementById('syllabusBackBtn')?.addEventListener('click',()=>openFeature('menu'));
   document.getElementById('syllabusPdfBtn')?.addEventListener('click',downloadSyllabusPDF);
 }
-function pdfTick(pdf,x,y,checked){pdf.setDrawColor(70,70,70);pdf.rect(x,y,3.5,3.5);if(checked){pdf.setFont('helvetica','bold');pdf.setFontSize(8);pdf.text('✓',x+0.5,y+3);}}
+function pdfTick(pdf,x,y,checked,size=3.2){
+  pdf.setDrawColor(95,95,95);
+  pdf.setLineWidth(0.25);
+  pdf.rect(x,y,size,size);
+  if(checked){
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(size+3);
+    pdf.text('✓',x+0.25,y+size-0.15);
+  }
+}
+
 function downloadSyllabusPDF(){
-  const Lib=window.jspdf?.jsPDF||window.jsPDF;if(!Lib){alert('PDF library missing.');return;}
-  const d=syllabusSafe();if(!d.chapters.length){alert('Pehle syllabus me chapters add karo.');return;}
-  const pdf=new Lib({orientation:'landscape',unit:'mm',format:'a4'});
-  const W=297,H=210, margin=8;
-  const title='JEE SYLLABUS TRACKER';
-  const drawHeader=()=>{pdf.setFont('helvetica','bold');pdf.setFontSize(16);pdf.text(title,margin,11);pdf.setFontSize(8);pdf.setFont('helvetica','normal');pdf.text('Chapter-wise lecture • PYQ • Revision progress',margin,16);};
-  const colW=[7,48,92,10,11,9,9,9,9,9,11,10,12,9,9,9,8];
-  const headers=['#','Chapter Name','Lecture Circle Tracker','Total','Comp','JM','Adv','MBBS','OPP','HW','Module','PYQ','Adv Prob','R1','R2','R3',''];
-  let y=22; let pageHasRows=false;
-  const drawTableHead=()=>{let x=margin;pdf.setFontSize(6.2);pdf.setFont('helvetica','bold');headers.forEach((h,i)=>{pdf.setFillColor(232,235,242);pdf.setDrawColor(120,130,145);pdf.rect(x,y,colW[i],8,'FD');pdf.text(h,x+colW[i]/2,y+5,{align:'center',maxWidth:colW[i]-1});x+=colW[i];});y+=8;};
-  const newPage=()=>{pdf.addPage();drawHeader();y=22;drawTableHead();pageHasRows=true;};
-  drawHeader();drawTableHead();
+  const Lib=window.jspdf?.jsPDF||window.jsPDF;
+  if(!Lib){alert('PDF library missing.');return;}
+  const d=syllabusSafe();
+  if(!d.chapters.length){alert('Pehle syllabus me chapters add karo.');return;}
+
+  // A3 landscape gives enough room for every tracker column without
+  // creating giant blank cells or clipping Adv/PYQ/Revision columns.
+  const pdf=new Lib({orientation:'landscape',unit:'mm',format:'a3'});
+  const pageW=420, pageH=297, margin=10;
+  const usableW=pageW-(margin*2);
+  const headers=['#','Chapter Name','Lecture Tracker','Total Lec','Lec Comp','JM Lec','Adv Lec','MBBS','OPP','HW','Module','PYQ','Adv Prob','R1','R2','R3'];
+  const colW=[8,55,105,12,13,13,13,14,13,13,16,13,17,12,12,12];
+
+  const safeText=v=>String(v??'').replace(/[\u0000-\u001F]/g,' ').trim();
+  const taskKeys=['jm','adv','mbbs','opp','hw','module','pyq','advProb','r1','r2','r3'];
+
+  const makeLectureText=(c)=>{
+    const perLine=12;
+    const lines=[];
+    for(let i=0;i<c.total;i+=perLine){
+      const row=[];
+      for(let j=i;j<Math.min(i+perLine,c.total);j++) row.push(`L${j+1}${c.lectures[j]?' ✓':''}`);
+      lines.push(row.join('   '));
+    }
+    return lines.join('\n');
+  };
+
+  const makeRows=(subject)=>d.chapters.filter(c=>c.subject===subject).map((c,i)=>{
+    const taskText=taskKeys.map(k=>c.tasks[k]);
+    return [String(i+1),safeText(c.name),makeLectureText(c),String(c.total),String(c.lectures.filter(Boolean).length),...taskText];
+  });
+
+  const drawTitle=()=>{
+    pdf.setTextColor(35,35,35);
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(18);
+    pdf.text('JEE SYLLABUS TRACKER',margin,10);
+    pdf.setFont('helvetica','normal');
+    pdf.setFontSize(8);
+    pdf.text('Lecture • JEE Main • Advanced • PYQ • Revision progress',margin,15);
+  };
+
+  drawTitle();
+  let firstSubject=true;
   SYLLABUS_SUBJECTS.forEach(subject=>{
-    const chapters=d.chapters.filter(c=>c.subject===subject);if(!chapters.length)return;
-    if(y>190)newPage();
-    pdf.setFont('helvetica','bold');pdf.setFontSize(9);pdf.setFillColor(50,60,80);pdf.setTextColor(255,255,255);pdf.rect(margin,y,281,7,'F');pdf.text(subject.toUpperCase(),margin+3,y+4.8);pdf.setTextColor(0,0,0);y+=7;
-    chapters.forEach((c,idx)=>{
-      const rowH=Math.max(10,Math.ceil(c.total/12)*6+6); if(y+rowH>201){newPage();pdf.setFont('helvetica','bold');pdf.setFontSize(8);pdf.setFillColor(50,60,80);pdf.setTextColor(255,255,255);pdf.rect(margin,y,281,7,'F');pdf.text(subject.toUpperCase()+' (CONT.)',margin+3,y+4.8);pdf.setTextColor(0,0,0);y+=7;}
-      let x=margin; const vals=[String(idx+1),c.name,String(c.total),String(c.lectures.filter(Boolean).length)];
-      pdf.setFont('helvetica','normal');pdf.setFontSize(6.2);
-      [0,1].forEach(i=>{pdf.setDrawColor(120,130,145);pdf.rect(x,y,colW[i],rowH);pdf.text(vals[i],x+(i?2:colW[i]/2),y+5,{align:i?'left':'center',maxWidth:colW[i]-2});x+=colW[i];});
-      // lecture tracker column
-      pdf.setDrawColor(120,130,145);pdf.rect(x,y,colW[2],rowH); let lx=x+2, ly=y+2; c.lectures.forEach((done,j)=>{if(lx+7>x+colW[2]-2){lx=x+2;ly+=6;}pdfTick(pdf,lx,ly,done);pdf.setFontSize(4.5);pdf.text('L'+(j+1),lx+1.7,ly+5.5,{align:'center'});lx+=7;});x+=colW[2];
-      pdf.setFontSize(6.2);pdf.text(vals[2],x+colW[3]/2,y+5,{align:'center'});pdf.rect(x,y,colW[3],rowH);x+=colW[3];pdf.text(vals[3],x+colW[4]/2,y+5,{align:'center'});pdf.rect(x,y,colW[4],rowH);x+=colW[4];
-      ['jm','adv','mbbs','opp','hw','module','pyq','advProb','r1','r2','r3'].forEach((k,ti)=>{const w=colW[5+ti];pdf.rect(x,y,w,rowH);pdfTick(pdf,x+(w-3.5)/2,y+3,c.tasks[k]);x+=w;});pdf.rect(x,y,colW[16],rowH);pdf.setFontSize(5.5);pdf.text('✓',x+4,y+5,{align:'center'});y+=rowH;
+    const rows=makeRows(subject);
+    if(!rows.length)return;
+    if(!firstSubject) pdf.addPage();
+    firstSubject=false;
+    drawTitle();
+
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(12);
+    pdf.text(subject.toUpperCase(),margin,23);
+
+    const startY=27;
+    pdf.autoTable({
+      startY,
+      margin:{left:margin,right:margin,top:18,bottom:16},
+      tableWidth:usableW,
+      head:[headers],
+      body:rows,
+      theme:'grid',
+      styles:{
+        font:'helvetica',fontSize:7,cellPadding:2,overflow:'linebreak',valign:'middle',halign:'center',lineWidth:0.2
+      },
+      headStyles:{font:'helvetica',fontStyle:'bold',fontSize:7,halign:'center',valign:'middle'},
+      columnStyles:{
+        0:{cellWidth:colW[0]},1:{cellWidth:colW[1],halign:'left'},2:{cellWidth:colW[2],halign:'left',fontSize:6.5},
+        3:{cellWidth:colW[3]},4:{cellWidth:colW[4]},5:{cellWidth:colW[5]},6:{cellWidth:colW[6]},7:{cellWidth:colW[7]},
+        8:{cellWidth:colW[8]},9:{cellWidth:colW[9]},10:{cellWidth:colW[10]},11:{cellWidth:colW[11]},12:{cellWidth:colW[12]},
+        13:{cellWidth:colW[13]},14:{cellWidth:colW[14]},15:{cellWidth:colW[15]}
+      },
+      didParseCell:(data)=>{
+        if(data.section==='body' && data.column.index>=5) data.cell.text=[''];
+      },
+      didDrawCell:(data)=>{
+        // Draw a real checkbox for every tracker column, matching the
+        // supplied syllabus-sheet style instead of using clipped glyphs.
+        if(data.section==='body' && data.column.index>=5){
+          const size=Math.min(4.2, data.cell.height-3);
+          const x=data.cell.x+(data.cell.width-size)/2;
+          const y=data.cell.y+(data.cell.height-size)/2;
+          pdf.setDrawColor(85,85,85);
+          pdf.setLineWidth(0.25);
+          pdf.rect(x,y,size,size);
+          if(data.cell.raw===true){
+            pdf.setFont('helvetica','bold');
+            pdf.setFontSize(7);
+            pdf.text('✓',x+0.25,y+size-0.25);
+          }
+        }
+      },
+      didDrawPage:(data)=>{
+        pdf.setFont('helvetica','normal');
+        pdf.setFontSize(7);
+        pdf.text(`Page ${data.pageNumber}`,pageW-margin, pageH-7,{align:'right'});
+      }
     });
   });
+
+  // Compact summary page — never overlaps the table.
+  pdf.addPage();
+  drawTitle();
   const p=syllabusProgress();
-  pdf.setFontSize(7);pdf.setFont('helvetica','bold');pdf.text(`Overall: ${p.doneL}/${p.totalL} lectures (${p.pct}%)   •   PYQ: ${p.donePyq}/${d.chapters.length}   •   Revision ticks: ${p.doneRev}`,margin,207);
+  const subjectSummary=SYLLABUS_SUBJECTS.map(s=>{
+    const cs=d.chapters.filter(c=>c.subject===s);
+    const total=cs.reduce((a,c)=>a+c.total,0);
+    const done=cs.reduce((a,c)=>a+c.lectures.filter(Boolean).length,0);
+    const pyq=cs.filter(c=>c.tasks.pyq).length;
+    const rev=cs.reduce((a,c)=>a+['r1','r2','r3'].filter(k=>c.tasks[k]).length,0);
+    return [s,String(cs.length),`${done}/${total}`,total?`${Math.round(done/total*100)}%`:'0%',`${pyq}/${cs.length}`,String(rev)];
+  }).filter(r=>r[1]!=='0');
+  pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text('OVERALL PROGRESS',margin,25);
+  pdf.autoTable({
+    startY:30,margin:{left:margin,right:margin},theme:'grid',
+    head:[['Subject','Chapters','Lectures','Progress','PYQ','Revision']],body:subjectSummary,
+    styles:{font:'helvetica',fontSize:9,cellPadding:3,halign:'center'},headStyles:{fontStyle:'bold'},
+    columnStyles:{0:{halign:'left',cellWidth:55},1:{cellWidth:30},2:{cellWidth:35},3:{cellWidth:35},4:{cellWidth:30},5:{cellWidth:35}}
+  });
+  const sy=pdf.lastAutoTable.finalY+15;
+  pdf.setFont('helvetica','bold');pdf.setFontSize(11);
+  pdf.text(`Total Lectures: ${p.doneL}/${p.totalL}   •   Overall: ${p.pct}%   •   PYQ: ${p.donePyq}/${d.chapters.length}   •   Revision Ticks: ${p.doneRev}`,margin,sy);
   pdf.save('JEE-Syllabus-Tracker.pdf');
 }
 
