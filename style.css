@@ -695,3 +695,15 @@ body[data-theme="ember"]{--bg:#fff2ec;--panel:#ffffff;--line:#895f50;--text:#503
 @media(min-width:701px){
   .top-btn-icon{margin-right:5px}
 }
+
+/* ===== Syllabus Tracker ===== */
+.syllabus-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.syllabus-actions{display:flex;gap:8px;flex-wrap:wrap}
+.syllabus-form{display:grid;grid-template-columns:170px minmax(220px,1fr) 150px auto;gap:10px;align-items:end;margin-bottom:12px;padding:12px}
+.syllabus-form select{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:38px}
+.syllabus-add-btn{min-height:38px}
+.syllabus-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+.sy-stat{background:var(--stat-bg,#0d1422);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}.sy-stat b{display:block;font-size:20px}.sy-stat span{font-size:10px;color:var(--muted)}
+.syllabus-list{display:flex;flex-direction:column;gap:16px}.sy-subject{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}.sy-subject-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--stat-bg,#0d1422);border-bottom:1px solid var(--line)}.sy-subject-head h3{margin:0;font-size:14px}.sy-subject-head span{font-size:11px;color:var(--muted)}
+.sy-table-wrap{overflow-x:auto}.sy-table{width:100%;min-width:1250px;border-collapse:collapse;font-size:10px}.sy-table th{position:sticky;top:0;background:var(--badge-bg,#202c3e);color:var(--text);padding:6px 4px;border:1px solid var(--line);white-space:nowrap}.sy-table td{border:1px solid var(--line);padding:5px 4px;text-align:center;vertical-align:middle}.sy-table td:nth-child(2){text-align:left;min-width:190px}.sy-name{font-weight:800;line-height:1.25}.sy-lectures{display:flex;flex-wrap:wrap;gap:3px;max-width:500px;min-width:320px;justify-content:flex-start}.sy-lecture{display:inline-flex;flex-direction:column;align-items:center;font-size:7px;color:var(--muted);cursor:pointer;line-height:1}.sy-lecture input{width:17px;height:17px;margin:0 0 2px;accent-color:var(--accent);cursor:pointer}.sy-lecture.done{color:var(--accent);font-weight:800}.sy-check{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}.sy-delete{padding:4px 6px;border:1px solid var(--line);background:transparent;color:var(--danger-text,#ff8f9f);border-radius:7px;cursor:pointer}.sy-empty{text-align:center;padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+@media(max-width:800px){.syllabus-form{grid-template-columns:1fr 1fr}.syllabus-chapter-input{grid-column:1/-1}.syllabus-add-btn{grid-column:1/-1}.syllabus-stats{grid-template-columns:repeat(2,1fr)}.syllabus-toolbar{align-items:stretch}.syllabus-actions{width:100%}.syllabus-actions button{flex:1}}
