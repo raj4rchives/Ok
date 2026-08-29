@@ -304,7 +304,7 @@ async function makeMonthlyPDF() {
   const name = new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   
   pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18);
-  pdf.text(`EXAMYWEB Study Tracker — Phase ${phaseNumber(key)} — ${name}`, 14, 16);
+  pdf.text(`370R JEE Tracker — Phase ${phaseNumber(key)} — ${name}`, 14, 16);
   pdf.setFontSize(10);
   pdf.text(`Study days: ${m.days}   Lectures: ${m.lec}   Total Questions: ${m.total}   PYQs: ${m.pyq}   Avg Q/day: ${m.days ? Math.round(m.total / m.days) : 0}`, 14, 24);
   pdf.setFontSize(11);
@@ -696,7 +696,7 @@ function downloadTodoPDF() {
   if(!s.daily.length){alert("Is date ke liye koi TODO task nahi hai.");return;}
   const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
   pdf.setFont("helvetica","bold");pdf.setFontSize(18);
-  pdf.text("EXAMYWEB Study Tracker — Daily TODO",14,16);
+  pdf.text("370R JEE Tracker — Daily TODO",14,16);
   pdf.setFontSize(11);pdf.text(date,14,23);
   pdf.setFontSize(10);pdf.text(`Total: ${s.total}   Completed: ${s.completed}   Pending: ${s.pending}   Completion: ${s.rate}%`,14,31);
   let y=38;
@@ -851,7 +851,7 @@ function downloadFocusPDF(){
   if(!logs.length){alert("Is date ke liye koi focus log nahi hai.");return;}
   const total=logs.reduce((a,x)=>a+x.minutes,0), qs=logs.reduce((a,x)=>a+x.questions,0);
   const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
-  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("EXAMYWEB Study Tracker — Focus Report",14,16);
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("370R JEE Tracker — Focus Report",14,16);
   pdf.setFontSize(11);pdf.text(`${date}  •  Focus: ${formatMinutes(total)}  •  Questions: ${qs}`,14,24);
   const body=logs.map((x,i)=>[i+1,x.subject,x.activity,formatMinutes(x.minutes),x.questions,x.note||""]);
   if(pdf.autoTable)pdf.autoTable({startY:32,head:[["#","SUBJECT","ACTIVITY","TIME","Q","NOTE"]],body,theme:"grid",styles:{fontSize:8}});
@@ -1110,7 +1110,7 @@ function collectAllBackupData(){
     }
   }
   return {
-    app:"EXAMYWEB Study Tracker",
+    app:"370R JEE Tracker",
     backupVersion:BACKUP_VERSION,
     exportedAt:new Date().toISOString(),
     localStorage:data
@@ -1172,45 +1172,3 @@ function initBackup(){
     e.target.value="";
   });
 }
-
-/* ================= EXAMYWEB MEMBERSHIP GATE =================
-   Replace PAYMENT_LINK with your real Stripe/Razorpay payment link.
-   After payment, your backend should set EXAMYWEB_ACCESS=true for the user.
-   The local flag below is only a demo/front-end gate and is NOT secure payment verification.
-*/
-const EXAMYWEB_CONFIG = {
-  PAYMENT_LINK: "https://buy.stripe.com/REPLACE_WITH_YOUR_PAYMENT_LINK",
-  ACCESS_KEY: "EXAMYWEB_ACCESS"
-};
-
-(function initExamyWeb(){
-  const landing=document.getElementById('examyLanding');
-  const app=document.getElementById('examyApp');
-  const paywall=document.getElementById('examyPaywall');
-  const subscribe=document.getElementById('examySubscribeBtn');
-  const pay=document.getElementById('examyPayBtn');
-  const close=document.getElementById('examyPayClose');
-  const hasAccess=localStorage.getItem(EXAMYWEB_CONFIG.ACCESS_KEY)==='true';
-
-  function openPaywall(){ if(paywall) paywall.hidden=false; }
-  function enterApp(){
-    if(landing) landing.hidden=true;
-    if(paywall) paywall.hidden=true;
-    if(app) app.hidden=false;
-  }
-  if(hasAccess) enterApp();
-  subscribe?.addEventListener('click',openPaywall);
-  close?.addEventListener('click',()=>{if(paywall)paywall.hidden=true;});
-  pay?.addEventListener('click',()=>{
-    if(EXAMYWEB_CONFIG.PAYMENT_LINK.includes('REPLACE_WITH_YOUR')){
-      alert('Payment link abhi set nahi hai. script.js me EXAMYWEB_CONFIG.PAYMENT_LINK me apna Stripe/Razorpay payment link paste karo.');
-      return;
-    }
-    window.location.href=EXAMYWEB_CONFIG.PAYMENT_LINK;
-  });
-  document.querySelectorAll('.exam-choice').forEach(btn=>btn.addEventListener('click',()=>{
-    document.querySelectorAll('.exam-choice').forEach(x=>x.classList.remove('active'));
-    btn.classList.add('active');
-    localStorage.setItem('EXAMYWEB_EXAM',btn.dataset.exam||'JEE');
-  }));
-})();
