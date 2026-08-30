@@ -616,19 +616,19 @@ const THEMES = [
 ];
 
 function applyTheme(theme) {
-  if (!THEMES.includes(theme)) theme = "royal-dark";
+  if (!THEMES.includes(theme)) theme = "lavender";
   document.body.dataset.theme = theme;
   localStorage.setItem(THEME_KEY, theme);
   updateThemeButtons();
 }
 function updateThemeButtons() {
-  const theme = document.body.dataset.theme || "royal-dark";
+  const theme = document.body.dataset.theme || "lavender";
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.theme === theme);
   });
 }
 function initThemes() {
-  applyTheme(localStorage.getItem(THEME_KEY) || "royal-dark");
+  applyTheme(localStorage.getItem(THEME_KEY) || "lavender");
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
@@ -941,7 +941,7 @@ function initSyllabus(){
   document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
   renderSyllabus();
 }
-function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(80,80,80); pdf.setLineWidth(0.25); pdf.rect(x,y,size,size); }
+function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(0,0,0); pdf.setLineWidth(0.45); pdf.rect(x,y,size,size); }
 function downloadSyllabusPDF(){
   const JsPDF=window.jspdf?.jsPDF || window.jsPDF;
   if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
@@ -964,7 +964,7 @@ function downloadSyllabusPDF(){
 
     pdf.setFont("helvetica","bold");
     pdf.setFontSize(15);
-    pdf.setTextColor(25,25,25);
+    pdf.setTextColor(0,0,0);
     pdf.text("JEE SYLLABUS TRACKER",M,9);
 
     pdf.setFont("helvetica","normal");
@@ -990,12 +990,12 @@ function downloadSyllabusPDF(){
       rowPageBreak:"avoid",
       styles:{
         font:"helvetica",fontSize:6.4,cellPadding:1.2,overflow:"linebreak",
-        valign:"middle",halign:"center",lineWidth:0.18,
-        lineColor:[145,145,145],textColor:[30,30,30]
+        valign:"middle",halign:"center",lineWidth:0.45,
+        lineColor:[0,0,0],textColor:[0,0,0]
       },
       headStyles:{
         fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
-        fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.2
+        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2
       },
       columnStyles:Object.fromEntries(
         widths.map((w,i)=>[
@@ -1026,7 +1026,7 @@ function downloadSyllabusPDF(){
             pdfBox(pdf,x,y,box);
             pdf.setFont("helvetica","normal");
             pdf.setFontSize(5.2);
-            pdf.setTextColor(55,55,55);
+            pdf.setTextColor(0,0,0);
             pdf.text(String(n+1),x+5.2,y+3.0);
           }
         }
