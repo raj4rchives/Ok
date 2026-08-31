@@ -16,8 +16,8 @@
       <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
     </div>
     <div class="actions">
-      <button class="secondary top-menu-btn" id="topMenuBtn" type="button" ><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
-      <button class="secondary top-theme-btn" id="topThemeBtn" type="button" ><span class="top-btn-icon">🎨</span><span class="top-btn-label">Themes</span></button>
+      <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="openFeature('menu')"><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
+      <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')"><span class="top-btn-icon">🎨</span><span class="top-btn-label">Themes</span></button>
       <button class="secondary" id="saveBtn">Save</button>
       <button class="secondary" id="loadBtn">Load</button>
       <button class="danger" id="clearBtn">Clear</button>
@@ -49,7 +49,7 @@
           <div class="feature-kicker">370R JEE TRACKER</div>
           <h2 id="featurePageTitle">Menu</h2>
         </div>
-        <button class="secondary feature-close" id="featureClose" type="button" >✕</button>
+        <button class="secondary feature-close" id="featureClose" type="button" onclick="closeFeature()">✕</button>
       </div>
 
       <div id="menuView" class="feature-view">
@@ -57,7 +57,7 @@
           <span>📚</span><div><b>Syllabus Tracker</b><small>Add chapter + total lectures → print A4 tracker</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="pyq">
-          <span>☑️</span><div><b>PYQ Tracker</b><small>Subject + chapter + total PYQs → printable A4 tracker</small></div>
+          <span>☑️</span><div><b>PYQ Question Tracker</b><small>Chapter-wise 10-question blocks + revision ticks</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="backup">
           <span>💾</span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
@@ -95,21 +95,34 @@
       </div>
 
       <div id="pyqView" class="feature-view" hidden>
-        <div class="syllabus-toolbar">
+        <div class="pyq-toolbar">
           <button class="secondary" id="pyqBackBtn" type="button">← Menu</button>
-          <div class="syllabus-actions">
+          <div class="pyq-actions">
             <button class="secondary" id="pyqClearBtn" type="button">Clear PYQ Tracker</button>
             <button class="primary" id="pyqPdfBtn" type="button">📄 Download A4 PDF</button>
           </div>
         </div>
-        <div class="syllabus-form pyq-form card">
-          <div class="small"><label>Subject</label><select id="pyqSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option></select></div>
-          <div class="small"><label>Chapter Name</label><input id="pyqChapterName" type="text" placeholder="e.g. Laws of Motion" maxlength="100"></div>
-          <div class="small"><label>Total PYQs</label><input id="pyqTotal" type="number" min="1" max="500" step="1" placeholder="e.g. 30"></div>
-          <button class="primary syllabus-add-btn" id="pyqAddBtn" type="button">+ Add Chapter</button>
+
+        <div class="pyq-form card">
+          <div class="small"><label>Subject</label>
+            <select id="pyqSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option></select>
+          </div>
+          <div class="pyq-chapter-field"><label>Chapter Name</label>
+            <input id="pyqChapterName" type="text" maxlength="100" placeholder="e.g. Motion in Straight Line">
+          </div>
+          <div class="small"><label>Total PYQs</label>
+            <input id="pyqTotalQuestions" type="number" min="1" max="1000" step="1" placeholder="50">
+          </div>
+          <button class="primary" id="pyqAddBtn" type="button">+ Add Chapter</button>
         </div>
-        <p class="note">हर <b>10 PYQs = 1 छोटा tick box</b>. उदाहरण: 30 PYQs → Q1–10, Q11–20, Q21–30. PDF में subject-wise A4 Landscape pages, chapter list, total PYQs, छोटे tick boxes और आख़िर में <b>REV ☐</b> होगा.</p>
-        <div id="pyqList" class="syllabus-list"></div>
+
+        <div class="pyq-help">
+          <b>1 small square = 10 questions.</b>
+          Example: 50 PYQs → 5 blocks. The last block shows the actual question number.
+          <span>REV boxes are for manual revision ticks.</span>
+        </div>
+
+        <div id="pyqList" class="pyq-list"></div>
       </div>
 
       <div id="themesView" class="feature-view" hidden>
