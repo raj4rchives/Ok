@@ -733,9 +733,12 @@ body[data-theme="ember"]{--bg:#fff2ec;--panel:#ffffff;--line:#895f50;--text:#503
 .pyq-help b{color:var(--text)}
 .pyq-help span{margin-left:10px}
 .pyq-subject{margin-top:15px}
-.pyq-subject-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.pyq-subject-head h3{margin:0;font-size:15px}
+.pyq-subject-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px}
+.pyq-subject-head h3{margin:0;font-size:14px;font-weight:900;letter-spacing:.2px;padding:7px 14px;border:1px solid var(--line);border-radius:9px;background:var(--stat-bg,#0d1422);color:var(--accent);display:inline-flex;align-items:center;min-height:32px;box-shadow:0 1px 0 rgba(0,0,0,.08)}
 .pyq-subject-head span{font-size:11px;color:var(--muted)}
+#pyqSubject{appearance:none;-webkit-appearance:none;width:100%;min-height:40px;padding:9px 38px 9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-weight:800;outline:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 17px,calc(100% - 11px) 17px;background-size:6px 6px,6px 6px;background-repeat:no-repeat;box-shadow:0 1px 2px rgba(20,30,60,.05)}
+#pyqSubject:hover{border-color:var(--accent)}
+#pyqSubject:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .pyq-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
 .pyq-table{width:100%;border-collapse:collapse;min-width:900px;table-layout:fixed}
 .pyq-table th,.pyq-table td{border:1px solid var(--line);padding:7px}
@@ -776,4 +779,106 @@ body[data-theme="ember"]{--bg:#fff2ec;--panel:#ffffff;--line:#895f50;--text:#503
 }
 @media print{
   .pyq-table{min-width:0}
+}
+
+/* =========================================================
+   DEFAULT PREMIUM LIGHT THEME — inspired by the supplied refs
+   Clean white surface + soft lavender background + indigo CTA.
+   ========================================================= */
+body[data-theme="lavender"]{
+  --bg:#f7f7ff;
+  --panel:#ffffff;
+  --line:#e2e3f0;
+  --text:#171c3b;
+  --muted:#707792;
+  --accent:#5146e5;
+  --accent2:#6d63ef;
+  --stat-bg:#f4f3ff;
+  --todo-bg:#ffffff;
+  --badge-bg:#eeecff;
+  --danger-text:#c34b67;
+  background:
+    radial-gradient(circle at 88% 18%,rgba(122,105,255,.10),transparent 30%),
+    radial-gradient(circle at 12% 80%,rgba(89,208,255,.08),transparent 32%),
+    var(--bg);
+  color:var(--text);
+}
+body[data-theme="lavender"] .wrap{max-width:1240px;padding:22px}
+body[data-theme="lavender"] .top{
+  padding:8px 0 18px;
+  border-bottom:1px solid rgba(226,227,240,.75);
+}
+body[data-theme="lavender"] h1{
+  font-size:clamp(24px,3vw,34px);
+  letter-spacing:-.8px;
+  color:#171c3b;
+}
+body[data-theme="lavender"] .sub{color:#737b96}
+body[data-theme="lavender"] .card,
+body[data-theme="lavender"] .countdown-card,
+body[data-theme="lavender"] .stat,
+body[data-theme="lavender"] .dashboard-card{
+  background:rgba(255,255,255,.94);
+  border-color:#e3e4f0;
+  box-shadow:0 10px 30px rgba(55,49,110,.055);
+}
+body[data-theme="lavender"] button.primary{
+  background:linear-gradient(135deg,#5146e5,#6658ee)!important;
+  color:#fff!important;
+  box-shadow:0 8px 18px rgba(81,70,229,.18);
+}
+body[data-theme="lavender"] button.secondary,
+body[data-theme="lavender"] .file-btn{
+  background:#fff!important;
+  color:#202543!important;
+  border:1px solid #e2e3ee;
+}
+body[data-theme="lavender"] button.secondary:hover,
+body[data-theme="lavender"] .file-btn:hover{background:#f6f5ff!important}
+body[data-theme="lavender"] button.danger{background:#fff0f3!important;color:#b84b65!important;border:1px solid #f2d7df}
+body[data-theme="lavender"] input,
+body[data-theme="lavender"] select{
+  background:#fff!important;
+  color:#202543!important;
+  border-color:#dedfec!important;
+}
+body[data-theme="lavender"] input:focus,
+body[data-theme="lavender"] select:focus{border-color:#8178ee!important;box-shadow:0 0 0 3px rgba(81,70,229,.08)}
+body[data-theme="lavender"] .badge{background:#efedff;color:#5146b9;border:1px solid #e2defe}
+body[data-theme="lavender"] .section-title{color:#1b2040}
+body[data-theme="lavender"] .table-wrap{border-color:#dedfec;box-shadow:0 8px 24px rgba(55,49,110,.04)}
+body[data-theme="lavender"] th{background:#f0efff!important;color:#5146c8!important;border-color:#dedfec}
+body[data-theme="lavender"] td{border-color:#e6e6f0}
+body[data-theme="lavender"] tr:nth-child(even){background:#fbfbff}
+body[data-theme="lavender"] .feature-overlay{background:rgba(18,20,42,.28);backdrop-filter:blur(6px)}
+body[data-theme="lavender"] .feature-page{background:#fff!important;border:1px solid #e1e2ef!important;box-shadow:0 25px 80px rgba(27,25,72,.18)}
+body[data-theme="lavender"] .feature-kicker{color:#6358dc!important;letter-spacing:2px;font-weight:900}
+body[data-theme="lavender"] .feature-page h2{color:#171c3b}
+body[data-theme="lavender"] .menu-feature-btn,
+body[data-theme="lavender"] .focus-controls,
+body[data-theme="lavender"] .pyq-form,
+body[data-theme="lavender"] .syllabus-form{
+  background:#fafaff!important;
+  border-color:#e3e4f0!important;
+  color:#171c3b!important;
+}
+body[data-theme="lavender"] .menu-feature-btn:hover{border-color:#bcb6fa!important;transform:translateY(-2px)}
+body[data-theme="lavender"] .pyq-help,
+body[data-theme="lavender"] .note{color:#747b95}
+body[data-theme="lavender"] .todo-item,
+body[data-theme="lavender"] .todo-stat,
+body[data-theme="lavender"] .weekly-chart-card,
+body[data-theme="lavender"] .backup-panel{
+  background:#fff!important;
+  border-color:#e3e4f0!important;
+  color:#202543!important;
+}
+body[data-theme="lavender"] .theme-option{background:#fff!important;color:#202543!important;border-color:#e3e4f0!important}
+body[data-theme="lavender"] .theme-option.active{outline-color:#5146e5!important}
+body[data-theme="lavender"] #countdown{color:#5146e5}
+body[data-theme="lavender"] .countdown-label{color:#716b9c}
+
+@media(max-width:700px){
+  body[data-theme="lavender"] .wrap{padding:14px}
+  body[data-theme="lavender"] .top{padding-bottom:14px}
 }
