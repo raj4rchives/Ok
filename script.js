@@ -930,7 +930,7 @@ function renderPYQ(){
       <div class="pyq-subject-head"><h3>${escapeFeatureText(subject)}</h3><span>${rows.length} chapter${rows.length>1?"s":""}</span></div>
       <div class="pyq-table-wrap">
         <table class="pyq-table">
-          <thead><tr><th class="pyq-idx">INDEX</th><th class="pyq-name">CHAPTER NAME</th><th class="pyq-total">TOTAL</th><th>PYQ BLOCKS — 10 Q</th><th class="pyq-rev">REV</th><th class="pyq-action">ACTION</th></tr></thead>
+          <thead><tr><th class="pyq-idx">INDEX</th><th class="pyq-name">CHAPTER NAME</th><th class="pyq-total">TOTAL</th><th>PYQ BLOCKS — 10 Q</th><th class="pyq-rev">REV</th></thead>
           <tbody>${rows.map((c,i)=>`<tr>
             <td class="pyq-idx">${String(i+1).padStart(2,"0")}</td>
             <td class="pyq-name">${escapeFeatureText(c.name)}</td>
