@@ -731,51 +731,53 @@ function downloadPyqPDF(){
   const data=getPyqData();
   if(!data.length){alert("Pehle PYQ chapters add karo.");return;}
 
-  // One clean table per subject. The column header is printed ONLY ONCE,
-  // not separately for every chapter. Each chapter gets only its real 10-Q blocks;
-  // unused cells stay blank so 30Q never creates actual 4th/5th blocks.
+  // Compact, print-friendly A4 landscape layout.
+  // IMPORTANT: one common header per subject. "QUESTIONS" is the single
+  // index heading for the whole question area. No BLOCK 1/2/3 labels and
+  // no vertical lines between individual 10-question ranges.
   const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
   const W=pdf.internal.pageSize.getWidth();
   const H=pdf.internal.pageSize.getHeight();
   const M=8;
   const subjects=["Physics","Chemistry","Mathematics"];
   let firstPage=true;
-  const headerH=8, rowH=13, gap=2.5;
+  const headerH=7, rowH=11, gap=1.8;
 
   subjects.forEach(subject=>{
     const items=data.filter(x=>x.subject===subject);
     if(!items.length)return;
 
-    // Maximum real block count only determines the shared header columns.
+    // The question area is shared by all chapters on the page.
+    // Its width adapts to the maximum number of real 10-Q blocks.
     const maxBlocks=Math.max(...items.map(item=>Math.max(1,Math.ceil(Number(item.total||0)/10))));
-    const chapterW=58, totalW=15, revW=20;
-    const available=W-(2*M)-chapterW-totalW-revW;
-    const blockW=Math.max(16, Math.min(24, available/maxBlocks));
-    const tableW=chapterW+totalW+blockW*maxBlocks+revW;
+    const chapterW=58, totalW=14, revW=19;
+    const questionW=W-(2*M)-chapterW-totalW-revW;
+    const qCellW=questionW/maxBlocks;
+    const tableW=chapterW+totalW+questionW+revW;
 
     const drawPageHeader=(pageNo,totalPages)=>{
       pdf.setTextColor(0,0,0);
       pdf.setDrawColor(0,0,0);
-      pdf.setLineWidth(0.25);
+      pdf.setFillColor(255,255,255);
+      pdf.setLineWidth(0.22);
       pdf.setFont("helvetica","bold");
-      pdf.setFontSize(13);
+      pdf.setFontSize(12);
       pdf.text("JEE PYQ QUESTIONS TRACKER",M,9);
       pdf.setFont("helvetica","normal");
-      pdf.setFontSize(7);
-      pdf.text("Offline Printable • Tick each 10-question block after completion and tick Revision after revising.",M,14);
+      pdf.setFontSize(6.3);
+      pdf.text("Offline Printable • Tick each 10-question set after completion and tick Revision after revising.",M,13.2);
       pdf.setFont("helvetica","bold");
-      pdf.setFontSize(10);
-      pdf.text(subject.toUpperCase(),M,20);
+      pdf.setFontSize(9);
+      pdf.text(subject.toUpperCase(),M,19);
       pdf.setFont("helvetica","normal");
-      pdf.setFontSize(7);
-      pdf.text("Name: ______________________________",W-75,9);
-      pdf.text(`Page ${pageNo}${totalPages?" / "+totalPages:""}`,W-25,14);
+      pdf.setFontSize(6.3);
+      pdf.text("Name: ______________________________",W-72,9);
+      pdf.text(`Page ${pageNo}${totalPages?" / "+totalPages:""}`,W-25,13.2);
     };
 
-    // Estimate pages using one header per page, not one header per chapter.
-    const usableTop=25;
-    const usableBottom=H-14;
-    const rowStep=headerH+rowH+gap;
+    const usableTop=24;
+    const usableBottom=H-13;
+    const rowStep=rowH+gap;
     const rowsPerPage=Math.max(1,Math.floor((usableBottom-usableTop-headerH+gap)/rowStep));
     const pages=[];
     for(let i=0;i<items.length;i+=rowsPerPage) pages.push(items.slice(i,i+rowsPerPage));
@@ -785,72 +787,71 @@ function downloadPyqPDF(){
       firstPage=false;
       drawPageHeader(pageIndex+1,pages.length);
 
-      let y=25;
-      // SINGLE shared table header for all chapters on this page.
       const x0=M;
+      let y=24;
+      const qX=x0+chapterW+totalW;
+      const rx=qX+questionW;
+
+      // Header: QUESTIONS is one merged index heading over the whole question area.
+      pdf.setFillColor(255,255,255);
       pdf.setDrawColor(0,0,0);
-      pdf.setFont("helvetica","bold");
-      pdf.setFontSize(6.5);
+      pdf.setLineWidth(0.22);
       pdf.rect(x0,y,chapterW,headerH,"S");
       pdf.rect(x0+chapterW,y,totalW,headerH,"S");
-      pdf.text("CHAPTER NAME",x0+2,y+6.5);
-      pdf.text("TOTAL",x0+chapterW+2.5,y+6.5);
-
-      for(let i=0;i<maxBlocks;i++){
-        const bx=x0+chapterW+totalW+i*blockW;
-        pdf.rect(bx,y,blockW,headerH,"S");
-        pdf.setFontSize(6);
-        pdf.text(`BLOCK ${i+1}`,bx+blockW/2,y+4.1,{align:"center"});
-        pdf.text("10 Q",bx+blockW/2,y+7.8,{align:"center"});
-      }
-      const rx=x0+chapterW+totalW+maxBlocks*blockW;
+      pdf.rect(qX,y,questionW,headerH,"S");
       pdf.rect(rx,y,revW,headerH,"S");
-      pdf.setFontSize(6.5);
-      pdf.text("REVISION",rx+revW/2,y+6.5,{align:"center"});
+
+      pdf.setFont("helvetica","bold");
+      pdf.setFontSize(6.2);
+      pdf.text("CHAPTER NAME",x0+2,y+4.7);
+      pdf.text("TOTAL",x0+chapterW+2.2,y+4.7);
+      pdf.text("QUESTIONS",qX+questionW/2,y+4.7,{align:"center"});
+      pdf.text("REVISION",rx+revW/2,y+4.7,{align:"center"});
       y+=headerH;
 
       pageItems.forEach(item=>{
         const blockCount=Math.max(1,Math.ceil(Number(item.total||0)/10));
         const rowY=y;
+
+        // Outer row cells. Question area is ONE continuous cell: no lines
+        // between Q1-10, Q11-20, Q21-30, etc.
         pdf.setFillColor(255,255,255);
         pdf.rect(x0,rowY,chapterW,rowH,"S");
         pdf.rect(x0+chapterW,rowY,totalW,rowH,"S");
-        for(let i=0;i<maxBlocks;i++){
-          pdf.rect(x0+chapterW+totalW+i*blockW,rowY,blockW,rowH,"S");
-        }
+        pdf.rect(qX,rowY,questionW,rowH,"S");
         pdf.rect(rx,rowY,revW,rowH,"S");
 
         pdf.setFont("helvetica","bold");
-        pdf.setFontSize(7.2);
-        const chapterLines=pdf.splitTextToSize(String(item.chapter||""),chapterW-5).slice(0,2);
-        pdf.text(chapterLines,x0+2.5,rowY+rowH/2-(chapterLines.length-1)*2.1);
         pdf.setFontSize(6.8);
-        pdf.text(String(item.total),x0+chapterW+totalW/2,rowY+rowH/2+2,{align:"center"});
+        const chapterLines=pdf.splitTextToSize(String(item.chapter||""),chapterW-4).slice(0,2);
+        pdf.text(chapterLines,x0+2,rowY+rowH/2-(chapterLines.length-1)*1.8);
 
-        // Draw ONLY the actual blocks for this chapter. Remaining shared cells are blank.
-        const blocks=item.blocks||Array.from({length:blockCount},(_,i)=>({start:i*10+1,end:Math.min((i+1)*10,item.total)}));
+        pdf.setFontSize(6.5);
+        pdf.text(String(item.total),x0+chapterW+totalW/2,rowY+rowH/2+1.8,{align:"center"});
+
+        const blocks=item.blocks||Array.from({length:blockCount},(_,i)=>({start:i*10+1,end:Math.min((i+1)*10,Number(item.total)||0)}));
         for(let i=0;i<blockCount;i++){
-          const b=blocks[i]||{start:i*10+1,end:Math.min((i+1)*10,item.total)};
-          const bx=x0+chapterW+totalW+i*blockW;
-          const cx=bx+blockW/2;
+          const b=blocks[i]||{start:i*10+1,end:Math.min((i+1)*10,Number(item.total)||0)};
+          const bx=qX+i*qCellW;
+          const cx=bx+qCellW/2;
           pdf.setFont("helvetica","normal");
-          pdf.setFontSize(6);
-          pdf.text(`Q${b.start}-${b.end}`,cx,rowY+4.2,{align:"center"});
-          pdf.rect(cx-2.2,rowY+6.5,4.4,4.4);
+          pdf.setFontSize(5.7);
+          pdf.text(`Q${b.start}-${b.end}`,cx,rowY+3.5,{align:"center"});
+          pdf.rect(cx-1.9,rowY+5.0,3.8,3.8,"S");
         }
 
         const revX=rx+revW/2;
-        pdf.rect(revX-2.2,rowY+4.5,4.4,4.4);
-        pdf.setFontSize(6);
-        pdf.text("REV",revX,rowY+11.5,{align:"center"});
-        y+=rowH;
+        pdf.rect(revX-1.9,rowY+3.0,3.8,3.8,"S");
+        pdf.setFontSize(5.4);
+        pdf.text("REV",revX,rowY+9.6,{align:"center"});
+        y+=rowH+gap;
       });
 
       pdf.setFont("helvetica","normal");
-      pdf.setFontSize(6.5);
-      pdf.text("□ = Tick with pen after completing each 10-question block",M,H-8);
-      pdf.text("REV = Tick after revision",M+90,H-8);
-      pdf.text("Print: A4 • Landscape • 100% / Actual Size",W-72,H-8);
+      pdf.setFontSize(5.8);
+      pdf.text("□ = Tick after completing each 10-question set",M,H-7);
+      pdf.text("REV = Tick after revision",M+68,H-7);
+      pdf.text("Print: A4 • Landscape • 100% / Actual Size",W-66,H-7);
     });
   });
 
