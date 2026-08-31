@@ -915,7 +915,7 @@ function pyqBlocks(c){
   return html;
 }
 function pyqRevision(c){
-  return [0].map(i=>`<button type="button" class="pyq-rev-box ${c.rev[i]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="${i}" aria-label="Revision ${i+1}"></button>`).join("");
+  return [0,1,2,3].map(i=>`<button type="button" class="pyq-rev-box ${c.rev[i]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="${i}" aria-label="Revision ${i+1}"></button>`).join("");
 }
 function renderPYQ(){
   const list=document.getElementById("pyqList"); if(!list)return;
@@ -1094,10 +1094,13 @@ function downloadPYQPDF(){
         }
 
         if(data.column.index===4){
-          const size=3.2;
-          const x=data.cell.x+(data.cell.width-size)/2;
+          const size=4;
+          const gap=2.2;
+          const n=4;
+          const totalW=n*size+(n-1)*gap;
+          const startX=data.cell.x+(data.cell.width-totalW)/2;
           const y=data.cell.y+(data.cell.height-size)/2;
-          drawTinySquare(x,y,size,!!c.rev[0]);
+          for(let i=0;i<n;i++) drawTinySquare(startX+i*(size+gap),y,size,!!c.rev[i]);
         }
       }
     });
