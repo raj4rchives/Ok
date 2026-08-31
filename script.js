@@ -1094,13 +1094,10 @@ function downloadPYQPDF(){
         }
 
         if(data.column.index===4){
-          const size=4;
-          const gap=2.2;
-          const n=4;
-          const totalW=n*size+(n-1)*gap;
-          const startX=data.cell.x+(data.cell.width-totalW)/2;
+          const size=3.2;
+          const x=data.cell.x+(data.cell.width-size)/2;
           const y=data.cell.y+(data.cell.height-size)/2;
-          for(let i=0;i<n;i++) drawTinySquare(startX+i*(size+gap),y,size,!!c.rev[i]);
+          drawTinySquare(x,y,size,!!c.rev[0]);
         }
       }
     });
