@@ -725,9 +725,98 @@ function addPyqTracker(){
   document.getElementById("pyqTotalQuestions").value="";
   renderPyqList();
 }
+function downloadPyqPDF(){
+  const JsPDF=window.jspdf?.jsPDF || window.jsPDF;
+  if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
+  const data=getPyqData();
+  if(!data.length){alert("Pehle PYQ chapters add karo.");return;}
+
+  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  const M=8;
+  let first=true;
+
+  const grouped={Physics:[],Chemistry:[],Mathematics:[]};
+  data.forEach(x=>{
+    if(!grouped[x.subject])grouped[x.subject]=[];
+    grouped[x.subject].push(x);
+  });
+
+  Object.keys(grouped).forEach(subject=>{
+    const items=grouped[subject];
+    if(!items.length)return;
+
+    let body=[];
+    items.forEach((item,idx)=>{
+      const blocks=item.blocks||[];
+      blocks.forEach((b,i)=>{
+        body.push([
+          idx+1,
+          item.chapter,
+          `Block ${i+1}`,
+          `Q${b.start}–Q${b.end}`,
+          `${b.end-b.start+1}`,
+          b.done ? "✓ DONE" : "□ PENDING",
+          b.revision ? "✓ REVISED" : "□ REVISION"
+        ]);
+      });
+    });
+
+    // Keep tables page-sized so large trackers remain reliable on mobile.
+    const rowsPerPage=24;
+    for(let start=0;start<body.length;start+=rowsPerPage){
+      if(!first)pdf.addPage();
+      first=false;
+      const chunk=body.slice(start,start+rowsPerPage);
+
+      pdf.setFont("helvetica","bold");
+      pdf.setFontSize(16);
+      pdf.setTextColor(0,0,0);
+      pdf.text("370R JEE TRACKER — PYQ QUESTIONS",M,10);
+      pdf.setFontSize(11);
+      pdf.text(subject, M,17);
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(8);
+      pdf.text(`Chapter-wise PYQ blocks of 10 • Printed ${new Date().toLocaleDateString()}`,M,22);
+
+      if(pdf.autoTable){
+        pdf.autoTable({
+          startY:27,
+          head:[["#","CHAPTER","BLOCK","QUESTIONS","TOTAL Q","STATUS","REVISION"]],
+          body:chunk,
+          theme:"grid",
+          styles:{fontSize:8,cellPadding:2.2,valign:"middle",textColor:[0,0,0]},
+          headStyles:{fontSize:8,fontStyle:"bold",textColor:[0,0,0]},
+          columnStyles:{
+            0:{cellWidth:9},
+            1:{cellWidth:82},
+            2:{cellWidth:22},
+            3:{cellWidth:28},
+            4:{cellWidth:18},
+            5:{cellWidth:32},
+            6:{cellWidth:34}
+          },
+          margin:{left:M,right:M,top:27,bottom:12},
+          didDrawPage:function(){
+            const h=pdf.internal.pageSize.getHeight();
+            pdf.setFontSize(7);
+            pdf.setFont("helvetica","normal");
+            pdf.text("Tick ✓ after completing each 10-question block. Tick revision after revising that block.",M,h-6);
+          }
+        });
+      }else{
+        let y=30;
+        chunk.forEach(r=>{pdf.text(r.join("   |   "),M,y);y+=7;});
+      }
+    }
+  });
+
+  pdf.save(`370R-PYQ-Questions-Tracker-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
 function initPyq(){
   document.getElementById("pyqAddBtn")?.addEventListener("click",addPyqTracker);
   document.getElementById("pyqBackBtn")?.addEventListener("click",()=>openFeature("menu"));
+  document.getElementById("pyqPdfBtn")?.addEventListener("click",downloadPyqPDF);
   document.getElementById("pyqClearBtn")?.addEventListener("click",()=>{
     if(!getPyqData().length)return;
     if(confirm("Saare PYQ tracker data ko clear karna hai?")){
