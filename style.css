@@ -711,31 +711,8 @@ body[data-theme="ember"]{--bg:#fff2ec;--panel:#ffffff;--line:#895f50;--text:#503
 .sy-simple-table-wrap{overflow-x:auto}.sy-simple-table{width:100%;border-collapse:collapse;font-size:12px}.sy-simple-table th,.sy-simple-table td{border:1px solid var(--line);padding:9px 10px;text-align:center}.sy-simple-table th{background:var(--badge-bg,#202c3e);color:var(--text)}.sy-simple-table td:nth-child(2){text-align:left;font-weight:700}.sy-delete{padding:5px 9px;border:1px solid var(--line);background:transparent;color:var(--danger-text,#ff8f9f);border-radius:7px;cursor:pointer}.sy-empty{text-align:center;padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
 @media(max-width:800px){.syllabus-form{grid-template-columns:1fr 1fr}.syllabus-form .small:nth-child(2){grid-column:1/-1}.syllabus-add-btn{grid-column:1/-1}.syllabus-actions{width:100%}.syllabus-actions button{flex:1}}
 
-
-/* ---------- PYQ Questions Tracker ---------- */
-.pyq-form{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
-.pyq-list{display:grid;gap:14px}
-.pyq-empty{padding:28px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
-.pyq-chapter-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
-.pyq-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.pyq-card-head h3{margin:5px 0 4px;font-size:20px}
-.pyq-subject-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:var(--accent);color:#111;font-size:11px;font-weight:900}
-.pyq-meta{font-size:12px;color:var(--muted)}
-.pyq-delete-btn{padding:8px 11px}
-.pyq-progress{height:7px;background:#0b1220;border-radius:999px;overflow:hidden;margin:13px 0}
-.pyq-progress span{display:block;height:100%;background:var(--accent);border-radius:999px}
-.pyq-blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
-.pyq-block{border:1px solid var(--line);background:#0b1220;border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:9px 12px;align-items:center}
-.pyq-block.done{border-color:var(--accent);background:rgba(255,217,0,.07)}
-.pyq-block-range{display:flex;flex-direction:column;gap:2px;min-width:0}
-.pyq-block-number{font-size:11px;color:var(--muted);font-weight:800}
-.pyq-block-range b{font-size:16px}
-.pyq-block-count{font-size:11px;color:var(--muted)}
-.pyq-check-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;white-space:nowrap}
-.pyq-check-label input{width:auto;margin:0;accent-color:var(--accent)}
-.pyq-check-label.revision{grid-column:1 / -1;border-top:1px solid var(--line);padding-top:8px}
-@media(max-width:650px){
-  .pyq-blocks{grid-template-columns:1fr}
-  .pyq-block{grid-template-columns:1fr auto}
-  .pyq-card-head h3{font-size:17px}
-}
+/* PYQ Tracker */
+.pyq-form{grid-template-columns:160px minmax(220px,1fr) 150px auto}
+.pyq-simple-table td:nth-child(3){font-weight:700}
+.pyq-mini-track{font-size:11px;color:var(--muted)}
+@media(max-width:800px){.pyq-form{grid-template-columns:1fr 1fr}.pyq-form .small:nth-child(2){grid-column:1/-1}.pyq-form .syllabus-add-btn{grid-column:1/-1}}

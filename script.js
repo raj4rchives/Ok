@@ -2,20 +2,21 @@ const KEY = "jee370rTrackerV3";
 const LEGACY_V2 = "jee370rTrackerV2";
 const LEGACY_V1 = "jee370rTrackerV1";
 
-// <thead> order mapping
+// Tere naye HTML <thead> order ke exact same mapping:
 const fields = [
   "date",      // 1. DATE
   "lec",       // 2. LEC TOTAL
   "phyWork",   // 3. PHY HW / CLASS ILLU
   "chemWork",  // 4. CHEM HW / CLASS ILLU
   "mathWork",  // 5. MATH HW / CLASS ILLU
-  "phyDpp",    // 6. PHY DPP
+  "phyDpp",    // 6. PHY DPP (Naya order)
   "chemDpp",   // 7. CHEM DPP
   "mathDpp",   // 8. MATH DPP
   "phyPyq",    // 9. PHY PYQ
   "chemPyq",   // 10. CHEM PYQ
   "mathPyq"    // 11. MATH PYQ
 ];
+
 
 const tbody = document.querySelector("#tracker tbody");
 
@@ -296,8 +297,8 @@ async function makeMonthlyPDF() {
   const rows = monthRows(key);
   if (!rows.length) { alert('No study data found for this month.'); return; }
   
-  const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
-  const pdf = new jsPDFLib({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const m = monthSummary(key);
   const [y, mo] = key.split('-');
   const name = new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
@@ -326,76 +327,48 @@ async function makeMonthlyPDF() {
   pdf.save(`JEE-Tracker-Phase-${phaseNumber(key)}-${key}.pdf`);
 }
 
-// 15-DAY LANDSCAPE PDF FUNCTION (FORMAT FIXED)
 async function makePDF() {
-  const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
-  if (!jsPDFLib) {
-    alert("PDF library missing h! Index.html me script tags check kr.");
-    return;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  
+  const img = new Image();
+  img.src = "tracker-template.png";
+  
+  try {
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+    pdf.addImage(img, "PNG", 0, 0, 210, 297);
+  } catch (e) {
+    console.warn("Template image not found or blocked. Generating standard PDF layout instead.");
   }
 
-  // Changed to Landscape mode for better table fit
-  const pdf = new jsPDFLib({ orientation: "landscape", unit: "mm", format: "a4" });
+  const sx = 210 / 1086, sy = 297 / 1536;
+  const cols = [20, 126, 232, 338, 444, 550, 656, 762, 868, 974, 1080];
+  const centers = cols.slice(0, -1).map((x, i) => ((x + cols[i + 1]) / 2) * sx);
+  const tableTop = 264, rowH = (1398 - 264) / 15;
+  const data = rowsData();
 
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(14);
-  pdf.text("370R JEE ADVANCED TRACKER", 14, 12);
-  pdf.setFontSize(8);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("15-DAY QUESTION & LECTURE LOG", 14, 16);
+  pdf.setTextColor(20, 20, 20);
+  pdf.setFontSize(12);
 
-  const headers = [[
-    "DATE", "LEC",
-    "PHY HW", "CHEM HW", "MATH HW",
-    "PHY DPP", "CHEM DPP", "MATH DPP",
-    "PHY PYQ", "CHEM PYQ", "MATH PYQ"
-  ]];
-
-  const rows = [...tbody.children].slice(0, 15).map(tr => {
-    const getVal = f => {
-      const inp = tr.querySelector(`[data-f="${f}"]`);
-      return inp ? inp.value : "";
-    };
-
-    return [
-      getVal("date"), getVal("lec"),
-      getVal("phyWork"), getVal("chemWork"), getVal("mathWork"),
-      getVal("phyDpp"), getVal("chemDpp"), getVal("mathDpp"),
-      getVal("phyPyq"), getVal("chemPyq"), getVal("mathPyq")
-    ];
+  data.forEach((r, i) => {
+    if (i >= 15) return;
+    const y = (tableTop + (i + .5) * rowH) * sy + 1.7;
+    const vals = [r.date, r.lec, r.phyWork, r.chemWork, r.mathWork, r.chemDpp, r.mathDpp, r.phyPyq, r.chemPyq, r.mathPyq];
+    
+    vals.forEach((v, j) => {
+      if (v === "" || v == null) return;
+      let text = String(v);
+      if (j === 0 && /^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        const [yy, mm, dd] = text.split("-"); text = `${dd}/${mm}`;
+      }
+      const maxChars = j === 0 ? 10 : 6;
+      if (text.length > maxChars) text = text.slice(0, maxChars - 1) + "…";
+      pdf.text(text, centers[j], y, { align: "center", maxWidth: (cols[j + 1] - cols[j]) * sx - 1 });
+    });
   });
 
-  const data = rowsData().slice(0, 15);
-  const totalLec = sumField(data, "lec");
-  const pWork = sumField(data, "phyWork"), cWork = sumField(data, "chemWork"), mWork = sumField(data, "mathWork");
-  const pDpp = sumField(data, "phyDpp"), cDpp = sumField(data, "chemDpp"), mDpp = sumField(data, "mathDpp");
-  const pPyq = sumField(data, "phyPyq"), cPyq = sumField(data, "chemPyq"), mPyq = sumField(data, "mathPyq");
-
-  const totalPyqs = pPyq + cPyq + mPyq;
-  const totalQs = pWork + cWork + mWork + pDpp + cDpp + mDpp + totalPyqs;
-
-  pdf.autoTable({
-    startY: 20,
-    head: headers,
-    body: rows,
-    foot: [[
-      "TOTAL", totalLec || 0,
-      pWork || 0, cWork || 0, mWork || 0,
-      pDpp || 0, cDpp || 0, mDpp || 0,
-      pPyq || 0, cPyq || 0, mPyq || 0
-    ]],
-    theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 2, halign: 'center', valign: 'middle' },
-    headStyles: { fillColor: [250, 204, 21], textColor: 0, fontStyle: 'bold' },
-    footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' }
-  });
-
-  const footerY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 8 : 180;
-  pdf.setFontSize(9);
-  pdf.setFont("helvetica", "bold");
-  pdf.text(`Total Questions: ${totalQs}  |  Total Lectures: ${totalLec}  |  Total PYQs: ${totalPyqs}`, 14, footerY);
-
-  pdf.save("15DAY-REPORT-JEE-Landscape.pdf");
+  pdf.save("370R-JEE-Advanced-Tracker-Filled.pdf");
 }
 
 // 7. Event Listeners Setup
@@ -432,4 +405,954 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCountdown();
   updateStats();
 });
-                                    
+    
+
+  async function makePDF() {
+  const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if (!jsPDFLib) {
+    alert("PDF library missing h! Index.html me script tags check kr.");
+    return;
+  }
+
+  const pdf = new jsPDFLib({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  // 1. Title Block
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(13);
+  pdf.text("370R JEE ADVANCED TRACKER", 14, 12);
+  pdf.setFontSize(8);
+  pdf.text("15-DAY QUESTION & LECTURE LOG", 14, 16);
+
+  // 2. Yellow Headers (14 Columns)
+  const headers = [[
+    "DATE", "LEC",
+    "PHY HW", "PHY ILLU",
+    "CHEM HW", "CHEM ILLU",
+    "MATH HW", "MATH ILLU",
+    "PHY DPP", "CHEM DPP", "MATH DPP",
+    "PHY PYQ", "CHEM PYQ", "MATH PYQ"
+  ]];
+
+  // 3. Extract 15 Rows
+  const rows = [...tbody.children].slice(0, 15).map(tr => {
+    const getVal = f => {
+      const inp = tr.querySelector(`[data-f="${f}"]`);
+      return inp ? inp.value : "";
+    };
+
+    return [
+      getVal("date"),
+      getVal("lec"),
+      getVal("phyWork"), "",
+      getVal("chemWork"), "",
+      getVal("mathWork"), "",
+      getVal("phyDpp"),
+      getVal("chemDpp"),
+      getVal("mathDpp"),
+      getVal("phyPyq"),
+      getVal("chemPyq"),
+      getVal("mathPyq")
+    ];
+  });
+
+  // 4. Totals Calculation
+  const data = rowsData().slice(0, 15);
+  const totalLec = sumField(data, "lec");
+  const pWork = sumField(data, "phyWork"), cWork = sumField(data, "chemWork"), mWork = sumField(data, "mathWork");
+  const pDpp = sumField(data, "phyDpp"), cDpp = sumField(data, "chemDpp"), mDpp = sumField(data, "mathDpp");
+  const pPyq = sumField(data, "phyPyq"), cPyq = sumField(data, "chemPyq"), mPyq = sumField(data, "mathPyq");
+
+  const totalPyqs = pPyq + cPyq + mPyq;
+  const totalQs = pWork + cWork + mWork + pDpp + cDpp + mDpp + totalPyqs;
+
+  // 5. Single AutoTable (Foot option se exact column width lock ho jayegi)
+  pdf.autoTable({
+    startY: 19,
+    head: headers,
+    body: rows,
+    foot: [[
+      "TOTAL",
+      totalLec || "",
+      pWork || 0, 0,
+      cWork || 0, 0,
+      mWork || 0, 0,
+      pDpp || 0, cDpp || 0, mDpp || 0,
+      pPyq || 0, cPyq || 0, mPyq || 0
+    ]],
+    theme: 'grid',
+    styles: {
+      fontSize: 6,
+      cellPadding: 1.5,
+      halign: 'center',
+      valign: 'middle',
+      textColor: 0,
+      lineColor: 150,
+      lineWidth: 0.1
+    },
+    headStyles: {
+      fillColor: [250, 204, 21], // Yellow Header
+      textColor: 0,
+      fontStyle: 'bold'
+    },
+    footStyles: {
+      fillColor: [255, 255, 255], // White background for TOTAL row
+      textColor: 0,
+      fontStyle: 'bold',
+      lineColor: 150,
+      lineWidth: 0.1
+    }
+  });
+
+  // 6. Footer Text Summary
+  const footerY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 6 : 190;
+  pdf.setFontSize(8);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(`Total questions: ${totalQs}`, 14, footerY);
+  pdf.text(`Total lectures: ${totalLec}   |   Total PYQs: ${totalPyqs}`, 14, footerY + 4);
+
+  // Download Output
+  pdf.save("15DAY-REPORT-JEE-Advanced.pdf");
+  }
+function updateDashboard(selectedDateData) {
+  let questionsToday = 0;
+  let lecturesToday = 0;
+
+  if (selectedDateData) {
+    // Sum questions for the selected day
+    const hw = Number(selectedDateData.hw) || 0;
+    const dpp = Number(selectedDateData.dpp) || 0;
+    const pyq = Number(selectedDateData.pyq) || 0;
+    
+    questionsToday = hw + dpp + pyq;
+
+    // Get lectures for the selected day (change .lectures if your key name is different)
+    lecturesToday = Number(selectedDateData.lectures) || 0;
+  }
+
+  // Render values to the UI
+  document.getElementById('questions-today').textContent = questionsToday;
+  document.getElementById('lectures-today').textContent = lecturesToday;
+}
+
+
+
+/* =========================================================
+   MENU + 29 THEMES + DAILY TODO + FOCUS MODE
+   These features use separate localStorage keys and do not
+   alter the existing tracker data.
+   ========================================================= */
+
+const THEME_KEY = "jee370rThemeV2";
+const TODO_KEY = "jee370rDailyTodoV1";
+const FOCUS_KEY = "jee370rFocusLogsV1";
+
+function localISODate(d = new Date()) {
+  const x = new Date(d);
+  const offset = x.getTimezoneOffset();
+  return new Date(x.getTime() - offset * 60000).toISOString().slice(0,10);
+}
+function put(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+function safeJSON(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) || "null");
+    return v ?? fallback;
+  } catch(e) { return fallback; }
+}
+function escapeFeatureText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[ch]));
+}
+
+/* ---------- Feature menu ---------- */
+function openFeature(name) {
+  const overlay = document.getElementById("featureOverlay");
+  const title = document.getElementById("featurePageTitle");
+  const views = ["menu","syllabus","pyq","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"☑️ PYQ Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
+  overlay.hidden = false;
+  views.forEach(v => {
+    const el = document.getElementById(v + "View");
+    if (el) el.hidden = v !== name;
+  });
+  title.textContent = titles[name] || "Menu";
+  if (name === "themes") updateThemeButtons();
+  if (name === "todo") renderTodoList();
+  if (name === "focus") renderFocus();
+  if (name === "weekly") renderWeeklyReport();
+}
+function closeFeature() {
+  const overlay = document.getElementById("featureOverlay");
+  if (overlay) overlay.hidden = true;
+}
+
+// Expose these functions globally as a compatibility fallback for older cached HTML.
+window.openFeature = openFeature;
+window.closeFeature = closeFeature;
+
+function initFeatureMenu() {
+  // Use document-level delegation so the controls keep working even if the
+  // original tracker script rebinds other buttons later.
+  document.addEventListener("click", e => {
+    const target = e.target instanceof Element ? e.target : null;
+    if (!target) return;
+    const themeBtn = target.closest("#topThemeBtn");
+    const menuBtn = target.closest("#topMenuBtn");
+    const closeBtn = e.target.closest("#featureClose");
+    const featureBtn = e.target.closest("[data-open-feature]");
+    if (themeBtn) { e.preventDefault(); e.stopPropagation(); openFeature("themes"); return; }
+    if (menuBtn) { e.preventDefault(); e.stopPropagation(); openFeature("menu"); return; }
+    if (closeBtn) { e.preventDefault(); e.stopPropagation(); closeFeature(); return; }
+    if (featureBtn) { e.preventDefault(); e.stopPropagation(); openFeature(featureBtn.dataset.openFeature); return; }
+    if (e.target.id === "featureOverlay") closeFeature();
+  }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
+}
+
+/* ---------- 48 themes ---------- */
+const THEMES = [
+  "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
+  "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
+  "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
+  "grape","ice","amoled","dracula","tokyo-night","nord-dark","solar-dark",
+  "deep-ocean","cyberpunk","synthwave","matrix","crimson","royal-dark","obsidian",
+  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night"
+];
+
+function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = "lavender";
+  document.body.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeButtons();
+}
+function updateThemeButtons() {
+  const theme = document.body.dataset.theme || "lavender";
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.theme === theme);
+  });
+}
+function initThemes() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "lavender");
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+  });
+}
+
+/* ---------- Daily TODO ---------- */
+function getTodos() { return safeJSON(TODO_KEY, []); }
+function saveTodos(data) { localStorage.setItem(TODO_KEY, JSON.stringify(data)); }
+
+function todoStats(date) {
+  const all = getTodos();
+  const daily = date ? all.filter(t => t.date === date) : all;
+  const total = daily.length;
+  const completed = daily.filter(t => t.completed).length;
+  return {all,daily,total,completed,pending:total-completed,rate:total ? Math.round(completed/total*100) : 0};
+}
+function renderTodoList() {
+  const filter = document.getElementById("todoFilterDate");
+  const list = document.getElementById("todoList");
+  if (!filter || !list) return;
+  const date = filter.value || localISODate();
+  const s = todoStats(date);
+  put("todoTotal",s.total); put("todoCompleted",s.completed);
+  put("todoPending",s.pending); put("todoRate",s.rate+"%");
+  if (!s.daily.length) {
+    list.innerHTML = '<div class="todo-empty">No tasks for this date. Add your first task ✨</div>';
+    return;
+  }
+  list.innerHTML = s.daily.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(t => `
+    <div class="todo-item ${t.completed ? "done" : ""}">
+      <input class="todo-check" type="checkbox" ${t.completed?"checked":""} data-todo-check="${t.id}">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(t.task)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${escapeFeatureText(t.category)}</span><span>${t.date}</span></div>
+      </div>
+      <button class="todo-delete" data-todo-delete="${t.id}">🗑️</button>
+    </div>`).join("");
+
+  list.querySelectorAll("[data-todo-check]").forEach(box => box.addEventListener("change", () => {
+    const todos=getTodos(), item=todos.find(t=>String(t.id)===String(box.dataset.todoCheck));
+    if(item){item.completed=box.checked;saveTodos(todos);renderTodoList();}
+  }));
+  list.querySelectorAll("[data-todo-delete]").forEach(btn => btn.addEventListener("click", () => {
+    saveTodos(getTodos().filter(t=>String(t.id)!==String(btn.dataset.todoDelete)));
+    renderTodoList();
+  }));
+}
+function addTodo() {
+  const date=document.getElementById("todoDate")?.value || localISODate();
+  const task=document.getElementById("todoTask")?.value.trim() || "";
+  const category=document.getElementById("todoCategory")?.value || "Other";
+  if(!task){alert("Task likho pehle.");return;}
+  const todos=getTodos();
+  todos.push({id:Date.now()+Math.random(),date,task,category,completed:false,createdAt:Date.now()});
+  saveTodos(todos);
+  document.getElementById("todoFilterDate").value=date;
+  document.getElementById("todoTask").value="";
+  renderTodoList();
+}
+function downloadTodoPDF() {
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("todoFilterDate")?.value || localISODate();
+  const s=todoStats(date);
+  if(!s.daily.length){alert("Is date ke liye koi TODO task nahi hai.");return;}
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);
+  pdf.text("370R JEE Tracker — Daily TODO",14,16);
+  pdf.setFontSize(11);pdf.text(date,14,23);
+  pdf.setFontSize(10);pdf.text(`Total: ${s.total}   Completed: ${s.completed}   Pending: ${s.pending}   Completion: ${s.rate}%`,14,31);
+  let y=38;
+  const body=s.daily.map((t,i)=>[i+1,t.completed?"DONE":"PENDING",t.category,t.task]);
+  if(pdf.autoTable) pdf.autoTable({startY:y,head:[["#","STATUS","CATEGORY","TASK"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Daily-TODO-${date}.pdf`);
+}
+function initTodo() {
+  const today=localISODate();
+  const d=document.getElementById("todoDate"), f=document.getElementById("todoFilterDate");
+  if(d)d.value=today;if(f)f.value=today;
+  document.getElementById("addTodoBtn")?.addEventListener("click",addTodo);
+  document.getElementById("todoTask")?.addEventListener("keydown",e=>{if(e.key==="Enter")addTodo();});
+  f?.addEventListener("change",renderTodoList);
+  document.getElementById("todayTodoBtn")?.addEventListener("click",()=>{if(d)d.value=today;if(f)f.value=today;renderTodoList();});
+  document.getElementById("todoPdfBtn")?.addEventListener("click",downloadTodoPDF);
+}
+
+/* ---------- Focus Mode ---------- */
+let focusTimer=null, focusSeconds=0, focusRunning=false, focusStartedAt=null;
+function getFocusLogs(){return safeJSON(FOCUS_KEY,[]);}
+function saveFocusLogs(x){localStorage.setItem(FOCUS_KEY,JSON.stringify(x));}
+function formatHMS(sec){
+  sec=Math.max(0,Math.floor(sec));
+  const h=String(Math.floor(sec/3600)).padStart(2,"0");
+  const m=String(Math.floor(sec%3600/60)).padStart(2,"0");
+  const s=String(sec%60).padStart(2,"0");
+  return `${h}:${m}:${s}`;
+}
+function formatMinutes(min){min=Math.round(min);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min}m`;}
+function updateFocusClock(){put("focusClock",formatHMS(focusSeconds));}
+function startFocus(){
+  if(focusRunning)return;
+  focusRunning=true;
+  if(!focusStartedAt)focusStartedAt=Date.now()-focusSeconds*1000;
+  focusTimer=setInterval(()=>{focusSeconds=Math.floor((Date.now()-focusStartedAt)/1000);updateFocusClock();},1000);
+}
+function pauseFocus(){focusRunning=false;clearInterval(focusTimer);focusTimer=null;}
+function resetFocus(){pauseFocus();focusSeconds=0;focusStartedAt=null;updateFocusClock();}
+function saveFocusLog(){
+  const minutes=Math.round(focusSeconds/60);
+  if(minutes<1){alert("At least 1 minute ka focus log save karo.");return;}
+  const logs=getFocusLogs();
+  logs.push({
+    id:Date.now()+Math.random(),date:localISODate(),minutes,
+    subject:document.getElementById("focusSubject").value,
+    activity:document.getElementById("focusActivity").value,
+    questions:Number(document.getElementById("focusQuestions").value)||0,
+    note:document.getElementById("focusNote").value.trim(),
+    createdAt:Date.now()
+  });
+  saveFocusLogs(logs);resetFocus();renderFocus();
+}
+function saveManualFocusLog(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  const minutesEl=document.getElementById("focusManualMinutes");
+  const dateEl=document.getElementById("focusManualDate");
+  const minutes=parseInt(minutesEl?.value,10);
+  if(!Number.isFinite(minutes) || minutes<1){
+    alert("Manual focus time me 1 ya usse zyada minutes enter karo.");
+    minutesEl?.focus();
+    return false;
+  }
+  const date=dateEl?.value || localISODate();
+  const subject=document.getElementById("focusSubject")?.value || "Other";
+  const activity=document.getElementById("focusActivity")?.value || "Other";
+  const questions=parseInt(document.getElementById("focusQuestions")?.value,10)||0;
+  const note=document.getElementById("focusNote")?.value.trim() || "Manual time";
+  const logs=getFocusLogs();
+  logs.push({id:Date.now()+Math.random(),date,minutes,subject,activity,questions,note,createdAt:Date.now(),manual:true});
+  saveFocusLogs(logs);
+  if(minutesEl) minutesEl.value="";
+  if(document.getElementById("focusFilterDate")) document.getElementById("focusFilterDate").value=date;
+  renderFocus();
+  if(!document.getElementById("weeklyView")?.hidden) renderWeeklyReport();
+  alert(`✅ ${formatMinutes(minutes)} focus time saved for ${date}.`);
+  return false;
+}
+window.saveManualFocusLog=saveManualFocusLog;
+
+function weekDates(end){
+  const d=new Date(end+"T00:00:00");
+  const out=[];
+  for(let i=6;i>=0;i--){
+    const x=new Date(d);x.setDate(d.getDate()-i);
+    out.push(x.toISOString().slice(0,10));
+  }
+  return out;
+}
+function drawWeeklyChart(id, labels, values, suffix=""){
+  const box=document.getElementById(id); if(!box)return;
+  const max=Math.max(1,...values.map(v=>Number(v)||0));
+  box.innerHTML=values.map((value,i)=>{
+    const v=Number(value)||0;
+    const pct=Math.max(0,Math.min(100,(v/max)*100));
+    return `<div class="weekly-bar-col">
+      <div class="weekly-bar-value">${escapeFeatureText(String(v)+suffix)}</div>
+      <div class="weekly-bar-track"><div class="weekly-bar-fill" style="height:${pct}%"></div></div>
+      <div class="weekly-bar-label">${escapeFeatureText(labels[i])}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderWeeklyReport(){
+  const input=document.getElementById("weeklyEndDate");
+  if(!input)return;
+  const end=input.value||localISODate();
+  const dates=weekDates(end), rows=rowsData(), logs=getFocusLogs(), todos=getTodos();
+  const questions=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.phyWork)+num(r.chemWork)+num(r.mathWork)+num(r.phyDpp)+num(r.chemDpp)+num(r.mathDpp)+num(r.phyPyq)+num(r.chemPyq)+num(r.mathPyq),0));
+  const lectures=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.lec),0));
+  const focus=dates.map(date=>logs.filter(x=>x.date===date).reduce((sum,x)=>sum+(Number(x.minutes)||0),0));
+  const weekTodos=todos.filter(x=>dates.includes(x.date));
+  const done=weekTodos.filter(x=>x.completed).length;
+  put("weeklyQuestions",questions.reduce((a,b)=>a+b,0));
+  put("weeklyLectures",lectures.reduce((a,b)=>a+b,0));
+  put("weeklyFocus",formatMinutes(focus.reduce((a,b)=>a+b,0)));
+  put("weeklyTasks",(weekTodos.length?Math.round(done/weekTodos.length*100):0)+"%");
+  const labels=dates.map(d=>new Date(d+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"}));
+  drawWeeklyChart("weeklyQuestionsChart",labels,questions);
+  drawWeeklyChart("weeklyLecturesChart",labels,lectures);
+  drawWeeklyChart("weeklyFocusChart",labels,focus,"m");
+}
+
+function renderFocus(){
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs(), daily=logs.filter(x=>x.date===date);
+  const today=logs.filter(x=>x.date===localISODate());
+  const mins=arr=>arr.reduce((a,x)=>a+(Number(x.minutes)||0),0);
+  put("focusTodayMinutes",formatMinutes(mins(today)));
+  put("focusTodayQuestions",today.reduce((a,x)=>a+(Number(x.questions)||0),0));
+  put("focusTotalMinutes",formatMinutes(mins(logs)));
+  put("focusLogCount",logs.length);
+  const list=document.getElementById("focusList"); if(!list)return;
+  if(!daily.length){list.innerHTML='<div class="todo-empty">No focus logs for this date.</div>';return;}
+  list.innerHTML=daily.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(x=>`
+    <div class="todo-item focus-item">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(x.subject)} · ${escapeFeatureText(x.activity)} · ${formatMinutes(x.minutes)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${x.questions||0} questions</span><span>${escapeFeatureText(x.note||"")}</span></div>
+      </div>
+      <button class="todo-delete" data-focus-delete="${x.id}">🗑️</button>
+    </div>`).join("");
+  list.querySelectorAll("[data-focus-delete]").forEach(btn=>btn.addEventListener("click",()=>{
+    saveFocusLogs(getFocusLogs().filter(x=>String(x.id)!==String(btn.dataset.focusDelete)));renderFocus();
+  }));
+}
+function downloadFocusPDF(){
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs().filter(x=>x.date===date);
+  if(!logs.length){alert("Is date ke liye koi focus log nahi hai.");return;}
+  const total=logs.reduce((a,x)=>a+x.minutes,0), qs=logs.reduce((a,x)=>a+x.questions,0);
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("370R JEE Tracker — Focus Report",14,16);
+  pdf.setFontSize(11);pdf.text(`${date}  •  Focus: ${formatMinutes(total)}  •  Questions: ${qs}`,14,24);
+  const body=logs.map((x,i)=>[i+1,x.subject,x.activity,formatMinutes(x.minutes),x.questions,x.note||""]);
+  if(pdf.autoTable)pdf.autoTable({startY:32,head:[["#","SUBJECT","ACTIVITY","TIME","Q","NOTE"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Focus-${date}.pdf`);
+}
+function initFocus(){
+  const f=document.getElementById("focusFilterDate");if(f)f.value=localISODate();
+  document.getElementById("focusStartBtn")?.addEventListener("click",startFocus);
+  document.getElementById("focusPauseBtn")?.addEventListener("click",pauseFocus);
+  document.getElementById("focusResetBtn")?.addEventListener("click",resetFocus);
+  document.getElementById("focusSaveBtn")?.addEventListener("click",saveFocusLog);
+  const manualBtn=document.getElementById("focusManualSaveBtn");
+  if(manualBtn){
+    manualBtn.onclick=saveManualFocusLog;
+  }
+  const md=document.getElementById("focusManualDate"); if(md)md.value=localISODate();
+  document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
+  f?.addEventListener("change",renderFocus);
+  updateFocusClock();
+}
+
+function initWeeklyReport(){
+  const d=document.getElementById("weeklyEndDate");
+  if(d)d.value=localISODate();
+  document.getElementById("weeklyThisWeekBtn")?.addEventListener("click",()=>{if(d)d.value=localISODate();renderWeeklyReport();});
+  d?.addEventListener("change",renderWeeklyReport);
+  window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)renderWeeklyReport();});
+}
+
+/* ---------- PYQ Tracker: chapter-wise 10-question boxes + A4 landscape PDF ---------- */
+const PYQ_KEY = "370R_JEE_PYQ_TRACKER_V1";
+const PYQ_SUBJECTS = ["Physics", "Chemistry", "Mathematics"];
+
+function pyqData(){
+  try{
+    const x=safeJSON(PYQ_KEY,{chapters:[]});
+    const chapters=Array.isArray(x.chapters)?x.chapters:[];
+    return {version:1,chapters:chapters.map(c=>({
+      id:String(c.id||("pyq_"+Date.now()+Math.random().toString(36).slice(2))),
+      subject:PYQ_SUBJECTS.includes(c.subject)?c.subject:"Physics",
+      name:String(c.name||"").trim(),
+      total:Math.max(1,Math.min(500,parseInt(c.total,10)||1))
+    })).filter(c=>c.name)};
+  }catch(e){return {version:1,chapters:[]};}
+}
+function savePyqData(d){localStorage.setItem(PYQ_KEY,JSON.stringify(d));}
+function renderPyq(){
+  const list=document.getElementById("pyqList"); if(!list)return;
+  const d=pyqData(), esc=s=>escapeFeatureText(s);
+  if(!d.chapters.length){list.innerHTML='<div class="sy-empty">No PYQ chapters yet. Add your first chapter above.</div>';return;}
+  list.innerHTML=PYQ_SUBJECTS.map(subject=>{
+    const rows=d.chapters.filter(c=>c.subject===subject); if(!rows.length)return "";
+    return `<section class="sy-subject"><div class="sy-subject-head"><h3>${esc(subject)}</h3><span>${rows.length} chapter${rows.length>1?'s':''}</span></div><div class="sy-simple-table-wrap"><table class="sy-simple-table pyq-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total PYQs</th><th>Tracking</th><th>REV</th><th>Action</th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.total}</td><td class="pyq-mini-track">${Math.ceil(c.total/10)} box${Math.ceil(c.total/10)>1?'es':''}</td><td>□</td><td><button class="sy-delete" data-pyq-delete="${esc(c.id)}" type="button">Delete</button></td></tr>`).join("")}</tbody></table></div></section>`;
+  }).join("");
+}
+function addPyqChapter(){
+  const subject=document.getElementById("pyqSubject")?.value;
+  const name=document.getElementById("pyqChapterName")?.value.trim();
+  const total=Number(document.getElementById("pyqTotal")?.value);
+  if(!PYQ_SUBJECTS.includes(subject)||!name||!Number.isInteger(total)||total<1||total>500){alert("Subject, Chapter Name aur Total PYQs (1–500) sahi se bharo.");return;}
+  const d=pyqData();
+  d.chapters.push({id:"pyq_"+Date.now()+"_"+Math.random().toString(36).slice(2),subject,name,total});
+  savePyqData(d);renderPyq();
+  document.getElementById("pyqChapterName").value="";
+  document.getElementById("pyqTotal").value="";
+  document.getElementById("pyqChapterName").focus();
+}
+function initPyq(){
+  document.getElementById("pyqAddBtn")?.addEventListener("click",addPyqChapter);
+  document.getElementById("pyqChapterName")?.addEventListener("keydown",e=>{if(e.key==="Enter")addPyqChapter();});
+  document.getElementById("pyqList")?.addEventListener("click",e=>{
+    const b=e.target.closest("[data-pyq-delete]");if(!b)return;
+    const d=pyqData(),c=d.chapters.find(x=>x.id===b.dataset.pyqDelete);if(!c)return;
+    if(confirm(`Delete “${c.name}”?`)){d.chapters=d.chapters.filter(x=>x.id!==c.id);savePyqData(d);renderPyq();}
+  });
+  document.getElementById("pyqClearBtn")?.addEventListener("click",()=>{
+    if(!pyqData().chapters.length)return;
+    if(confirm("Clear the complete PYQ tracker?")){savePyqData({version:1,chapters:[]});renderPyq();}
+  });
+  document.getElementById("pyqBackBtn")?.addEventListener("click",()=>openFeature("menu"));
+  document.getElementById("pyqPdfBtn")?.addEventListener("click",downloadPyqPDF);
+  renderPyq();
+}
+function downloadPyqPDF(){
+  const JsPDF=window.jspdf?.jsPDF||window.jsPDF;
+  if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
+  const d=pyqData();
+  if(!d.chapters.length){alert("Pehle PYQ chapters add karo.");return;}
+
+  // A4 LANDSCAPE — designed specifically as a large, hand-tickable PYQ question tracker.
+  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  const M=9, pageW=297, pageH=210, usable=pageW-M*2;
+  let firstPage=true;
+
+  function drawTrackBox(x,y,w,h,label){
+    pdf.setDrawColor(0,0,0);
+    pdf.setLineWidth(0.55);
+    pdf.rect(x,y,w,h);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(0,0,0);
+    pdf.text(label,x+w/2,y+h/2+2.4,{align:"center"});
+  }
+
+  function drawSubjectPage(subject, chapters, startIndex){
+    if(!firstPage) pdf.addPage();
+    firstPage=false;
+
+    // Header
+    pdf.setTextColor(0,0,0);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(16);
+    pdf.text("JEE PYQ QUESTION TRACKER",M,10);
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(7);
+    pdf.text("Offline • Printable • Tick each 10-question block by hand",M,15);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(12);
+    pdf.text(subject.toUpperCase(),M,22);
+
+    const headers=["#","CHAPTER NAME","TOTAL PYQs","PYQ QUESTION TRACKER\n(10 QUESTIONS = 1 BOX)","REV"];
+    const widths=[10,68,24,173,13];
+    const rowData=chapters.map((c,i)=>[String(startIndex+i+1),c.name,String(c.total),"",""]);
+
+    pdf.autoTable({
+      startY:25,
+      margin:{left:M,right:M,top:8,bottom:8},
+      tableWidth:usable,
+      head:[headers],
+      body:rowData,
+      theme:"grid",
+      rowPageBreak:"avoid",
+      styles:{
+        font:"helvetica",fontSize:8,cellPadding:2.2,valign:"middle",halign:"center",
+        lineWidth:0.55,lineColor:[0,0,0],textColor:[0,0,0],overflow:"linebreak"
+      },
+      headStyles:{
+        fontStyle:"bold",fontSize:7.2,halign:"center",valign:"middle",
+        fillColor:[255,255,255],textColor:[0,0,0],lineWidth:0.55,cellPadding:2.5
+      },
+      columnStyles:{
+        0:{cellWidth:widths[0],halign:"center",fontSize:8},
+        1:{cellWidth:widths[1],halign:"left",fontSize:10,fontStyle:"bold"},
+        2:{cellWidth:widths[2],halign:"center",fontSize:9,fontStyle:"bold"},
+        3:{cellWidth:widths[3],halign:"center"},
+        4:{cellWidth:widths[4],halign:"center"}
+      },
+      didParseCell:data=>{
+        if(data.section!=="body") return;
+        const chapter=chapters[data.row.index];
+        const boxes=Math.ceil(chapter.total/10);
+        const perLine=5;
+        const lines=Math.ceil(boxes/perLine);
+        data.cell.styles.minCellHeight=Math.max(22, lines*20+5);
+        if(data.column.index===4) data.cell.styles.fontSize=14;
+      },
+      didDrawCell:data=>{
+        if(data.section!=="body") return;
+        const chapter=chapters[data.row.index];
+
+        if(data.column.index===3){
+          const boxes=Math.ceil(chapter.total/10);
+          const perLine=5;
+          // Large printable boxes; each box represents exactly 10 questions.
+          const bw=27, bh=15, gapX=5, gapY=4;
+          const lines=Math.ceil(boxes/perLine);
+          const totalW=Math.min(boxes,perLine)*bw+(Math.min(boxes,perLine)-1)*gapX;
+          const totalH=lines*bh+(lines-1)*gapY;
+          const startX=data.cell.x+(data.cell.width-totalW)/2;
+          const startY=data.cell.y+(data.cell.height-totalH)/2;
+
+          for(let b=0;b<boxes;b++){
+            const line=Math.floor(b/perLine), pos=b%perLine;
+            const x=startX+pos*(bw+gapX), y=startY+line*(bh+gapY);
+            const from=b*10+1, to=Math.min(chapter.total,(b+1)*10);
+            drawTrackBox(x,y,bw,bh,`Q${from}–${to}`);
+          }
+        }
+
+        if(data.column.index===4){
+          const bw=9,bh=9;
+          const x=data.cell.x+(data.cell.width-bw)/2;
+          const y=data.cell.y+(data.cell.height-bh)/2;
+          drawTrackBox(x,y,bw,bh,"");
+        }
+      }
+    });
+
+    // Small footer/legend on every page.
+    const footerY=pageH-5;
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(6.5);
+    pdf.text("Each box = 10 PYQs  •  Last partial box contains the remaining questions  •  REV = Revision",M,footerY);
+  }
+
+  try{
+    const maxRowsPerPage=9;
+    for(const subject of PYQ_SUBJECTS){
+      const chapters=d.chapters.filter(c=>c.subject===subject);
+      if(!chapters.length) continue;
+      for(let i=0;i<chapters.length;i+=maxRowsPerPage){
+        drawSubjectPage(subject,chapters.slice(i,i+maxRowsPerPage),i);
+      }
+    }
+    pdf.save("JEE-PYQ-Question-Tracker-A4-Landscape.pdf");
+  }catch(err){
+    console.error(err);
+    alert("PDF generate nahi ho paaya. Please page reload karke dobara try karo.");
+  }
+}
+
+function syllabusData(){
+  try{
+    const raw = localStorage.getItem(SYLLABUS_KEY) || localStorage.getItem("370R_JEE_SYLLABUS_V2") || localStorage.getItem("370R_JEE_SYLLABUS_V1");
+    const x = raw ? JSON.parse(raw) : {chapters:[]};
+    const chapters = Array.isArray(x.chapters) ? x.chapters : [];
+    return {version:3, chapters:chapters.map(c=>({
+      id:String(c.id || ("ch_"+Date.now()+Math.random().toString(36).slice(2))),
+      subject:SYLLABUS_SUBJECTS.includes(c.subject) ? c.subject : "Physics",
+      name:String(c.name||"").trim(),
+      total:Math.max(1,Math.min(100,parseInt(c.total,10)||1))
+    })).filter(c=>c.name)};
+  }catch(e){ return {version:3,chapters:[]}; }
+}
+function saveSyllabusData(d){ localStorage.setItem(SYLLABUS_KEY, JSON.stringify(d)); }
+function renderSyllabus(){
+  const list=document.getElementById("syllabusList"); if(!list)return;
+  const d=syllabusData();
+  if(!d.chapters.length){ list.innerHTML='<div class="sy-empty">No chapters yet. Add your first chapter above.</div>'; return; }
+  const esc=s=>escapeFeatureText(s);
+  list.innerHTML=SYLLABUS_SUBJECTS.map(subject=>{
+    const rows=d.chapters.filter(c=>c.subject===subject); if(!rows.length)return "";
+    return `<section class="sy-subject"><div class="sy-subject-head"><h3>${esc(subject)}</h3><span>${rows.length} chapter${rows.length>1?'s':''}</span></div><div class="sy-simple-table-wrap"><table class="sy-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total Lectures</th><th>Action</th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.total}</td><td><button class="sy-delete" data-sy-delete="${esc(c.id)}" type="button">Delete</button></td></tr>`).join("")}</tbody></table></div></section>`;
+  }).join("");
+}
+function addSyllabusChapter(){
+  const subject=document.getElementById("syllabusSubject")?.value;
+  const name=document.getElementById("syllabusChapterName")?.value.trim();
+  const total=Number(document.getElementById("syllabusTotalLectures")?.value);
+  if(!SYLLABUS_SUBJECTS.includes(subject) || !name || !Number.isInteger(total) || total<1 || total>100){
+    alert("Subject, Chapter Name aur Total Lectures (1–100) sahi se bharo."); return;
+  }
+  const d=syllabusData();
+  d.chapters.push({id:"ch_"+Date.now()+"_"+Math.random().toString(36).slice(2),subject,name,total});
+  saveSyllabusData(d); renderSyllabus();
+  document.getElementById("syllabusChapterName").value="";
+  document.getElementById("syllabusTotalLectures").value="";
+  document.getElementById("syllabusChapterName").focus();
+}
+function initSyllabus(){
+  document.getElementById("syllabusAddBtn")?.addEventListener("click",addSyllabusChapter);
+  document.getElementById("syllabusChapterName")?.addEventListener("keydown",e=>{if(e.key==="Enter")addSyllabusChapter();});
+  document.getElementById("syllabusList")?.addEventListener("click",e=>{
+    const b=e.target.closest("[data-sy-delete]"); if(!b)return;
+    const id=b.dataset.syDelete, d=syllabusData(), c=d.chapters.find(x=>x.id===id); if(!c)return;
+    if(confirm(`Delete “${c.name}”?`)){d.chapters=d.chapters.filter(x=>x.id!==id);saveSyllabusData(d);renderSyllabus();}
+  });
+  document.getElementById("syllabusClearBtn")?.addEventListener("click",()=>{
+    if(!syllabusData().chapters.length)return;
+    if(confirm("Clear the complete syllabus?")){saveSyllabusData({version:3,chapters:[]});renderSyllabus();}
+  });
+  document.getElementById("syllabusBackBtn")?.addEventListener("click",()=>openFeature("menu"));
+  document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
+  renderSyllabus();
+}
+function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(0,0,0); pdf.setLineWidth(0.45); pdf.rect(x,y,size,size); }
+function downloadSyllabusPDF(){
+  const JsPDF=window.jspdf?.jsPDF || window.jsPDF;
+  if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
+  const d=syllabusData();
+  if(!d.chapters.length){alert("Pehle chapters add karo.");return;}
+
+  // Large syllabuses used to make one very heavy autoTable call. On phones
+  // that could stall jsPDF before the browser got a chance to download it.
+  // Build the PDF in small page-sized chunks instead.
+  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  const M=7, usable=297-14;
+  const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
+  const widths=[7,55,60,14,10,...SYLLABUS_TASKS.map(()=>12)];
+
+  let firstPage=true;
+
+  function drawPage(subject, chapters, startIndex){
+    if(!firstPage) pdf.addPage();
+    firstPage=false;
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(15);
+    pdf.setTextColor(0,0,0);
+    pdf.text("JEE SYLLABUS TRACKER",M,9);
+
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(6.5);
+    pdf.text("Offline Printable • Tick everything by hand",M,13);
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(10.5);
+    pdf.text(subject.toUpperCase(),M,19);
+
+    const rows=chapters.map((c,i)=>[
+      String(startIndex+i+1), c.name, "", String(c.total), "",
+      ...SYLLABUS_TASKS.map(()=> "")
+    ]);
+
+    pdf.autoTable({
+      startY:22,
+      margin:{left:M,right:M,top:6,bottom:7},
+      tableWidth:usable,
+      head:[headers],
+      body:rows,
+      theme:"grid",
+      rowPageBreak:"avoid",
+      styles:{
+        font:"helvetica",fontSize:6.4,cellPadding:1.2,overflow:"linebreak",
+        valign:"middle",halign:"center",lineWidth:0.45,
+        lineColor:[0,0,0],textColor:[0,0,0]
+      },
+      headStyles:{
+        fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
+        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2
+      },
+      columnStyles:Object.fromEntries(
+        widths.map((w,i)=>[
+          i,{cellWidth:w,halign:i===1?"left":"center",
+          fontSize:i===1?10:(i===3?8:6.4),fontStyle:i===1||i===3?"bold":"normal"}
+        ])
+      ),
+      didParseCell:data=>{
+        if(data.section==="body" && data.column.index===2){
+          const total=chapters[data.row.index].total;
+          const lines=Math.ceil(total/5);
+          data.cell.styles.minCellHeight=Math.max(8,lines*7.0+1.5);
+        }
+      },
+      didDrawCell:data=>{
+        if(data.section!=="body")return;
+
+        if(data.column.index===2){
+          const total=chapters[data.row.index].total;
+          const perLine=5, box=4.0, step=11.0, lineH=7.0;
+
+          for(let n=0;n<total;n++){
+            const line=Math.floor(n/perLine), pos=n%perLine;
+            const x=data.cell.x+2.0+pos*step;
+            const y=data.cell.y+1.0+line*lineH;
+            if(y+box>data.cell.y+data.cell.height-0.3)continue;
+
+            pdfBox(pdf,x,y,box);
+            pdf.setFont("helvetica","normal");
+            pdf.setFontSize(5.2);
+            pdf.setTextColor(0,0,0);
+            pdf.text(String(n+1),x+5.2,y+3.0);
+          }
+        }
+
+        if(data.column.index>=5){
+          const box=4.0;
+          pdfBox(
+            pdf,
+            data.cell.x+(data.cell.width-box)/2,
+            data.cell.y+(data.cell.height-box)/2,
+            box
+          );
+        }
+      }
+    });
+  }
+
+  try{
+    // Keep each autoTable call comfortably within one A4 page's worth of rows.
+    // A chapter with up to 100 lectures still fits as a single row.
+    const MAX_BODY_HEIGHT=255;
+
+    for(const subject of SYLLABUS_SUBJECTS){
+      const chapters=d.chapters.filter(c=>c.subject===subject);
+      if(!chapters.length) continue;
+
+      let chunk=[];
+      let used=0;
+      let startIndex=0;
+
+      chapters.forEach((chapter,index)=>{
+        const h=Math.max(8,Math.ceil(chapter.total/5)*7.0+1.5);
+
+        // Flush before adding another large row.
+        if(chunk.length && used+h>MAX_BODY_HEIGHT){
+          drawPage(subject,chunk,startIndex);
+          startIndex=index;
+          chunk=[];
+          used=0;
+        }
+
+        chunk.push(chapter);
+        used+=h;
+
+        if(index===chapters.length-1 && chunk.length){
+          drawPage(subject,chunk,startIndex);
+        }
+      });
+    }
+
+    pdf.save("JEE-Syllabus-Tracker-A4-Landscape.pdf");
+  }catch(e){
+    console.error("Syllabus PDF generation failed:",e);
+    alert("PDF generate nahi ho paaya. Data safe hai — chapters/lectures delete nahi hue. Page reload karke dobara try karo.");
+  }
+}
+
+/* ---------- Start ---------- */
+document.addEventListener("DOMContentLoaded",()=>{
+  initFeatureMenu();
+  initSyllabus();
+  initPyq();
+  initThemes();
+  initTodo();
+  initFocus();
+  initWeeklyReport();
+  initBackup();
+});
+
+/* ---------- Full JSON backup / import ---------- */
+const BACKUP_VERSION = 1;
+
+function collectAllBackupData(){
+  const data = {};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key) continue;
+    try{
+      data[key]=JSON.parse(localStorage.getItem(key));
+    }catch(e){
+      data[key]=localStorage.getItem(key);
+    }
+  }
+  return {
+    app:"370R JEE Tracker",
+    backupVersion:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    localStorage:data
+  };
+}
+
+function exportAllJson(){
+  const backup=collectAllBackupData();
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+  a.download=`370R-JEE-Tracker-Backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  const s=document.getElementById("backupStatus");
+  if(s)s.textContent="✅ Full JSON backup downloaded successfully.";
+}
+
+function importAllJson(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const backup=JSON.parse(reader.result);
+      if(!backup || typeof backup!=="object" || !backup.localStorage || typeof backup.localStorage!=="object"){
+        throw new Error("Invalid backup format");
+      }
+
+      const confirmed=confirm(
+        "Import this backup?\\n\\nThis will replace the current saved tracker data on this browser with the backup data."
+      );
+      if(!confirmed)return;
+
+      Object.keys(backup.localStorage).forEach(key=>{
+        const value=backup.localStorage[key];
+        localStorage.setItem(key,typeof value==="string"?value:JSON.stringify(value));
+      });
+
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="✅ Backup imported. Reloading tracker...";
+      setTimeout(()=>location.reload(),500);
+    }catch(e){
+      const s=document.getElementById("backupStatus");
+      if(s)s.textContent="❌ Invalid JSON backup. Nothing was changed.";
+      console.error(e);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function initBackup(){
+  document.getElementById("exportJsonBtn")?.addEventListener("click",exportAllJson);
+  document.getElementById("importJsonInput")?.addEventListener("change",e=>{
+    importAllJson(e.target.files?.[0]);
+    e.target.value="";
+  });
+}
