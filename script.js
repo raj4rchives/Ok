@@ -731,86 +731,133 @@ function downloadPyqPDF(){
   const data=getPyqData();
   if(!data.length){alert("Pehle PYQ chapters add karo.");return;}
 
+  // Printable offline format — same clean black/white table style as the Syllabus Tracker.
+  // Each 10-question block gets its own large checkbox and a separate Revision checkbox.
   const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
-  const M=8;
-  let first=true;
+  const W=pdf.internal.pageSize.getWidth();
+  const H=pdf.internal.pageSize.getHeight();
+  const M=7;
+  const subjects=["Physics","Chemistry","Mathematics"];
+  let firstPage=true;
 
-  const grouped={Physics:[],Chemistry:[],Mathematics:[]};
-  data.forEach(x=>{
-    if(!grouped[x.subject])grouped[x.subject]=[];
-    grouped[x.subject].push(x);
-  });
+  const drawHeader=(subject,pageNo,totalPages)=>{
+    pdf.setTextColor(0,0,0);
+    pdf.setDrawColor(0,0,0);
+    pdf.setLineWidth(0.25);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(13);
+    pdf.text("JEE PYQ QUESTIONS TRACKER",M,9);
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica","normal");
+    pdf.text("Offline Printable • Tick each 10-question block after completion and tick Revision after revising.",M,14);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(10);
+    pdf.text(subject.toUpperCase(),M,20);
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(7);
+    pdf.text("Name: ______________________________",W-75,9);
+    pdf.text(`Page ${pageNo}${totalPages?" / "+totalPages:""}`,W-25,14);
+  };
 
-  Object.keys(grouped).forEach(subject=>{
-    const items=grouped[subject];
+  // Split by subject. A chapter is kept together on one page whenever possible.
+  subjects.forEach(subject=>{
+    const items=data.filter(x=>x.subject===subject);
     if(!items.length)return;
 
-    let body=[];
-    items.forEach((item,idx)=>{
-      const blocks=item.blocks||[];
-      blocks.forEach((b,i)=>{
-        body.push([
-          idx+1,
-          item.chapter,
-          `Block ${i+1}`,
-          `Q${b.start}–Q${b.end}`,
-          `${b.end-b.start+1}`,
-          b.done ? "✓ DONE" : "□ PENDING",
-          b.revision ? "✓ REVISED" : "□ REVISION"
-        ]);
-      });
+    let pages=[];
+    let current=[];
+    let estimated=0;
+    items.forEach(item=>{
+      const rowH=Math.max(13, 9 + Math.ceil((item.blocks||[]).length/8)*9);
+      if(current.length && estimated+rowH>165){pages.push(current);current=[];estimated=0;}
+      current.push(item);estimated+=rowH;
     });
+    if(current.length)pages.push(current);
 
-    // Keep tables page-sized so large trackers remain reliable on mobile.
-    const rowsPerPage=24;
-    for(let start=0;start<body.length;start+=rowsPerPage){
-      if(!first)pdf.addPage();
-      first=false;
-      const chunk=body.slice(start,start+rowsPerPage);
+    pages.forEach((pageItems,pageIndex)=>{
+      if(!firstPage)pdf.addPage();
+      firstPage=false;
+      drawHeader(subject,pageIndex+1,pages.length);
 
+      const startY=24;
+      const chapterW=66;
+      const totalW=17;
+      const blockW=21;
+      const revW=20;
+      const maxBlocks=8;
+      const x0=M;
+
+      // Header columns
+      pdf.setFillColor(245,245,245);
+      pdf.rect(x0,startY,chapterW,10,"FD");
+      pdf.rect(x0+chapterW,startY,totalW,10,"FD");
+      for(let i=0;i<maxBlocks;i++) pdf.rect(x0+chapterW+totalW+i*blockW,startY,blockW,10,"FD");
+      pdf.rect(x0+chapterW+totalW+maxBlocks*blockW,startY,revW,10,"FD");
       pdf.setFont("helvetica","bold");
-      pdf.setFontSize(16);
-      pdf.setTextColor(0,0,0);
-      pdf.text("370R JEE TRACKER — PYQ QUESTIONS",M,10);
-      pdf.setFontSize(11);
-      pdf.text(subject, M,17);
-      pdf.setFont("helvetica","normal");
-      pdf.setFontSize(8);
-      pdf.text(`Chapter-wise PYQ blocks of 10 • Printed ${new Date().toLocaleDateString()}`,M,22);
-
-      if(pdf.autoTable){
-        pdf.autoTable({
-          startY:27,
-          head:[["#","CHAPTER","BLOCK","QUESTIONS","TOTAL Q","STATUS","REVISION"]],
-          body:chunk,
-          theme:"grid",
-          styles:{fontSize:8,cellPadding:2.2,valign:"middle",textColor:[0,0,0]},
-          headStyles:{fontSize:8,fontStyle:"bold",textColor:[0,0,0]},
-          columnStyles:{
-            0:{cellWidth:9},
-            1:{cellWidth:82},
-            2:{cellWidth:22},
-            3:{cellWidth:28},
-            4:{cellWidth:18},
-            5:{cellWidth:32},
-            6:{cellWidth:34}
-          },
-          margin:{left:M,right:M,top:27,bottom:12},
-          didDrawPage:function(){
-            const h=pdf.internal.pageSize.getHeight();
-            pdf.setFontSize(7);
-            pdf.setFont("helvetica","normal");
-            pdf.text("Tick ✓ after completing each 10-question block. Tick revision after revising that block.",M,h-6);
-          }
-        });
-      }else{
-        let y=30;
-        chunk.forEach(r=>{pdf.text(r.join("   |   "),M,y);y+=7;});
+      pdf.setFontSize(6.5);
+      pdf.text("CHAPTER NAME",x0+2,startY+6.5);
+      pdf.text("TOTAL",x0+chapterW+2,startY+6.5);
+      for(let i=0;i<maxBlocks;i++){
+        pdf.text(`BLOCK ${i+1}`,x0+chapterW+totalW+i*blockW+2,startY+4.2);
+        pdf.text("10 Q",x0+chapterW+totalW+i*blockW+7,startY+7.8);
       }
-    }
+      pdf.text("REVISION",x0+chapterW+totalW+maxBlocks*blockW+2,startY+6.5);
+
+      let y=startY+10;
+      pdf.setFont("helvetica","normal");
+      pageItems.forEach((item,rowIndex)=>{
+        const blocks=item.blocks||[];
+        const blockRows=Math.max(1,Math.ceil(blocks.length/maxBlocks));
+        const rowH=Math.max(15,blockRows*11);
+        pdf.rect(x0,y,chapterW,rowH);
+        pdf.rect(x0+chapterW,y,totalW,rowH);
+        for(let i=0;i<maxBlocks;i++) pdf.rect(x0+chapterW+totalW+i*blockW,y,blockW,rowH);
+        pdf.rect(x0+chapterW+totalW+maxBlocks*blockW,y,revW,rowH);
+
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(8);
+        const chapter=String(item.chapter||"");
+        const chapterLines=pdf.splitTextToSize(chapter,chapterW-5);
+        const visible=chapterLines.slice(0,3);
+        const textY=y+rowH/2-(visible.length-1)*2;
+        pdf.text(visible,x0+2.5,textY);
+        pdf.setFontSize(7);
+        pdf.text(String(item.total),x0+chapterW+totalW/2,y+rowH/2+2,{align:"center"});
+
+        // Up to 8 blocks per row. If there are more, they are shown on extra block lines inside the same chapter row.
+        blocks.forEach((b,i)=>{
+          const col=i%maxBlocks;
+          const line=Math.floor(i/maxBlocks);
+          const cx=x0+chapterW+totalW+col*blockW+blockW/2;
+          const cy=y+line*11+5.2;
+          pdf.setFont("helvetica","bold");
+          pdf.setFontSize(6);
+          pdf.text(`Q${b.start}-${b.end}`,cx,cy-1.8,{align:"center"});
+          // Big empty square for pen ticking.
+          const box=4.2;
+          pdf.rect(cx-box/2,cy+0.4,box,box);
+        });
+
+        // Revision is one checkbox per chapter, as requested.
+        const rx=x0+chapterW+totalW+maxBlocks*blockW+revW/2;
+        const ry=y+rowH/2-1.8;
+        pdf.rect(rx-2.1,ry,4.2,4.2);
+        pdf.setFont("helvetica","bold");
+        pdf.setFontSize(6);
+        pdf.text("REV",rx,y+rowH-2,{align:"center"});
+        y+=rowH;
+      });
+
+      // Footer + legend
+      pdf.setFont("helvetica","normal");
+      pdf.setFontSize(6.5);
+      pdf.text("□ = Tick with pen after completing that block",M,H-8);
+      pdf.text("REV = Tick after revision",M+75,H-8);
+      pdf.text("Print: A4 • Landscape • 100% / Actual Size",W-72,H-8);
+    });
   });
 
-  pdf.save(`370R-PYQ-Questions-Tracker-${new Date().toISOString().slice(0,10)}.pdf`);
+  pdf.save(`JEE-PYQ-Questions-Tracker-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 function initPyq(){
