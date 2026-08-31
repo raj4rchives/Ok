@@ -991,62 +991,131 @@ function downloadPYQPDF(){
   if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
   const d=pyqData();
   if(!d.chapters.length){alert("Pehle PYQ chapters add karo.");return;}
-  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
-  const M=8,W=297;
-  let first=true;
-  PYQ_SUBJECTS.forEach(subject=>{
-    const rows=d.chapters.filter(c=>c.subject===subject);
-    if(!rows.length)return;
-    if(!first)pdf.addPage(); first=false;
-    pdf.setTextColor(0,0,0);pdf.setFont("helvetica","bold");pdf.setFontSize(16);
-    pdf.text("JEE PYQ QUESTIONS TRACKER",M,10);
-    pdf.setFontSize(10);pdf.text(subject.toUpperCase(),M,17);
-    pdf.setFont("helvetica","normal");pdf.setFontSize(7);
-    pdf.text("Tick each small square after completing 10 questions  •  REV = tick after revision",M,21);
 
-    const headers=["INDEX","CHAPTER NAME","TOTAL PYQ","PYQ BLOCKS — 10 Q","REVISION",""];
-    const body=rows.map((c,i)=>[String(i+1).padStart(2,"0"),c.name,String(c.total),"","REV",""]);
+  // A4 PORTRAIT — compact printable sheet. Each small square = 10 PYQs.
+  const pdf=new JsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
+  const M=5, PAGE_W=210, USABLE_W=PAGE_W-M*2;
+  let first=true;
+
+  function drawTinySquare(x,y,size,checked=false){
+    pdf.setDrawColor(0,0,0);
+    pdf.setLineWidth(0.35);
+    pdf.rect(x,y,size,size);
+    if(checked){
+      pdf.setFont("helvetica","bold");
+      pdf.setFontSize(7);
+      pdf.text("✓",x+size/2,y+size-0.7,{align:"center"});
+    }
+  }
+
+  function drawSubject(subject,rows){
+    if(!first) pdf.addPage();
+    first=false;
+
+    pdf.setTextColor(0,0,0);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(13);
+    pdf.text("JEE PYQ QUESTIONS TRACKER",M,9);
+    pdf.setFontSize(9);
+    pdf.text(subject.toUpperCase(),M,15);
+    pdf.setFont("helvetica","normal");
+    pdf.setFontSize(6.5);
+    pdf.text("1 small square = 10 PYQs  •  Tick by hand after completing the questions  •  REV = revision",M,19);
+
+    const headers=["#","CHAPTER NAME","TOTAL PYQs","PYQ PROGRESS — 10 Q / SQUARE","REV"];
+    const widths=[8,55,18,103,16]; // exactly 200mm usable
+    const body=rows.map((c,i)=>[String(i+1).padStart(2,"0"),c.name,String(c.total),"",""]);
+
     pdf.autoTable({
-      startY:25,margin:{left:M,right:M,top:6,bottom:7},tableWidth:281,
-      head:[headers],body,theme:"grid",rowPageBreak:"avoid",
-      styles:{font:"helvetica",fontSize:7,cellPadding:1.6,valign:"middle",halign:"center",lineWidth:.35,lineColor:[0,0,0],textColor:[0,0,0]},
-      headStyles:{fontStyle:"bold",fontSize:6.5,fillColor:[255,255,255],textColor:[0,0,0]},
-      columnStyles:{0:{cellWidth:15},1:{cellWidth:65,halign:"left",fontSize:9,fontStyle:"bold"},2:{cellWidth:20},3:{cellWidth:135},4:{cellWidth:30},5:{cellWidth:16}},
-      didParseCell:data=>{
-        if(data.section==="body"&&data.column.index===3){
-          const c=rows[data.row.index],lines=Math.ceil(Math.ceil(c.total/10)/9);
-          data.cell.styles.minCellHeight=Math.max(12,lines*8+3);
-        }
+      startY:22,
+      margin:{left:M,right:M,top:5,bottom:6},
+      tableWidth:USABLE_W,
+      head:[headers],body,
+      theme:"grid",
+      rowPageBreak:"avoid",
+      styles:{
+        font:"helvetica",fontSize:7,cellPadding:1.2,
+        valign:"middle",halign:"center",
+        lineWidth:.3,lineColor:[0,0,0],textColor:[0,0,0]
       },
-      didDrawCell:data=>{
-        if(data.section!=="body")return;
+      headStyles:{
+        fontStyle:"bold",fontSize:6.2,
+        fillColor:[255,255,255],textColor:[0,0,0],
+        cellPadding:1.2
+      },
+      columnStyles:{
+        0:{cellWidth:widths[0]},
+        1:{cellWidth:widths[1],halign:"left",fontSize:8.5,fontStyle:"bold"},
+        2:{cellWidth:widths[2],fontSize:7.5,fontStyle:"bold"},
+        3:{cellWidth:widths[3]},
+        4:{cellWidth:widths[4]}
+      },
+      didParseCell:data=>{
+        if(data.section!=="body") return;
         const c=rows[data.row.index];
         if(data.column.index===3){
-          const count=Math.ceil(c.total/10), perLine=9, box=5, sx=13, sy=8;
+          const count=Math.ceil(c.total/10);
+          const perLine=12;
+          const lines=Math.ceil(count/perLine);
+          // Small, square-only tracker; never large rectangular blocks.
+          data.cell.styles.minCellHeight=Math.max(11,lines*8+4);
+        }
+        if(data.column.index===4) data.cell.styles.minCellHeight=Math.max(11,12);
+      },
+      didDrawCell:data=>{
+        if(data.section!=="body") return;
+        const c=rows[data.row.index];
+
+        if(data.column.index===3){
+          const count=Math.ceil(c.total/10);
+          const perLine=12;
+          const size=4;
+          const gap=2.0;
+          const step=size+gap;
+          const lineStep=8;
+          const totalLineW=perLine*size+(perLine-1)*gap;
+          const startX=data.cell.x+Math.max(1,(data.cell.width-totalLineW)/2);
+          const lines=Math.ceil(count/perLine);
+          const contentH=lines*lineStep-2;
+          const startY=data.cell.y+Math.max(1,(data.cell.height-contentH)/2);
+
           for(let i=0;i<count;i++){
             const line=Math.floor(i/perLine),pos=i%perLine;
-            const x=data.cell.x+2+pos*sx,y=data.cell.y+1.5+line*sy;
-            if(y+box>data.cell.y+data.cell.height-1)continue;
-            pdf.setDrawColor(0,0,0);pdf.setLineWidth(.45);pdf.rect(x,y,box,box);
-            if(c.done[i]){pdf.setFillColor(0,0,0);pdf.rect(x+.7,y+.7,box-1.4,box-1.4,"F");}
-            pdf.setFontSize(4.5);pdf.setTextColor(0,0,0);
-            const end=Math.min((i+1)*10,c.total);
-            pdf.text(`${i*10+1}-${end}`,x+6,y+3.8);
+            const x=startX+pos*step;
+            const y=startY+line*lineStep;
+            if(y+size>data.cell.y+data.cell.height-0.5) continue;
+            drawTinySquare(x,y,size,!!c.done[i]);
+            // Only the ending question number is shown below the square.
+            pdf.setFont("helvetica","normal");
+            pdf.setFontSize(4.1);
+            pdf.setTextColor(0,0,0);
+            pdf.text(String(Math.min((i+1)*10,c.total)),x+size/2,y+size+2.2,{align:"center"});
           }
         }
+
         if(data.column.index===4){
-          const box=5,gap=6,total=4;
-          for(let i=0;i<total;i++){
-            const x=data.cell.x+(data.cell.width-(total*box+(total-1)*gap))/2+i*(box+gap);
-            const y=data.cell.y+(data.cell.height-box)/2;
-            pdf.setDrawColor(0,0,0);pdf.setLineWidth(.45);pdf.rect(x,y,box,box);
-            if(c.rev[i]){pdf.setFillColor(0,0,0);pdf.rect(x+.7,y+.7,box-1.4,box-1.4,"F");}
-          }
+          const size=4;
+          const gap=2.2;
+          const n=4;
+          const totalW=n*size+(n-1)*gap;
+          const startX=data.cell.x+(data.cell.width-totalW)/2;
+          const y=data.cell.y+(data.cell.height-size)/2;
+          for(let i=0;i<n;i++) drawTinySquare(startX+i*(size+gap),y,size,!!c.rev[i]);
         }
       }
     });
-  });
-  pdf.save("JEE-PYQ-Questions-Tracker-A4.pdf");
+  }
+
+  try{
+    for(const subject of PYQ_SUBJECTS){
+      const rows=d.chapters.filter(c=>c.subject===subject);
+      if(rows.length) drawSubject(subject,rows);
+    }
+    pdf.save("JEE-PYQ-Questions-Tracker-A4-Portrait.pdf");
+  }catch(e){
+    console.error("PYQ PDF generation failed:",e);
+    alert("PYQ PDF generate nahi ho paaya. Data safe hai — chapters delete nahi hue.");
+  }
 }
 
 /* ---------- Syllabus Tracker: configurable chapters + A4 printable sheet ---------- */
