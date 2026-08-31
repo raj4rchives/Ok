@@ -737,10 +737,10 @@ function downloadPyqPDF(){
   const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
   const W=pdf.internal.pageSize.getWidth();
   const H=pdf.internal.pageSize.getHeight();
-  const M=7;
+  const M=8;
   const subjects=["Physics","Chemistry","Mathematics"];
   let firstPage=true;
-  const headerH=10, rowH=18, gap=5;
+  const headerH=8, rowH=13, gap=2.5;
 
   subjects.forEach(subject=>{
     const items=data.filter(x=>x.subject===subject);
@@ -748,7 +748,7 @@ function downloadPyqPDF(){
 
     // Maximum real block count only determines the shared header columns.
     const maxBlocks=Math.max(...items.map(item=>Math.max(1,Math.ceil(Number(item.total||0)/10))));
-    const chapterW=62, totalW=16, revW=22;
+    const chapterW=58, totalW=15, revW=20;
     const available=W-(2*M)-chapterW-totalW-revW;
     const blockW=Math.max(16, Math.min(24, available/maxBlocks));
     const tableW=chapterW+totalW+blockW*maxBlocks+revW;
@@ -788,24 +788,23 @@ function downloadPyqPDF(){
       let y=25;
       // SINGLE shared table header for all chapters on this page.
       const x0=M;
-      pdf.setFillColor(245,245,245);
       pdf.setDrawColor(0,0,0);
       pdf.setFont("helvetica","bold");
       pdf.setFontSize(6.5);
-      pdf.rect(x0,y,chapterW,headerH,"FD");
-      pdf.rect(x0+chapterW,y,totalW,headerH,"FD");
+      pdf.rect(x0,y,chapterW,headerH,"S");
+      pdf.rect(x0+chapterW,y,totalW,headerH,"S");
       pdf.text("CHAPTER NAME",x0+2,y+6.5);
       pdf.text("TOTAL",x0+chapterW+2.5,y+6.5);
 
       for(let i=0;i<maxBlocks;i++){
         const bx=x0+chapterW+totalW+i*blockW;
-        pdf.rect(bx,y,blockW,headerH,"FD");
+        pdf.rect(bx,y,blockW,headerH,"S");
         pdf.setFontSize(6);
         pdf.text(`BLOCK ${i+1}`,bx+blockW/2,y+4.1,{align:"center"});
         pdf.text("10 Q",bx+blockW/2,y+7.8,{align:"center"});
       }
       const rx=x0+chapterW+totalW+maxBlocks*blockW;
-      pdf.rect(rx,y,revW,headerH,"FD");
+      pdf.rect(rx,y,revW,headerH,"S");
       pdf.setFontSize(6.5);
       pdf.text("REVISION",rx+revW/2,y+6.5,{align:"center"});
       y+=headerH;
@@ -822,10 +821,10 @@ function downloadPyqPDF(){
         pdf.rect(rx,rowY,revW,rowH,"S");
 
         pdf.setFont("helvetica","bold");
-        pdf.setFontSize(8);
+        pdf.setFontSize(7.2);
         const chapterLines=pdf.splitTextToSize(String(item.chapter||""),chapterW-5).slice(0,2);
-        pdf.text(chapterLines,x0+2.5,rowY+rowH/2-(chapterLines.length-1)*2.5);
-        pdf.setFontSize(7);
+        pdf.text(chapterLines,x0+2.5,rowY+rowH/2-(chapterLines.length-1)*2.1);
+        pdf.setFontSize(6.8);
         pdf.text(String(item.total),x0+chapterW+totalW/2,rowY+rowH/2+2,{align:"center"});
 
         // Draw ONLY the actual blocks for this chapter. Remaining shared cells are blank.
@@ -836,14 +835,14 @@ function downloadPyqPDF(){
           const cx=bx+blockW/2;
           pdf.setFont("helvetica","normal");
           pdf.setFontSize(6);
-          pdf.text(`Q${b.start}-${b.end}`,cx,rowY+6.2,{align:"center"});
-          pdf.rect(cx-2.5,rowY+9,5,5);
+          pdf.text(`Q${b.start}-${b.end}`,cx,rowY+4.2,{align:"center"});
+          pdf.rect(cx-2.2,rowY+6.5,4.4,4.4);
         }
 
         const revX=rx+revW/2;
-        pdf.rect(revX-2.5,rowY+7,5,5);
+        pdf.rect(revX-2.2,rowY+4.5,4.4,4.4);
         pdf.setFontSize(6);
-        pdf.text("REV",revX,rowY+16,{align:"center"});
+        pdf.text("REV",revX,rowY+11.5,{align:"center"});
         y+=rowH;
       });
 
