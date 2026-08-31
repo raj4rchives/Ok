@@ -948,72 +948,64 @@ function downloadPyqPDF(){
   const d=pyqData();
   if(!d.chapters.length){alert("Pehle PYQ chapters add karo.");return;}
 
-  // A4 LANDSCAPE — designed specifically as a large, hand-tickable PYQ question tracker.
+  // A4 LANDSCAPE — compact printable tracker. Small square = 10 PYQs.
   const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
-  const M=9, pageW=297, pageH=210, usable=pageW-M*2;
+  const M=8, pageW=297, pageH=210, usable=pageW-M*2;
   let firstPage=true;
 
-  function drawTrackBox(x,y,w,h,label){
+  function drawSmallCheckbox(x,y,size=4.2){
     pdf.setDrawColor(0,0,0);
-    pdf.setLineWidth(0.55);
-    pdf.rect(x,y,w,h);
-    pdf.setFont("helvetica","bold");
-    pdf.setFontSize(7.5);
-    pdf.setTextColor(0,0,0);
-    pdf.text(label,x+w/2,y+h/2+2.4,{align:"center"});
+    pdf.setLineWidth(0.45);
+    pdf.rect(x,y,size,size);
   }
 
   function drawSubjectPage(subject, chapters, startIndex){
     if(!firstPage) pdf.addPage();
     firstPage=false;
 
-    // Header
     pdf.setTextColor(0,0,0);
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(16);
-    pdf.text("JEE PYQ QUESTION TRACKER",M,10);
+    pdf.setFontSize(15);
+    pdf.text("JEE PYQ QUESTION TRACKER",M,9.5);
     pdf.setFont("helvetica","normal");
-    pdf.setFontSize(7);
-    pdf.text("Offline • Printable • Tick each 10-question block by hand",M,15);
+    pdf.setFontSize(6.5);
+    pdf.text("Offline • Printable • Tick each 10-question block by hand",M,14);
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(12);
-    pdf.text(subject.toUpperCase(),M,22);
+    pdf.setFontSize(11);
+    pdf.text(subject.toUpperCase(),M,20);
 
-    const headers=["#","CHAPTER NAME","TOTAL PYQs","PYQ QUESTION TRACKER\n(10 QUESTIONS = 1 BOX)","REV"];
-    const widths=[10,68,24,173,13];
+    const headers=["#","CHAPTER NAME","TOTAL PYQs","PYQ TRACKER  (1 SMALL BOX = 10 QUESTIONS)","REV"];
+    const widths=[9,66,23,181,10];
     const rowData=chapters.map((c,i)=>[String(startIndex+i+1),c.name,String(c.total),"",""]);
 
     pdf.autoTable({
-      startY:25,
-      margin:{left:M,right:M,top:8,bottom:8},
+      startY:23,
+      margin:{left:M,right:M,top:6,bottom:7},
       tableWidth:usable,
       head:[headers],
       body:rowData,
       theme:"grid",
       rowPageBreak:"avoid",
       styles:{
-        font:"helvetica",fontSize:8,cellPadding:2.2,valign:"middle",halign:"center",
-        lineWidth:0.55,lineColor:[0,0,0],textColor:[0,0,0],overflow:"linebreak"
+        font:"helvetica",fontSize:7.2,cellPadding:1.8,valign:"middle",halign:"center",
+        lineWidth:0.45,lineColor:[0,0,0],textColor:[0,0,0],overflow:"linebreak"
       },
       headStyles:{
-        fontStyle:"bold",fontSize:7.2,halign:"center",valign:"middle",
-        fillColor:[255,255,255],textColor:[0,0,0],lineWidth:0.55,cellPadding:2.5
+        fontStyle:"bold",fontSize:6.5,halign:"center",valign:"middle",
+        fillColor:[255,255,255],textColor:[0,0,0],lineWidth:0.45,cellPadding:1.8
       },
       columnStyles:{
-        0:{cellWidth:widths[0],halign:"center",fontSize:8},
-        1:{cellWidth:widths[1],halign:"left",fontSize:10,fontStyle:"bold"},
-        2:{cellWidth:widths[2],halign:"center",fontSize:9,fontStyle:"bold"},
-        3:{cellWidth:widths[3],halign:"center"},
+        0:{cellWidth:widths[0],halign:"center",fontSize:7},
+        1:{cellWidth:widths[1],halign:"left",fontSize:8.5,fontStyle:"bold"},
+        2:{cellWidth:widths[2],halign:"center",fontSize:8,fontStyle:"bold"},
+        3:{cellWidth:widths[3],halign:"left"},
         4:{cellWidth:widths[4],halign:"center"}
       },
       didParseCell:data=>{
         if(data.section!=="body") return;
-        const chapter=chapters[data.row.index];
-        const boxes=Math.ceil(chapter.total/10);
-        const perLine=5;
-        const lines=Math.ceil(boxes/perLine);
-        data.cell.styles.minCellHeight=Math.max(22, lines*20+5);
-        if(data.column.index===4) data.cell.styles.fontSize=14;
+        // Compact rows like the reference syllabus sheet.
+        data.cell.styles.minCellHeight=10.5;
+        if(data.column.index===4) data.cell.styles.minCellHeight=10.5;
       },
       didDrawCell:data=>{
         if(data.section!=="body") return;
@@ -1021,41 +1013,47 @@ function downloadPyqPDF(){
 
         if(data.column.index===3){
           const boxes=Math.ceil(chapter.total/10);
-          const perLine=5;
-          // Large printable boxes; each box represents exactly 10 questions.
-          const bw=27, bh=15, gapX=5, gapY=4;
+          const size=4.1;
+          const labelGap=1.5;
+          const itemW=24; // small checkbox + Q1–10 label
+          const maxPerLine=Math.max(1,Math.floor((data.cell.width-6)/itemW));
+          const perLine=Math.min(8,maxPerLine);
           const lines=Math.ceil(boxes/perLine);
-          const totalW=Math.min(boxes,perLine)*bw+(Math.min(boxes,perLine)-1)*gapX;
-          const totalH=lines*bh+(lines-1)*gapY;
-          const startX=data.cell.x+(data.cell.width-totalW)/2;
-          const startY=data.cell.y+(data.cell.height-totalH)/2;
+          const lineH=6.0;
+          const totalH=lines*lineH;
+          const startY=data.cell.y+(data.cell.height-totalH)/2+0.7;
 
           for(let b=0;b<boxes;b++){
             const line=Math.floor(b/perLine), pos=b%perLine;
-            const x=startX+pos*(bw+gapX), y=startY+line*(bh+gapY);
             const from=b*10+1, to=Math.min(chapter.total,(b+1)*10);
-            drawTrackBox(x,y,bw,bh,`Q${from}–${to}`);
+            const x=data.cell.x+5+pos*itemW;
+            const y=startY+line*lineH;
+            drawSmallCheckbox(x,y,size);
+            pdf.setFont("helvetica","normal");
+            pdf.setFontSize(5.7);
+            pdf.setTextColor(0,0,0);
+            pdf.text(`Q${from}–${to}`,x+size+labelGap,y+3.15);
           }
         }
 
         if(data.column.index===4){
-          const bw=9,bh=9;
-          const x=data.cell.x+(data.cell.width-bw)/2;
-          const y=data.cell.y+(data.cell.height-bh)/2;
-          drawTrackBox(x,y,bw,bh,"");
+          const size=4.8;
+          const x=data.cell.x+(data.cell.width-size)/2;
+          const y=data.cell.y+(data.cell.height-size)/2;
+          drawSmallCheckbox(x,y,size);
         }
       }
     });
 
-    // Small footer/legend on every page.
-    const footerY=pageH-5;
+    const footerY=pageH-4.5;
     pdf.setFont("helvetica","normal");
-    pdf.setFontSize(6.5);
-    pdf.text("Each box = 10 PYQs  •  Last partial box contains the remaining questions  •  REV = Revision",M,footerY);
+    pdf.setFontSize(5.8);
+    pdf.text("□ = tick after completing that 10-question block   •   Last block may contain fewer than 10 questions   •   REV □ = revision done",M,footerY);
   }
 
   try{
-    const maxRowsPerPage=9;
+    // 16 compact rows per A4 page, subject-wise.
+    const maxRowsPerPage=16;
     for(const subject of PYQ_SUBJECTS){
       const chapters=d.chapters.filter(c=>c.subject===subject);
       if(!chapters.length) continue;
@@ -1068,291 +1066,4 @@ function downloadPyqPDF(){
     console.error(err);
     alert("PDF generate nahi ho paaya. Please page reload karke dobara try karo.");
   }
-}
-
-function syllabusData(){
-  try{
-    const raw = localStorage.getItem(SYLLABUS_KEY) || localStorage.getItem("370R_JEE_SYLLABUS_V2") || localStorage.getItem("370R_JEE_SYLLABUS_V1");
-    const x = raw ? JSON.parse(raw) : {chapters:[]};
-    const chapters = Array.isArray(x.chapters) ? x.chapters : [];
-    return {version:3, chapters:chapters.map(c=>({
-      id:String(c.id || ("ch_"+Date.now()+Math.random().toString(36).slice(2))),
-      subject:SYLLABUS_SUBJECTS.includes(c.subject) ? c.subject : "Physics",
-      name:String(c.name||"").trim(),
-      total:Math.max(1,Math.min(100,parseInt(c.total,10)||1))
-    })).filter(c=>c.name)};
-  }catch(e){ return {version:3,chapters:[]}; }
-}
-function saveSyllabusData(d){ localStorage.setItem(SYLLABUS_KEY, JSON.stringify(d)); }
-function renderSyllabus(){
-  const list=document.getElementById("syllabusList"); if(!list)return;
-  const d=syllabusData();
-  if(!d.chapters.length){ list.innerHTML='<div class="sy-empty">No chapters yet. Add your first chapter above.</div>'; return; }
-  const esc=s=>escapeFeatureText(s);
-  list.innerHTML=SYLLABUS_SUBJECTS.map(subject=>{
-    const rows=d.chapters.filter(c=>c.subject===subject); if(!rows.length)return "";
-    return `<section class="sy-subject"><div class="sy-subject-head"><h3>${esc(subject)}</h3><span>${rows.length} chapter${rows.length>1?'s':''}</span></div><div class="sy-simple-table-wrap"><table class="sy-simple-table"><thead><tr><th>#</th><th>Chapter Name</th><th>Total Lectures</th><th>Action</th></tr></thead><tbody>${rows.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.total}</td><td><button class="sy-delete" data-sy-delete="${esc(c.id)}" type="button">Delete</button></td></tr>`).join("")}</tbody></table></div></section>`;
-  }).join("");
-}
-function addSyllabusChapter(){
-  const subject=document.getElementById("syllabusSubject")?.value;
-  const name=document.getElementById("syllabusChapterName")?.value.trim();
-  const total=Number(document.getElementById("syllabusTotalLectures")?.value);
-  if(!SYLLABUS_SUBJECTS.includes(subject) || !name || !Number.isInteger(total) || total<1 || total>100){
-    alert("Subject, Chapter Name aur Total Lectures (1–100) sahi se bharo."); return;
-  }
-  const d=syllabusData();
-  d.chapters.push({id:"ch_"+Date.now()+"_"+Math.random().toString(36).slice(2),subject,name,total});
-  saveSyllabusData(d); renderSyllabus();
-  document.getElementById("syllabusChapterName").value="";
-  document.getElementById("syllabusTotalLectures").value="";
-  document.getElementById("syllabusChapterName").focus();
-}
-function initSyllabus(){
-  document.getElementById("syllabusAddBtn")?.addEventListener("click",addSyllabusChapter);
-  document.getElementById("syllabusChapterName")?.addEventListener("keydown",e=>{if(e.key==="Enter")addSyllabusChapter();});
-  document.getElementById("syllabusList")?.addEventListener("click",e=>{
-    const b=e.target.closest("[data-sy-delete]"); if(!b)return;
-    const id=b.dataset.syDelete, d=syllabusData(), c=d.chapters.find(x=>x.id===id); if(!c)return;
-    if(confirm(`Delete “${c.name}”?`)){d.chapters=d.chapters.filter(x=>x.id!==id);saveSyllabusData(d);renderSyllabus();}
-  });
-  document.getElementById("syllabusClearBtn")?.addEventListener("click",()=>{
-    if(!syllabusData().chapters.length)return;
-    if(confirm("Clear the complete syllabus?")){saveSyllabusData({version:3,chapters:[]});renderSyllabus();}
-  });
-  document.getElementById("syllabusBackBtn")?.addEventListener("click",()=>openFeature("menu"));
-  document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
-  renderSyllabus();
-}
-function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(0,0,0); pdf.setLineWidth(0.45); pdf.rect(x,y,size,size); }
-function downloadSyllabusPDF(){
-  const JsPDF=window.jspdf?.jsPDF || window.jsPDF;
-  if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
-  const d=syllabusData();
-  if(!d.chapters.length){alert("Pehle chapters add karo.");return;}
-
-  // Large syllabuses used to make one very heavy autoTable call. On phones
-  // that could stall jsPDF before the browser got a chance to download it.
-  // Build the PDF in small page-sized chunks instead.
-  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
-  const M=7, usable=297-14;
-  const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
-  const widths=[7,55,60,14,10,...SYLLABUS_TASKS.map(()=>12)];
-
-  let firstPage=true;
-
-  function drawPage(subject, chapters, startIndex){
-    if(!firstPage) pdf.addPage();
-    firstPage=false;
-
-    pdf.setFont("helvetica","bold");
-    pdf.setFontSize(15);
-    pdf.setTextColor(0,0,0);
-    pdf.text("JEE SYLLABUS TRACKER",M,9);
-
-    pdf.setFont("helvetica","normal");
-    pdf.setFontSize(6.5);
-    pdf.text("Offline Printable • Tick everything by hand",M,13);
-
-    pdf.setFont("helvetica","bold");
-    pdf.setFontSize(10.5);
-    pdf.text(subject.toUpperCase(),M,19);
-
-    const rows=chapters.map((c,i)=>[
-      String(startIndex+i+1), c.name, "", String(c.total), "",
-      ...SYLLABUS_TASKS.map(()=> "")
-    ]);
-
-    pdf.autoTable({
-      startY:22,
-      margin:{left:M,right:M,top:6,bottom:7},
-      tableWidth:usable,
-      head:[headers],
-      body:rows,
-      theme:"grid",
-      rowPageBreak:"avoid",
-      styles:{
-        font:"helvetica",fontSize:6.4,cellPadding:1.2,overflow:"linebreak",
-        valign:"middle",halign:"center",lineWidth:0.45,
-        lineColor:[0,0,0],textColor:[0,0,0]
-      },
-      headStyles:{
-        fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
-        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2
-      },
-      columnStyles:Object.fromEntries(
-        widths.map((w,i)=>[
-          i,{cellWidth:w,halign:i===1?"left":"center",
-          fontSize:i===1?10:(i===3?8:6.4),fontStyle:i===1||i===3?"bold":"normal"}
-        ])
-      ),
-      didParseCell:data=>{
-        if(data.section==="body" && data.column.index===2){
-          const total=chapters[data.row.index].total;
-          const lines=Math.ceil(total/5);
-          data.cell.styles.minCellHeight=Math.max(8,lines*7.0+1.5);
-        }
-      },
-      didDrawCell:data=>{
-        if(data.section!=="body")return;
-
-        if(data.column.index===2){
-          const total=chapters[data.row.index].total;
-          const perLine=5, box=4.0, step=11.0, lineH=7.0;
-
-          for(let n=0;n<total;n++){
-            const line=Math.floor(n/perLine), pos=n%perLine;
-            const x=data.cell.x+2.0+pos*step;
-            const y=data.cell.y+1.0+line*lineH;
-            if(y+box>data.cell.y+data.cell.height-0.3)continue;
-
-            pdfBox(pdf,x,y,box);
-            pdf.setFont("helvetica","normal");
-            pdf.setFontSize(5.2);
-            pdf.setTextColor(0,0,0);
-            pdf.text(String(n+1),x+5.2,y+3.0);
-          }
-        }
-
-        if(data.column.index>=5){
-          const box=4.0;
-          pdfBox(
-            pdf,
-            data.cell.x+(data.cell.width-box)/2,
-            data.cell.y+(data.cell.height-box)/2,
-            box
-          );
-        }
-      }
-    });
-  }
-
-  try{
-    // Keep each autoTable call comfortably within one A4 page's worth of rows.
-    // A chapter with up to 100 lectures still fits as a single row.
-    const MAX_BODY_HEIGHT=255;
-
-    for(const subject of SYLLABUS_SUBJECTS){
-      const chapters=d.chapters.filter(c=>c.subject===subject);
-      if(!chapters.length) continue;
-
-      let chunk=[];
-      let used=0;
-      let startIndex=0;
-
-      chapters.forEach((chapter,index)=>{
-        const h=Math.max(8,Math.ceil(chapter.total/5)*7.0+1.5);
-
-        // Flush before adding another large row.
-        if(chunk.length && used+h>MAX_BODY_HEIGHT){
-          drawPage(subject,chunk,startIndex);
-          startIndex=index;
-          chunk=[];
-          used=0;
-        }
-
-        chunk.push(chapter);
-        used+=h;
-
-        if(index===chapters.length-1 && chunk.length){
-          drawPage(subject,chunk,startIndex);
-        }
-      });
-    }
-
-    pdf.save("JEE-Syllabus-Tracker-A4-Landscape.pdf");
-  }catch(e){
-    console.error("Syllabus PDF generation failed:",e);
-    alert("PDF generate nahi ho paaya. Data safe hai — chapters/lectures delete nahi hue. Page reload karke dobara try karo.");
-  }
-}
-
-/* ---------- Start ---------- */
-document.addEventListener("DOMContentLoaded",()=>{
-  initFeatureMenu();
-  initSyllabus();
-  initPyq();
-  initThemes();
-  initTodo();
-  initFocus();
-  initWeeklyReport();
-  initBackup();
-});
-
-/* ---------- Full JSON backup / import ---------- */
-const BACKUP_VERSION = 1;
-
-function collectAllBackupData(){
-  const data = {};
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(!key) continue;
-    try{
-      data[key]=JSON.parse(localStorage.getItem(key));
-    }catch(e){
-      data[key]=localStorage.getItem(key);
-    }
-  }
-  return {
-    app:"370R JEE Tracker",
-    backupVersion:BACKUP_VERSION,
-    exportedAt:new Date().toISOString(),
-    localStorage:data
-  };
-}
-
-function exportAllJson(){
-  const backup=collectAllBackupData();
-  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
-  a.download=`370R-JEE-Tracker-Backup-${stamp}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  const s=document.getElementById("backupStatus");
-  if(s)s.textContent="✅ Full JSON backup downloaded successfully.";
-}
-
-function importAllJson(file){
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const backup=JSON.parse(reader.result);
-      if(!backup || typeof backup!=="object" || !backup.localStorage || typeof backup.localStorage!=="object"){
-        throw new Error("Invalid backup format");
-      }
-
-      const confirmed=confirm(
-        "Import this backup?\\n\\nThis will replace the current saved tracker data on this browser with the backup data."
-      );
-      if(!confirmed)return;
-
-      Object.keys(backup.localStorage).forEach(key=>{
-        const value=backup.localStorage[key];
-        localStorage.setItem(key,typeof value==="string"?value:JSON.stringify(value));
-      });
-
-      const s=document.getElementById("backupStatus");
-      if(s)s.textContent="✅ Backup imported. Reloading tracker...";
-      setTimeout(()=>location.reload(),500);
-    }catch(e){
-      const s=document.getElementById("backupStatus");
-      if(s)s.textContent="❌ Invalid JSON backup. Nothing was changed.";
-      console.error(e);
-    }
-  };
-  reader.readAsText(file);
-}
-
-function initBackup(){
-  document.getElementById("exportJsonBtn")?.addEventListener("click",exportAllJson);
-  document.getElementById("importJsonInput")?.addEventListener("change",e=>{
-    importAllJson(e.target.files?.[0]);
-    e.target.value="";
-  });
 }
