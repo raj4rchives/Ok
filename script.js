@@ -571,14 +571,15 @@ function escapeFeatureText(value) {
 function openFeature(name) {
   const overlay = document.getElementById("featureOverlay");
   const title = document.getElementById("featurePageTitle");
-  const views = ["menu","syllabus","themes","todo","focus","weekly","backup"];
-  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
+  const views = ["menu","syllabus","pyq","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"📘 PYQ Questions Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
   overlay.hidden = false;
   views.forEach(v => {
     const el = document.getElementById(v + "View");
     if (el) el.hidden = v !== name;
   });
   title.textContent = titles[name] || "Menu";
+  if (name === "pyq") renderPyqList();
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
@@ -603,6 +604,143 @@ function initFeatureMenu() {
     if (e.target.id === "featureOverlay") closeFeature();
   }, true);
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
+}
+
+/* ---------- PYQ Questions Tracker ---------- */
+const PYQ_KEY = "jee370rPyqQuestionsTrackerV1";
+
+function getPyqData(){
+  return safeJSON(PYQ_KEY, []);
+}
+function savePyqData(data){
+  localStorage.setItem(PYQ_KEY, JSON.stringify(data));
+}
+function escapePyqText(v){
+  return String(v ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+function pyqBlocks(total){
+  const blocks=[];
+  const count=Math.ceil(total/10);
+  for(let i=0;i<count;i++){
+    const start=i*10+1;
+    const end=Math.min((i+1)*10,total);
+    blocks.push({start,end,done:false,revision:false});
+  }
+  return blocks;
+}
+function pyqCompletedCount(item){
+  return (item.blocks||[]).filter(b=>b.done).length;
+}
+function pyqRevisionCount(item){
+  return (item.blocks||[]).filter(b=>b.revision).length;
+}
+function renderPyqList(){
+  const list=document.getElementById("pyqList");
+  if(!list)return;
+  const data=getPyqData();
+
+  if(!data.length){
+    list.innerHTML='<div class="pyq-empty">No PYQ tracker yet. Add your first chapter above 📘</div>';
+    return;
+  }
+
+  list.innerHTML=data.map(item=>{
+    const total=item.total;
+    const done=item.blocks.filter(b=>b.done).reduce((s,b)=>s+(b.end-b.start+1),0);
+    const rev=item.blocks.filter(b=>b.revision).length;
+    const blocks=item.blocks.map((b,i)=>`
+      <div class="pyq-block ${b.done ? "done" : ""}">
+        <div class="pyq-block-range">
+          <span class="pyq-block-number">Block ${i+1}</span>
+          <b>Q${b.start}–Q${b.end}</b>
+          <span class="pyq-block-count">${b.end-b.start+1} Q</span>
+        </div>
+        <label class="pyq-check-label">
+          <input type="checkbox" class="pyq-done-check" data-id="${item.id}" data-block="${i}" ${b.done?"checked":""}>
+          <span>✓ Done</span>
+        </label>
+        <label class="pyq-check-label revision">
+          <input type="checkbox" class="pyq-revision-check" data-id="${item.id}" data-block="${i}" ${b.revision?"checked":""}>
+          <span>↻ Revision</span>
+        </label>
+      </div>`).join("");
+
+    return `
+      <div class="pyq-chapter-card">
+        <div class="pyq-card-head">
+          <div>
+            <div class="pyq-subject-badge">${escapePyqText(item.subject)}</div>
+            <h3>${escapePyqText(item.chapter)}</h3>
+            <div class="pyq-meta">${total} Questions • ${item.blocks.length} Block${item.blocks.length===1?"":"s"} • ${done}/${total} done • ${rev}/${item.blocks.length} revised</div>
+          </div>
+          <button class="danger pyq-delete-btn" type="button" data-pyq-delete="${item.id}">🗑️</button>
+        </div>
+        <div class="pyq-progress"><span style="width:${total?Math.round(done/total*100):0}%"></span></div>
+        <div class="pyq-blocks">${blocks}</div>
+      </div>`;
+  }).join("");
+
+  list.querySelectorAll(".pyq-done-check,.pyq-revision-check").forEach(box=>{
+    box.addEventListener("change",()=>{
+      const data=getPyqData();
+      const item=data.find(x=>String(x.id)===String(box.dataset.id));
+      const block=item?.blocks?.[Number(box.dataset.block)];
+      if(!block)return;
+      if(box.classList.contains("pyq-done-check")) block.done=box.checked;
+      else block.revision=box.checked;
+      savePyqData(data);
+      renderPyqList();
+    });
+  });
+  list.querySelectorAll("[data-pyq-delete]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      if(!confirm("Is chapter ka PYQ tracker delete karna hai?"))return;
+      savePyqData(getPyqData().filter(x=>String(x.id)!==String(btn.dataset.pyqDelete)));
+      renderPyqList();
+    });
+  });
+}
+function addPyqTracker(){
+  const subject=document.getElementById("pyqSubject")?.value || "Physics";
+  const chapter=document.getElementById("pyqChapterName")?.value.trim() || "";
+  const total=Math.floor(Number(document.getElementById("pyqTotalQuestions")?.value || 0));
+
+  if(!chapter){alert("Chapter name likho pehle.");return;}
+  if(!Number.isFinite(total) || total<1){alert("Total PYQ questions 1 ya usse zyada hona chahiye.");return;}
+
+  const data=getPyqData();
+  data.push({
+    id:Date.now()+Math.random(),
+    subject,
+    chapter,
+    total,
+    blocks:pyqBlocks(total),
+    createdAt:Date.now()
+  });
+  savePyqData(data);
+
+  document.getElementById("pyqChapterName").value="";
+  document.getElementById("pyqTotalQuestions").value="";
+  renderPyqList();
+}
+function initPyq(){
+  document.getElementById("pyqAddBtn")?.addEventListener("click",addPyqTracker);
+  document.getElementById("pyqBackBtn")?.addEventListener("click",()=>openFeature("menu"));
+  document.getElementById("pyqClearBtn")?.addEventListener("click",()=>{
+    if(!getPyqData().length)return;
+    if(confirm("Saare PYQ tracker data ko clear karna hai?")){
+      localStorage.removeItem(PYQ_KEY);
+      renderPyqList();
+    }
+  });
+  ["pyqChapterName","pyqTotalQuestions"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("keydown",e=>{
+      if(e.key==="Enter")addPyqTracker();
+    });
+  });
+  renderPyqList();
 }
 
 /* ---------- 48 themes ---------- */
@@ -1088,6 +1226,7 @@ function downloadSyllabusPDF(){
 document.addEventListener("DOMContentLoaded",()=>{
   initFeatureMenu();
   initSyllabus();
+  initPyq();
   initThemes();
   initTodo();
   initFocus();
