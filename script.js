@@ -915,7 +915,7 @@ function pyqBlocks(c){
   return html;
 }
 function pyqRevision(c){
-  return [0,1,2,3].map(i=>`<button type="button" class="pyq-rev-box ${c.rev[i]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="${i}" aria-label="Revision ${i+1}"></button>`).join("");
+  return [0].map(i=>`<button type="button" class="pyq-rev-box ${c.rev[i]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="${i}" aria-label="Revision ${i+1}"></button>`).join("");
 }
 function renderPYQ(){
   const list=document.getElementById("pyqList"); if(!list)return;
@@ -1023,7 +1023,7 @@ function downloadPYQPDF(){
     pdf.text("1 small square = 10 PYQs  •  Tick by hand after completing the questions  •  REV = revision",M,19);
 
     const headers=["#","CHAPTER NAME","TOTAL PYQs","PYQ PROGRESS — 10 Q / SQUARE","REV"];
-    const widths=[8,55,18,103,16]; // exactly 200mm usable
+    const widths=[8,55,18,80,16]; // exactly 200mm usable
     const body=rows.map((c,i)=>[String(i+1).padStart(2,"0"),c.name,String(c.total),"",""]);
 
     pdf.autoTable({
