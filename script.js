@@ -915,7 +915,7 @@ function pyqBlocks(c){
   return html;
 }
 function pyqRevision(c){
-  return [0,1,2,3].map(i=>`<button type="button" class="pyq-rev-box ${c.rev[i]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="${i}" aria-label="Revision ${i+1}"></button>`).join("");
+  return [0].map(i=>`<button type="button" class="pyq-rev-box ${c.rev[i]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="${i}" aria-label="Revision ${i+1}"></button>`).join("");
 }
 function renderPYQ(){
   const list=document.getElementById("pyqList"); if(!list)return;
