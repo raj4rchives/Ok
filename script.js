@@ -801,8 +801,12 @@ function downloadPyqPDF(){
 
         // Header row — only actual blocks are drawn.
         pdf.setFillColor(245,245,245);
-        pdf.rect(x0,y,chapterW,headerH,"FD");
-        pdf.rect(x0+chapterW,y,totalW,headerH,"FD");
+        pdf.setDrawColor(0,0,0);
+        pdf.rect(x0,y,chapterW,headerH,"F");
+        pdf.rect(x0+chapterW,y,totalW,headerH,"F");
+        pdf.setDrawColor(0,0,0);
+        pdf.rect(x0,y,chapterW,headerH,"S");
+        pdf.rect(x0+chapterW,y,totalW,headerH,"S");
         pdf.setFont("helvetica","bold");
         pdf.setFontSize(6.5);
         pdf.text("CHAPTER NAME",x0+2,y+6.5);
@@ -810,16 +814,23 @@ function downloadPyqPDF(){
 
         for(let i=0;i<blockCount;i++){
           const bx=x0+chapterW+totalW+i*blockW;
-          pdf.rect(bx,y,blockW,headerH,"FD");
+          pdf.setFillColor(245,245,245);
+          pdf.rect(bx,y,blockW,headerH,"F");
+          pdf.setDrawColor(0,0,0);
+          pdf.rect(bx,y,blockW,headerH,"S");
           pdf.setFontSize(6);
           pdf.text(`BLOCK ${i+1}`,bx+blockW/2,y+4.1,{align:"center"});
           pdf.text("10 Q",bx+blockW/2,y+7.8,{align:"center"});
         }
         const rx=x0+chapterW+totalW+blockCount*blockW;
-        pdf.rect(rx,y,revW,headerH,"FD");
+        pdf.setFillColor(245,245,245);
+        pdf.rect(rx,y,revW,headerH,"F");
+        pdf.setDrawColor(0,0,0);
+        pdf.rect(rx,y,revW,headerH,"S");
         pdf.text("REVISION",rx+revW/2,y+6.5,{align:"center"});
 
-        // Chapter row.
+        // Chapter row — white body, stroke only.
+        pdf.setFillColor(255,255,255);
         const rowY=y+headerH;
         pdf.rect(x0,rowY,chapterW,rowH);
         pdf.rect(x0+chapterW,rowY,totalW,rowH);
