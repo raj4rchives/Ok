@@ -937,8 +937,7 @@ function renderPYQ(){
             <td class="pyq-total">${c.total}</td>
             <td class="pyq-progress"><div class="pyq-blocks">${pyqBlocks(c)}</div></td>
             <td class="pyq-rev"><div class="pyq-revisions">${pyqRevision(c)}</div></td>
-            <td class="pyq-action"><button type="button" class="pyq-delete" data-pyq-delete="${escapeFeatureText(c.id)}">Delete</button></td>
-          </tr>`).join("")}</tbody>
+              </tr>`).join("")}</tbody>
         </table>
       </div>
     </section>`;
