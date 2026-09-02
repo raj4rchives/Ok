@@ -14,25 +14,55 @@
        370R HOME PAGE
        CARTU / PREMIUM STYLE
     ================================= */
+:root{
+  --bg: #f5f4f7;
+  --surface: #ffffff;
+  --text: #202337;
+  --muted: #6f7280;
+  --accent: #6257c7;
+  --accent-soft: #e9e6ff;
+  --border: rgba(32,35,55,.10);
+  --radius: 28px;
+}
 
-    :root {
-      --home-bg: #f4f4f8;
-      --home-text: #222638;
-      --home-muted: #74798a;
-      --home-purple: #6c63c9;
-      --home-purple-dark: #5147b2;
-      --home-border: rgba(35, 40, 65, .10);
-    }
+body{
+  background: var(--bg);
+  color: var(--text);
+}
 
-    body {
-      margin: 0;
-      background:
-        radial-gradient(circle at 85% 15%, rgba(108,99,201,.13), transparent 28%),
-        radial-gradient(circle at 5% 65%, rgba(108,99,201,.08), transparent 30%),
-        var(--home-bg);
-      color: var(--home-text);
-      font-family: Inter, Arial, sans-serif;
-    }
+.hero-title{
+  font-size: clamp(42px, 9vw, 62px);
+  line-height: .98;
+  letter-spacing: -2px;
+}
+
+.hero-title span{
+  color: var(--accent);
+}
+
+.hero-text{
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.primary-btn{
+  min-height: 76px;
+  border-radius: 22px;
+  background: var(--accent);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 14px 30px rgba(98,87,199,.18);
+}
+
+.card{
+  background: rgba(255,255,255,.78);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
 
     /* Announcement */
     .announcement {
