@@ -608,28 +608,23 @@ function initFeatureMenu() {
 
 /* ---------- 48 themes ---------- */
 const THEMES = [
-  "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
-  "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
-  "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
-  "grape","ice","amoled","dracula","tokyo-night","nord-dark","solar-dark",
-  "deep-ocean","cyberpunk","synthwave","matrix","crimson","royal-dark","obsidian",
-  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night"
+  "sky"
 ];
 
 function applyTheme(theme) {
-  if (!THEMES.includes(theme)) theme = "lavender";
+  if (!THEMES.includes(theme)) theme = "sky";
   document.body.dataset.theme = theme;
   localStorage.setItem(THEME_KEY, theme);
   updateThemeButtons();
 }
 function updateThemeButtons() {
-  const theme = document.body.dataset.theme || "lavender";
+  const theme = document.body.dataset.theme || "sky";
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.theme === theme);
   });
 }
 function initThemes() {
-  applyTheme(localStorage.getItem(THEME_KEY) || "lavender");
+  applyTheme(localStorage.getItem(THEME_KEY) || "sky);
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
   });
