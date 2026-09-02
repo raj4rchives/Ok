@@ -9,44 +9,59 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="announcement"><span class="announcement-dot"></span><span>370R is built for consistent preparation</span><b>Track. Practice. Improve.</b><span class="announcement-close">×</span></div>
-<div class="wrap">
-  <header class="top">
-    <div class="brand-lockup">
-      <div class="brand-mark"><i></i><i></i><i></i></div>
-      <div class="brand-name">370<span>R</span></div>
-    </div>
-    <div class="nav-actions">
-      <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')" aria-label="Themes"><span class="top-btn-icon">◐</span><span class="top-btn-label">Theme</span></button>
-      <button class="menu-square" id="topMenuBtn" type="button" onclick="openFeature('menu')" aria-label="Open menu"><span></span><span></span><span></span></button>
+<main id="homePage" class="home-page">
+  <div class="announcement"><span class="announcement-dot"></span><span>YOUR PERSONAL JEE WORKSPACE</span><strong>Track progress. Stay consistent. →</strong></div>
+  <header class="home-nav">
+    <button class="brand" type="button" onclick="goHome()"><span class="brand-mark"><i></i><i></i><i></i></span><span>370R<span>Tracker</span></span></button>
+    <div class="home-nav-actions">
+      <button class="nav-theme" type="button" onclick="openFeature('themes')">Theme</button>
+      <button class="home-menu" type="button" onclick="openFeature('menu')" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
   </header>
-
-  <section class="hero-shell">
-    <div class="hero-copy">
-      <div class="hero-kicker"><span>✦</span> THE MODERN WAY TO PREPARE FOR JEE</div>
-      <h1>Build momentum.<br><em>Track every day.</em><br>Crack it.</h1>
-      <p class="sub">One focused system for lectures, questions, PYQs, revision, focus sessions and weekly progress.</p>
-      <div class="hero-cta">
-        <button class="primary hero-primary" type="button" onclick="openFeature('focus')">Start focus session <b>→</b></button>
-        <button class="secondary hero-secondary" type="button" onclick="openFeature('menu')">Open study tools</button>
-      </div>
-      <div class="hero-proof">
-        <div class="proof-orbits"><span>J</span><span>E</span><span>E</span><span>✓</span></div>
-        <div><b id="heroProgress">Your preparation hub</b><small>Everything stays in one dashboard</small></div>
-      </div>
+  <section class="home-hero">
+    <div class="eyebrow"><span>✦</span> THE SMARTER WAY TO PREPARE FOR JEE</div>
+    <h1>Build your rank.<br><em>Track every day.</em><br>Stay consistent.</h1>
+    <p>Your complete preparation workspace for lectures, questions, PYQs, focus sessions, daily tasks and progress reports.</p>
+    <div class="hero-actions">
+      <button class="hero-primary" type="button" onclick="goTracker()">Open JEE Tracker <b>→</b></button>
+      <button class="hero-secondary" type="button" onclick="openFeature('menu')">Explore tools</button>
     </div>
-    <aside class="hero-side">
-      <div class="hero-mini-card"><span>DAILY TARGET</span><b>70–80</b><small>questions / day</small></div>
-      <div class="hero-mini-card"><span>TRACK</span><b>∞</b><small>unlimited study days</small></div>
-      <div class="hero-quick-actions">
-        <button class="secondary" id="saveBtn">Save</button>
-        <button class="secondary" id="loadBtn">Load</button>
-        <button class="danger" id="clearBtn">Clear</button>
-        <button class="primary" id="pdfBtn">Export PDF</button>
-      </div>
-    </aside>
   </section>
+  <section class="home-proof">
+    <div class="proof-main"><div class="proof-icon">370R</div><div><b>One workspace. Every study day.</b><span>Designed around your JEE preparation</span></div></div>
+    <div class="proof-number"><b>70–80</b><span>target questions / day</span></div>
+  </section>
+  <section class="home-dashboard-preview">
+    <div class="preview-heading"><div><span class="eyebrow">YOUR PREPARATION DASHBOARD</span><h2>Everything important, at a glance.</h2></div><button type="button" onclick="goTracker()">View tracker →</button></div>
+    <div class="preview-grid">
+      <article class="preview-count"><span>JEE MAINS COUNTDOWN</span><b id="homeCountdown">—</b><small id="homeExamDate">24 January 2027</small></article>
+      <article class="preview-card"><span>STUDY SYSTEM</span><b>Study Log</b><small>Unlimited date-wise tracking</small></article>
+      <article class="preview-card"><span>TOOLS</span><b>7 modules</b><small>TODO, Focus, PYQ, Reports & more</small></article>
+    </div>
+  </section>
+  <section class="home-tools">
+    <div class="tool"><b>01</b><div><h3>Daily Tracking</h3><p>Lectures, DPP, class illustrations and PYQs in one study log.</p></div></div>
+    <div class="tool"><b>02</b><div><h3>Focus & TODO</h3><p>Log focused study time and manage your date-wise tasks.</p></div></div>
+    <div class="tool"><b>03</b><div><h3>Reports</h3><p>Weekly insights, monthly reports, PDFs and complete backups.</p></div></div>
+  </section>
+  <footer class="home-footer"><span>370R JEE ADVANCED TRACKER</span><button type="button" onclick="goTracker()">Enter dashboard →</button></footer>
+</main>
+
+<div class="wrap" id="trackerApp" hidden>
+  <div class="top">
+    <div>
+      <h1>370R JEE Advanced Tracker</h1>
+      <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
+    </div>
+    <div class="actions">
+      <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="openFeature('menu')"><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
+      <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')"><span class="top-btn-icon">🎨</span><span class="top-btn-label">Themes</span></button>
+      <button class="secondary" id="saveBtn">Save</button>
+      <button class="secondary" id="loadBtn">Load</button>
+      <button class="danger" id="clearBtn">Clear</button>
+      <button class="primary" id="pdfBtn">Download Filled PDF</button>
+    </div>
+  </div>
 
   <div class="card">
     <div class="settings">

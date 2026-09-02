@@ -1,3 +1,31 @@
+
+/* ---------- Home / Tracker navigation ---------- */
+function goTracker(){
+  const home=document.getElementById("homePage");
+  const tracker=document.getElementById("trackerApp");
+  if(home) home.hidden=true;
+  if(tracker) tracker.hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+  try{localStorage.setItem("jee370rCurrentPage","tracker")}catch(e){}
+}
+function goHome(){
+  const home=document.getElementById("homePage");
+  const tracker=document.getElementById("trackerApp");
+  if(tracker) tracker.hidden=true;
+  if(home) home.hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+  try{localStorage.setItem("jee370rCurrentPage","home")}catch(e){}
+}
+function updateHomeCountdown(){
+  const exam=document.getElementById("examDate");
+  const count=document.getElementById("countdown");
+  const homeCount=document.getElementById("homeCountdown");
+  const label=document.getElementById("examDateLabel");
+  const homeLabel=document.getElementById("homeExamDate");
+  if(homeCount && count) homeCount.textContent=count.textContent;
+  if(homeLabel && label) homeLabel.textContent=label.textContent;
+}
+setTimeout(updateHomeCountdown,150);
 const KEY = "jee370rTrackerV3";
 const LEGACY_V2 = "jee370rTrackerV2";
 const LEGACY_V1 = "jee370rTrackerV1";
@@ -1350,3 +1378,5 @@ function initBackup(){
     e.target.value="";
   });
 }
+
+setInterval(updateHomeCountdown,1000);
