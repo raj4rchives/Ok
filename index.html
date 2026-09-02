@@ -9,21 +9,44 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="announcement"><span class="announcement-dot"></span><span>370R is built for consistent preparation</span><b>Track. Practice. Improve.</b><span class="announcement-close">×</span></div>
 <div class="wrap">
-  <div class="top">
-    <div>
-      <h1>370R JEE Advanced Tracker</h1>
-      <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
+  <header class="top">
+    <div class="brand-lockup">
+      <div class="brand-mark"><i></i><i></i><i></i></div>
+      <div class="brand-name">370<span>R</span></div>
     </div>
-    <div class="actions">
-      <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="openFeature('menu')"><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
-      <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')"><span class="top-btn-icon">🎨</span><span class="top-btn-label">Themes</span></button>
-      <button class="secondary" id="saveBtn">Save</button>
-      <button class="secondary" id="loadBtn">Load</button>
-      <button class="danger" id="clearBtn">Clear</button>
-      <button class="primary" id="pdfBtn">Download Filled PDF</button>
+    <div class="nav-actions">
+      <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')" aria-label="Themes"><span class="top-btn-icon">◐</span><span class="top-btn-label">Theme</span></button>
+      <button class="menu-square" id="topMenuBtn" type="button" onclick="openFeature('menu')" aria-label="Open menu"><span></span><span></span><span></span></button>
     </div>
-  </div>
+  </header>
+
+  <section class="hero-shell">
+    <div class="hero-copy">
+      <div class="hero-kicker"><span>✦</span> THE MODERN WAY TO PREPARE FOR JEE</div>
+      <h1>Build momentum.<br><em>Track every day.</em><br>Crack it.</h1>
+      <p class="sub">One focused system for lectures, questions, PYQs, revision, focus sessions and weekly progress.</p>
+      <div class="hero-cta">
+        <button class="primary hero-primary" type="button" onclick="openFeature('focus')">Start focus session <b>→</b></button>
+        <button class="secondary hero-secondary" type="button" onclick="openFeature('menu')">Open study tools</button>
+      </div>
+      <div class="hero-proof">
+        <div class="proof-orbits"><span>J</span><span>E</span><span>E</span><span>✓</span></div>
+        <div><b id="heroProgress">Your preparation hub</b><small>Everything stays in one dashboard</small></div>
+      </div>
+    </div>
+    <aside class="hero-side">
+      <div class="hero-mini-card"><span>DAILY TARGET</span><b>70–80</b><small>questions / day</small></div>
+      <div class="hero-mini-card"><span>TRACK</span><b>∞</b><small>unlimited study days</small></div>
+      <div class="hero-quick-actions">
+        <button class="secondary" id="saveBtn">Save</button>
+        <button class="secondary" id="loadBtn">Load</button>
+        <button class="danger" id="clearBtn">Clear</button>
+        <button class="primary" id="pdfBtn">Export PDF</button>
+      </div>
+    </aside>
+  </section>
 
   <div class="card">
     <div class="settings">
