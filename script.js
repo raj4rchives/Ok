@@ -63,6 +63,7 @@ function addRows(count = 15) {
       x.addEventListener("input", () => {
         updateStats();
         autoExtendRows();
+        refreshWeeklyIfOpen();
       });
     });
   }
@@ -146,6 +147,7 @@ function save() {
     examDate: examEl ? examEl.value : "",
     rows: rowsData()
   }));
+  refreshWeeklyIfOpen();
   alert("Progress saved on this device.");
 }
 
@@ -779,13 +781,21 @@ function saveManualFocusLog(e){
 window.saveManualFocusLog=saveManualFocusLog;
 
 function weekDates(end){
+  // Keep calendar dates in local time. toISOString() can shift dates backward
+  // in IST and other positive-offset timezones.
   const d=new Date(end+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return [];
   const out=[];
   for(let i=6;i>=0;i--){
-    const x=new Date(d);x.setDate(d.getDate()-i);
-    out.push(x.toISOString().slice(0,10));
+    const x=new Date(d);
+    x.setDate(d.getDate()-i);
+    out.push(localISODate(x));
   }
   return out;
+}
+function refreshWeeklyIfOpen(){
+  const view=document.getElementById("weeklyView");
+  if(view && !view.hidden) renderWeeklyReport();
 }
 function drawWeeklyChart(id, labels, values, suffix=""){
   const box=document.getElementById(id); if(!box)return;
