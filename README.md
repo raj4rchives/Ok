@@ -1,20 +1,14 @@
 # EXAMYWEB
 
-Study-tracker SaaS-style portal built around the existing tracker.
+EXAMYWEB is a free static study tracker for JEE, NEET, Boards and other exam preparation.
 
-## Flow
-Landing page → Login / account → Plan selection → Paytm checkout → verified success → `tracker.html`.
+## Free access
+There is **no payment, subscription, checkout, UPI, Paytm or paid plan** in this version. The landing page and login flow open the tracker directly.
 
-## Paytm setup
-1. Create/activate your Paytm merchant account and get MID + merchant key.
-2. Copy `.env.example` to `.env` and add credentials.
-3. Run `npm install` then `npm start`.
-4. Use the Paytm staging credentials first. Move to production credentials only after testing.
+## GitHub Pages
+Upload the contents of this folder to your GitHub Pages repository and open `index.html`.
 
-**Security:** Merchant keys stay on the server. The browser only receives the transaction token. Payment status must be verified server-side before granting access.
+## Theme
+Mono is the default theme. The tracker supports the serial Mono-style theme collection and can be controlled from the HTML theme configuration.
 
-## Important
-The starter UI shows **$1/month / ₹99/month**. Paytm transactions here are in INR. If you need true automatic recurring monthly billing rather than a monthly purchase, enable Paytm's subscription/UPI AutoPay flow and store subscription status server-side.
-
-## UPI payment
-UPI is enabled on checkout using UPI ID `6900365026@superyes`. Each plan generates an Android UPI intent with the correct INR amount. The customer submits the UTR after payment; `/api/upi/submit` records it as `PENDING`. Verify the UTR with your payment provider before granting access. Do not treat the client-side UTR form as proof of payment.
+Founder: **Raj Sharma**
