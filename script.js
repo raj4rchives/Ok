@@ -620,22 +620,33 @@ const THEMES = [
   "dashboard","arcade","blueprint","newspaper","soft-3d","editorial"
 ];
 
-function applyTheme(theme) {
-  if (!THEMES.includes(theme)) theme = "lavender";
+function getDefaultTheme() {
+  const meta = document.querySelector('meta[name="tracker-default-theme"]');
+  const configured = (meta?.content || "mono").trim().toLowerCase();
+  return THEMES.includes(configured) ? configured : "mono";
+}
+
+function applyTheme(theme, persist = true) {
+  if (!THEMES.includes(theme)) theme = getDefaultTheme();
   document.body.dataset.theme = theme;
-  localStorage.setItem(THEME_KEY, theme);
+  if (persist) localStorage.setItem(THEME_KEY, theme);
   updateThemeButtons();
 }
+
 function updateThemeButtons() {
-  const theme = document.body.dataset.theme || "lavender";
+  const theme = document.body.dataset.theme || getDefaultTheme();
   document.querySelectorAll(".theme-option").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.theme === theme);
   });
 }
 function initThemes() {
-  applyTheme(localStorage.getItem(THEME_KEY) || "lavender");
+  // The editable default is controlled from index.html/tracker.html:
+  // <meta name="tracker-default-theme" content="mono">
+  // Saved user selection still wins after the user manually changes theme.
+  const saved = localStorage.getItem(THEME_KEY);
+  applyTheme(saved && THEMES.includes(saved) ? saved : getDefaultTheme(), false);
   document.querySelectorAll(".theme-option").forEach(btn => {
-    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme, true));
   });
 }
 
