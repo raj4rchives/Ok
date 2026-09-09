@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7566d8">
+<meta name="theme-color" content="#000000">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>370R JEE Advanced Tracker by Raj Sharma</title>
+<title>EXAMYWEB — Study Tracker</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>370R JEE Advanced Tracker</h1>
+      <h1>EXAMYWEB — Study Tracker</h1>
       <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
     </div>
     <div class="actions">
@@ -56,20 +56,17 @@
         <button class="menu-feature-btn" data-open-feature="syllabus">
           <span>📚</span><div><b>Syllabus Tracker</b><small>Add chapter + total lectures → print A4 tracker</small></div>
         </button>
-        <button class="menu-feature-btn" data-open-feature="pyq">
-          <span>☑️</span><div><b>PYQ Question Tracker</b><small>Chapter-wise 10-question blocks + revision ticks</small></div>
-        </button>
         <button class="menu-feature-btn" data-open-feature="backup">
           <span>💾</span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="themes">
-          <span>🎨</span><div><b>Themes</b><small>62 visual themes — different layouts, not just colours</small></div>
+          <span>🎨</span><div><b>Themes</b><small>29 different colour styles</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="todo">
           <span>📝</span><div><b>Daily TODO</b><small>Date-wise tasks + PDF + analysis</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="focus">
-          <span>⏱️</span><div><b>Focus Mode</b><small>Manual focus time + study logs + analysis</small></div>
+          <span>⏱️</span><div><b>Focus Mode</b><small>Timer + study logs + analysis</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="weekly">
           <span>📊</span><div><b>Weekly Report</b><small>Questions • Lectures • Focus time chart</small></div>
@@ -92,37 +89,6 @@
         </div>
         <p class="note">बस Subject, Chapter Name और Total Lectures डालो. PDF में हर lecture के लिए <b>□ L1   □ L2   □ L3...</b> और JM/Adv/MBBS/OPP/HW/Module/PYQ/Adv Prob/R1/R2/R3 के अलग boxes होंगे. A4 Landscape में print करके offline tick कर सकते हो.</p>
         <div id="syllabusList" class="syllabus-list"></div>
-      </div>
-
-      <div id="pyqView" class="feature-view" hidden>
-        <div class="pyq-toolbar">
-          <button class="secondary" id="pyqBackBtn" type="button">← Menu</button>
-          <div class="pyq-actions">
-            <button class="secondary" id="pyqClearBtn" type="button">Clear PYQ Tracker</button>
-            <button class="primary" id="pyqPdfBtn" type="button">📄 Download A4 PDF</button>
-          </div>
-        </div>
-
-        <div class="pyq-form card">
-          <div class="small"><label>Subject</label>
-            <select id="pyqSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option></select>
-          </div>
-          <div class="pyq-chapter-field"><label>Chapter Name</label>
-            <input id="pyqChapterName" type="text" maxlength="100" placeholder="e.g. Motion in Straight Line">
-          </div>
-          <div class="small"><label>Total PYQs</label>
-            <input id="pyqTotalQuestions" type="number" min="1" max="1000" step="1" placeholder="50">
-          </div>
-          <button class="primary" id="pyqAddBtn" type="button">+ Add Chapter</button>
-        </div>
-
-        <div class="pyq-help">
-          <b>1 small square = 10 questions.</b>
-          Example: 50 PYQs → 5 blocks. The last block shows the actual question number.
-          <span>REV boxes are for manual revision ticks.</span>
-        </div>
-
-        <div id="pyqList" class="pyq-list"></div>
       </div>
 
       <div id="themesView" class="feature-view" hidden>
@@ -176,20 +142,6 @@
           <button class="theme-option" data-theme="rosewood"><span class="theme-dot theme-rosewood"></span><b>Rosewood</b></button>
           <button class="theme-option" data-theme="teal-night"><span class="theme-dot theme-teal-night"></span><b>Teal Night</b></button>
           <button class="theme-option" data-theme="gold-night"><span class="theme-dot theme-gold-night"></span><b>Gold Night</b></button>
-          <button class="theme-option" data-theme="glass"><span class="theme-dot theme-glass"></span><b>Glass</b></button>
-          <button class="theme-option" data-theme="bento"><span class="theme-dot theme-bento"></span><b>Bento</b></button>
-          <button class="theme-option" data-theme="brutalist"><span class="theme-dot theme-brutalist"></span><b>Brutalist</b></button>
-          <button class="theme-option" data-theme="terminal"><span class="theme-dot theme-terminal"></span><b>Terminal</b></button>
-          <button class="theme-option" data-theme="notebook"><span class="theme-dot theme-notebook"></span><b>Notebook</b></button>
-          <button class="theme-option" data-theme="paper"><span class="theme-dot theme-paper"></span><b>Paper</b></button>
-          <button class="theme-option" data-theme="mono"><span class="theme-dot theme-mono"></span><b>Mono</b></button>
-          <button class="theme-option" data-theme="glass-dark"><span class="theme-dot theme-glass-dark"></span><b>Glass Dark</b></button>
-          <button class="theme-option" data-theme="dashboard"><span class="theme-dot theme-dashboard"></span><b>Dashboard</b></button>
-          <button class="theme-option" data-theme="arcade"><span class="theme-dot theme-arcade"></span><b>Arcade</b></button>
-          <button class="theme-option" data-theme="blueprint"><span class="theme-dot theme-blueprint"></span><b>Blueprint</b></button>
-          <button class="theme-option" data-theme="newspaper"><span class="theme-dot theme-newspaper"></span><b>Newspaper</b></button>
-          <button class="theme-option" data-theme="soft-3d"><span class="theme-dot theme-soft-3d"></span><b>Soft 3D</b></button>
-          <button class="theme-option" data-theme="editorial"><span class="theme-dot theme-editorial"></span><b>Editorial</b></button>
         </div>
       </div>
 
@@ -198,7 +150,7 @@
           <div class="small todo-date-wrap"><label>Date</label><input id="todoDate" type="date"></div>
           <div class="todo-task-wrap"><label>Task</label><input id="todoTask" type="text" maxlength="140" placeholder="e.g. Complete Electrostatics DPP"></div>
           <div class="todo-category-wrap"><label>Category</label>
-            <select id="todoCategory"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Lecture</option><option>Revision</option><option>Questions</option></select>
+            <select id="todoCategory"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Lecture</option><option>Revision</option><option>Other</option></select>
           </div>
           <button class="primary todo-add-btn" id="addTodoBtn">+ Add Task</button>
         </div>
@@ -246,45 +198,12 @@
       </div>
 
       <div id="focusView" class="feature-view" hidden>
-        <div class="focus-hero">
-          <div>
-            <div class="focus-kicker">MANUAL STUDY LOG</div>
-            <h3>Log your focus time</h3>
-            <p>No stopwatch. Just enter how long you studied and save it.</p>
-          </div>
-          <div class="focus-hero-badge">⏱ <b>Manual only</b><span>No live timer</span></div>
+        <div class="focus-manual-card"><div class="focus-manual-head"><div><div class="feature-kicker">FOCUS LOG</div><h3>Log your study time</h3><p>Timer nahi. Bas jitna padha, utne minutes manually add karo.</p></div><div class="manual-focus-mark">＋</div></div>
+          <div class="focus-fields focus-fields-manual"><div><label>Subject</label><select id="focusSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Other</option></select></div><div><label>Activity</label><select id="focusActivity"><option>Lecture</option><option>Questions</option><option>Revision</option><option>DPP</option><option>PYQ</option><option>Other</option></select></div><div><label>Minutes</label><input id="focusManualMinutes" type="number" min="1" placeholder="e.g. 90" inputmode="numeric"></div><div><label>Questions</label><input id="focusQuestions" type="number" min="0" value="0" inputmode="numeric"></div><div class="focus-note-field"><label>Note</label><input id="focusNote" type="text" maxlength="100" placeholder="Optional"></div><div><label>Date</label><input id="focusManualDate" type="date"></div></div>
+          <div class="quick-minutes"><span>Quick add:</span><button type="button" data-focus-min="30">30m</button><button type="button" data-focus-min="60">1h</button><button type="button" data-focus-min="90">1h 30m</button><button type="button" data-focus-min="120">2h</button><button type="button" data-focus-min="180">3h</button></div><button class="primary focus-save-main" id="focusManualSaveBtn" type="button">＋ Add Focus Log</button>
         </div>
-        <div class="focus-controls manual-focus-card">
-          <div class="focus-fields">
-            <div><label>Subject</label><select id="focusSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Other</option></select></div>
-            <div><label>Activity</label><select id="focusActivity"><option>Lecture</option><option>Questions</option><option>Revision</option><option>DPP</option><option>PYQ</option><option>Other</option></select></div>
-            <div class="focus-duration-field"><label>Study time (minutes)</label><input id="focusManualMinutes" type="number" min="1" max="1440" inputmode="numeric" placeholder="e.g. 90"></div>
-            <div><label>Questions</label><input id="focusQuestions" type="number" min="0" value="0" inputmode="numeric"></div>
-            <div class="focus-date-field"><label>Study date</label><input id="focusManualDate" type="date"></div>
-            <div><label>Note</label><input id="focusNote" type="text" maxlength="100" placeholder="Optional — chapter, topic, etc."></div>
-          </div>
-          <div class="focus-presets" aria-label="Quick time presets">
-            <span>Quick add:</span>
-            <button type="button" class="focus-chip" data-focus-min="30">30m</button>
-            <button type="button" class="focus-chip" data-focus-min="60">1h</button>
-            <button type="button" class="focus-chip" data-focus-min="90">1h 30m</button>
-            <button type="button" class="focus-chip" data-focus-min="120">2h</button>
-          </div>
-          <div class="focus-buttons">
-            <button class="primary focus-save-main" id="focusManualSaveBtn">＋ Add Focus Log</button>
-          </div>
-        </div>
-        <div class="todo-analysis focus-analysis">
-          <div class="todo-stat"><b id="focusTodayMinutes">0m</b><span>Today focus</span></div>
-          <div class="todo-stat"><b id="focusTodayQuestions">0</b><span>Questions</span></div>
-          <div class="todo-stat"><b id="focusTotalMinutes">0m</b><span>Total focus</span></div>
-          <div class="todo-stat"><b id="focusLogCount">0</b><span>Logs</span></div>
-        </div>
-        <div class="todo-toolbar">
-          <div class="todo-filter-wrap"><label>Show logs for</label><input id="focusFilterDate" type="date"></div>
-          <button class="secondary" id="focusPdfBtn">📄 Download Focus PDF</button>
-        </div>
-        <div class="todo-list" id="focusList"><div class="todo-empty">No focus logs yet.</div></div>
+        <div class="todo-analysis focus-analysis"><div class="todo-stat"><b id="focusTodayMinutes">0m</b><span>Today focus</span></div><div class="todo-stat"><b id="focusTodayQuestions">0</b><span>Questions</span></div><div class="todo-stat"><b id="focusTotalMinutes">0m</b><span>Total focus</span></div><div class="todo-stat"><b id="focusLogCount">0</b><span>Logs</span></div></div>
+        <div class="todo-toolbar focus-toolbar"><div class="todo-filter-wrap"><label>Show logs for</label><input id="focusFilterDate" type="date"></div><button class="secondary" id="focusPdfBtn" type="button">📄 Download Focus PDF</button></div><div class="todo-list" id="focusList"><div class="todo-empty">No focus logs yet.</div></div>
       </div>
     </div>
   </div>

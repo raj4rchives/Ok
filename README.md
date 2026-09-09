@@ -1,15 +1,20 @@
-# 370R JEE Advanced Tracker V5
+# EXAMYWEB
 
-Features:
-- Unlimited daily study log
-- Physics/Chemistry/Maths HW + Class Illustration combined in one column
-- Subject-wise DPP and PYQ tracking
-- Overall and subject dashboard
-- Automatic calendar-month phases (Phase 1, Phase 2, ...)
-- Monthly PDF report
-- JSON export/import backup
-- Editable JEE Advanced target date + live days-left countdown
+Study-tracker SaaS-style portal built around the existing tracker.
 
-Note: the default countdown date is 23 May 2027 as an editable planning date. JEE Advanced 2027 official date was not found on the official JEE Advanced site in this build; change the date when officially announced.
+## Flow
+Landing page → Login / account → Plan selection → Paytm checkout → verified success → `tracker.html`.
 
-GitHub Pages: upload all files to repository root.
+## Paytm setup
+1. Create/activate your Paytm merchant account and get MID + merchant key.
+2. Copy `.env.example` to `.env` and add credentials.
+3. Run `npm install` then `npm start`.
+4. Use the Paytm staging credentials first. Move to production credentials only after testing.
+
+**Security:** Merchant keys stay on the server. The browser only receives the transaction token. Payment status must be verified server-side before granting access.
+
+## Important
+The starter UI shows **$1/month / ₹99/month**. Paytm transactions here are in INR. If you need true automatic recurring monthly billing rather than a monthly purchase, enable Paytm's subscription/UPI AutoPay flow and store subscription status server-side.
+
+## UPI payment
+UPI is enabled on checkout using UPI ID `6900365026@superyes`. Each plan generates an Android UPI intent with the correct INR amount. The customer submits the UTR after payment; `/api/upi/submit` records it as `PENDING`. Verify the UTR with your payment provider before granting access. Do not treat the client-side UTR form as proof of payment.
