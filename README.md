@@ -1,14 +1,15 @@
-# EXAMYWEB
+# 370R JEE Advanced Tracker V5
 
-EXAMYWEB is a free static study tracker for JEE, NEET, Boards and other exam preparation.
+Features:
+- Unlimited daily study log
+- Physics/Chemistry/Maths HW + Class Illustration combined in one column
+- Subject-wise DPP and PYQ tracking
+- Overall and subject dashboard
+- Automatic calendar-month phases (Phase 1, Phase 2, ...)
+- Monthly PDF report
+- JSON export/import backup
+- Editable JEE Advanced target date + live days-left countdown
 
-## Free access
-There is **no payment, subscription, checkout, UPI, Paytm or paid plan** in this version. The landing page and login flow open the tracker directly.
+Note: the default countdown date is 23 May 2027 as an editable planning date. JEE Advanced 2027 official date was not found on the official JEE Advanced site in this build; change the date when officially announced.
 
-## GitHub Pages
-Upload the contents of this folder to your GitHub Pages repository and open `index.html`.
-
-## Theme
-Mono is the default theme. The tracker supports the serial Mono-style theme collection and can be controlled from the HTML theme configuration.
-
-Founder: **Raj Sharma**
+GitHub Pages: upload all files to repository root.

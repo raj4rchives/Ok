@@ -63,6 +63,7 @@ function addRows(count = 15) {
       x.addEventListener("input", () => {
         updateStats();
         autoExtendRows();
+        refreshWeeklyIfOpen();
       });
     });
   }
@@ -146,6 +147,7 @@ function save() {
     examDate: examEl ? examEl.value : "",
     rows: rowsData()
   }));
+  refreshWeeklyIfOpen();
   alert("Progress saved on this device.");
 }
 
@@ -537,7 +539,7 @@ function updateDashboard(selectedDateData) {
 
 
 /* =========================================================
-   MENU + 29 THEMES + DAILY TODO + FOCUS MODE
+   MENU + 62 THEMES + DAILY TODO + MANUAL FOCUS MODE
    These features use separate localStorage keys and do not
    alter the existing tracker data.
    ========================================================= */
@@ -571,14 +573,15 @@ function escapeFeatureText(value) {
 function openFeature(name) {
   const overlay = document.getElementById("featureOverlay");
   const title = document.getElementById("featurePageTitle");
-  const views = ["menu","syllabus","themes","todo","focus","weekly","backup"];
-  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
+  const views = ["menu","syllabus","pyq","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"☑️ PYQ Question Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
   overlay.hidden = false;
   views.forEach(v => {
     const el = document.getElementById(v + "View");
     if (el) el.hidden = v !== name;
   });
   title.textContent = titles[name] || "Menu";
+  if (name === "pyq") renderPYQ();
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
@@ -605,11 +608,36 @@ function initFeatureMenu() {
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
 }
 
-/* ---------- 60 Mono themes ---------- */
-const THEMES = ["mono", "mono-02", "mono-03", "mono-04", "mono-05", "mono-06", "mono-07", "mono-08", "mono-09", "mono-10", "mono-11", "mono-12", "mono-13", "mono-14", "mono-15", "mono-16", "mono-17", "mono-18", "mono-19", "mono-20", "mono-21", "mono-22", "mono-23", "mono-24", "mono-25", "mono-26", "mono-27", "mono-28", "mono-29", "mono-30", "mono-31", "mono-32", "mono-33", "mono-34", "mono-35", "mono-36", "mono-37", "mono-38", "mono-39", "mono-40", "mono-41", "mono-42", "mono-43", "mono-44", "mono-45", "mono-46", "mono-47", "mono-48", "mono-49", "mono-50", "mono-51", "mono-52", "mono-53", "mono-54", "mono-55", "mono-56", "mono-57", "mono-58", "mono-59", "mono-60"];
-function applyTheme(theme){if(!THEMES.includes(theme))theme="mono";document.body.dataset.theme=theme;localStorage.setItem(THEME_KEY,theme);updateThemeButtons();}
-function updateThemeButtons(){const theme=document.body.dataset.theme||"mono";document.querySelectorAll(".theme-option").forEach(btn=>btn.classList.toggle("active",btn.dataset.theme===theme));}
-function initThemes(){applyTheme(localStorage.getItem(THEME_KEY)||document.body.dataset.theme||"mono");document.querySelectorAll(".theme-option").forEach(btn=>btn.addEventListener("click",()=>applyTheme(btn.dataset.theme)));}
+/* ---------- 62 themes ---------- */
+const THEMES = [
+  "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
+  "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
+  "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
+  "grape","ice","amoled","dracula","tokyo-night","nord-dark","solar-dark",
+  "deep-ocean","cyberpunk","synthwave","matrix","crimson","royal-dark","obsidian",
+  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night",
+  "glass","bento","brutalist","terminal","notebook","paper","mono","glass-dark",
+  "dashboard","arcade","blueprint","newspaper","soft-3d","editorial"
+];
+
+function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = "lavender";
+  document.body.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeButtons();
+}
+function updateThemeButtons() {
+  const theme = document.body.dataset.theme || "lavender";
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.theme === theme);
+  });
+}
+function initThemes() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "lavender");
+  document.querySelectorAll(".theme-option").forEach(btn => {
+    btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+  });
+}
 
 /* ---------- Daily TODO ---------- */
 function getTodos() { return safeJSON(TODO_KEY, []); }
@@ -692,14 +720,144 @@ function initTodo() {
   document.getElementById("todoPdfBtn")?.addEventListener("click",downloadTodoPDF);
 }
 
-/* ---------- Focus Mode: manual time only ---------- */
+/* ---------- Focus Mode — manual time only ---------- */
 function getFocusLogs(){return safeJSON(FOCUS_KEY,[]);}
 function saveFocusLogs(x){localStorage.setItem(FOCUS_KEY,JSON.stringify(x));}
-function formatMinutes(min){min=Math.round(Number(min)||0);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min}m`;}
-function saveManualFocusLog(e){if(e){e.preventDefault();e.stopPropagation();}const m=document.getElementById("focusManualMinutes"),d=document.getElementById("focusManualDate"),minutes=parseInt(m?.value,10);if(!Number.isFinite(minutes)||minutes<1){alert("Manual focus time me 1 ya usse zyada minutes enter karo.");m?.focus();return false;}const logs=getFocusLogs();logs.push({id:Date.now()+Math.random(),date:d?.value||localISODate(),minutes,subject:document.getElementById("focusSubject")?.value||"Other",activity:document.getElementById("focusActivity")?.value||"Other",questions:parseInt(document.getElementById("focusQuestions")?.value,10)||0,note:document.getElementById("focusNote")?.value.trim()||"Manual time",createdAt:Date.now(),manual:true});saveFocusLogs(logs);m.value="";document.getElementById("focusNote").value="";renderFocus();}
-function renderFocus(){const date=document.getElementById("focusFilterDate")?.value||localISODate(),logs=getFocusLogs(),daily=logs.filter(x=>x.date===date),today=logs.filter(x=>x.date===localISODate()),mins=a=>a.reduce((s,x)=>s+(Number(x.minutes)||0),0);put("focusTodayMinutes",formatMinutes(mins(today)));put("focusTodayQuestions",today.reduce((s,x)=>s+(Number(x.questions)||0),0));put("focusTotalMinutes",formatMinutes(mins(logs)));put("focusLogCount",logs.length);const list=document.getElementById("focusList");if(!list)return;if(!daily.length){list.innerHTML='<div class="todo-empty">No focus logs for this date.</div>';return;}list.innerHTML=daily.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(x=>`<div class="todo-item focus-item"><div class="focus-log-time">${formatMinutes(x.minutes)}</div><div class="todo-item-main"><div class="todo-item-title">${escapeFeatureText(x.subject)} · ${escapeFeatureText(x.activity)}</div><div class="todo-item-meta"><span class="todo-tag">${x.questions||0} questions</span><span>${escapeFeatureText(x.note||"")}</span></div></div><button class="todo-delete" data-focus-delete="${x.id}">🗑️</button></div>`).join("");list.querySelectorAll("[data-focus-delete]").forEach(btn=>btn.addEventListener("click",()=>{saveFocusLogs(getFocusLogs().filter(x=>String(x.id)!==String(btn.dataset.focusDelete)));renderFocus();}));}
-function downloadFocusPDF(){const jsPDFLib=window.jspdf?window.jspdf.jsPDF:window.jsPDF;if(!jsPDFLib){alert("PDF library missing.");return;}const date=document.getElementById("focusFilterDate")?.value||localISODate(),logs=getFocusLogs().filter(x=>x.date===date);if(!logs.length){alert("Is date ke liye koi focus log nahi hai.");return;}const total=logs.reduce((a,x)=>a+(Number(x.minutes)||0),0),qs=logs.reduce((a,x)=>a+(Number(x.questions)||0),0),pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("EXAMYWEB — Focus Report",14,16);pdf.setFontSize(11);pdf.text(`${date}  •  Focus: ${formatMinutes(total)}  •  Questions: ${qs}`,14,24);const body=logs.map((x,i)=>[i+1,x.subject,x.activity,formatMinutes(x.minutes),x.questions,x.note||""]);if(pdf.autoTable)pdf.autoTable({startY:32,head:[["#","SUBJECT","ACTIVITY","TIME","Q","NOTE"]],body,theme:"grid",styles:{fontSize:8}});pdf.save(`EXAMYWEB-Focus-${date}.pdf`);}
-function initFocus(){const f=document.getElementById("focusFilterDate"),d=document.getElementById("focusManualDate");if(f)f.value=localISODate();if(d)d.value=localISODate();document.getElementById("focusManualSaveBtn")?.addEventListener("click",saveManualFocusLog);document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);f?.addEventListener("change",renderFocus);document.querySelectorAll("[data-focus-min]").forEach(b=>b.addEventListener("click",()=>{const el=document.getElementById("focusManualMinutes");if(el)el.value=b.dataset.focusMin;}));renderFocus();}
+function formatMinutes(min){min=Math.round(min);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min}m`;}
+function saveManualFocusLog(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  const minutesEl=document.getElementById("focusManualMinutes");
+  const dateEl=document.getElementById("focusManualDate");
+  const minutes=parseInt(minutesEl?.value,10);
+  if(!Number.isFinite(minutes) || minutes<1){
+    alert("Study time me 1 ya usse zyada minutes enter karo.");
+    minutesEl?.focus();
+    return false;
+  }
+  const date=dateEl?.value || localISODate();
+  const subject=document.getElementById("focusSubject")?.value || "Other";
+  const activity=document.getElementById("focusActivity")?.value || "Other";
+  const questions=parseInt(document.getElementById("focusQuestions")?.value,10)||0;
+  const note=document.getElementById("focusNote")?.value.trim() || "Manual time";
+  const logs=getFocusLogs();
+  logs.push({id:Date.now()+Math.random(),date,minutes,subject,activity,questions,note,createdAt:Date.now(),manual:true});
+  saveFocusLogs(logs);
+  if(minutesEl) minutesEl.value="";
+  if(document.getElementById("focusQuestions")) document.getElementById("focusQuestions").value="0";
+  if(document.getElementById("focusNote")) document.getElementById("focusNote").value="";
+  if(document.getElementById("focusFilterDate")) document.getElementById("focusFilterDate").value=date;
+  renderFocus();
+  refreshWeeklyIfOpen();
+  alert(`✅ ${formatMinutes(minutes)} focus time saved for ${date}.`);
+  return false;
+}
+window.saveManualFocusLog=saveManualFocusLog;
+
+function weekDates(end){
+  // Keep calendar dates in local time. toISOString() can shift dates backward
+  // in IST and other positive-offset timezones.
+  const d=new Date(end+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return [];
+  const out=[];
+  for(let i=6;i>=0;i--){
+    const x=new Date(d);
+    x.setDate(d.getDate()-i);
+    out.push(localISODate(x));
+  }
+  return out;
+}
+function refreshWeeklyIfOpen(){
+  const view=document.getElementById("weeklyView");
+  if(view && !view.hidden) renderWeeklyReport();
+}
+function drawWeeklyChart(id, labels, values, suffix=""){
+  const box=document.getElementById(id); if(!box)return;
+  const max=Math.max(1,...values.map(v=>Number(v)||0));
+  box.innerHTML=values.map((value,i)=>{
+    const v=Number(value)||0;
+    const pct=Math.max(0,Math.min(100,(v/max)*100));
+    return `<div class="weekly-bar-col">
+      <div class="weekly-bar-value">${escapeFeatureText(String(v)+suffix)}</div>
+      <div class="weekly-bar-track"><div class="weekly-bar-fill" style="height:${pct}%"></div></div>
+      <div class="weekly-bar-label">${escapeFeatureText(labels[i])}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderWeeklyReport(){
+  const input=document.getElementById("weeklyEndDate");
+  if(!input)return;
+  const end=input.value||localISODate();
+  const dates=weekDates(end), rows=rowsData(), logs=getFocusLogs(), todos=getTodos();
+  const questions=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.phyWork)+num(r.chemWork)+num(r.mathWork)+num(r.phyDpp)+num(r.chemDpp)+num(r.mathDpp)+num(r.phyPyq)+num(r.chemPyq)+num(r.mathPyq),0));
+  const lectures=dates.map(date=>rows.filter(r=>r.date===date).reduce((sum,r)=>sum+num(r.lec),0));
+  const focus=dates.map(date=>logs.filter(x=>x.date===date).reduce((sum,x)=>sum+(Number(x.minutes)||0),0));
+  const weekTodos=todos.filter(x=>dates.includes(x.date));
+  const done=weekTodos.filter(x=>x.completed).length;
+  put("weeklyQuestions",questions.reduce((a,b)=>a+b,0));
+  put("weeklyLectures",lectures.reduce((a,b)=>a+b,0));
+  put("weeklyFocus",formatMinutes(focus.reduce((a,b)=>a+b,0)));
+  put("weeklyTasks",(weekTodos.length?Math.round(done/weekTodos.length*100):0)+"%");
+  const labels=dates.map(d=>new Date(d+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"}));
+  drawWeeklyChart("weeklyQuestionsChart",labels,questions);
+  drawWeeklyChart("weeklyLecturesChart",labels,lectures);
+  drawWeeklyChart("weeklyFocusChart",labels,focus,"m");
+}
+
+function renderFocus(){
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs(), daily=logs.filter(x=>x.date===date);
+  const today=logs.filter(x=>x.date===localISODate());
+  const mins=arr=>arr.reduce((a,x)=>a+(Number(x.minutes)||0),0);
+  put("focusTodayMinutes",formatMinutes(mins(today)));
+  put("focusTodayQuestions",today.reduce((a,x)=>a+(Number(x.questions)||0),0));
+  put("focusTotalMinutes",formatMinutes(mins(logs)));
+  put("focusLogCount",logs.length);
+  const list=document.getElementById("focusList"); if(!list)return;
+  if(!daily.length){list.innerHTML='<div class="todo-empty">No focus logs for this date.</div>';return;}
+  list.innerHTML=daily.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(x=>`
+    <div class="todo-item focus-item">
+      <div class="todo-item-main">
+        <div class="todo-item-title">${escapeFeatureText(x.subject)} · ${escapeFeatureText(x.activity)} · ${formatMinutes(x.minutes)}</div>
+        <div class="todo-item-meta"><span class="todo-tag">${x.questions||0} questions</span><span>${escapeFeatureText(x.note||"")}</span></div>
+      </div>
+      <button class="todo-delete" data-focus-delete="${x.id}">🗑️</button>
+    </div>`).join("");
+  list.querySelectorAll("[data-focus-delete]").forEach(btn=>btn.addEventListener("click",()=>{
+    saveFocusLogs(getFocusLogs().filter(x=>String(x.id)!==String(btn.dataset.focusDelete)));renderFocus();
+  }));
+}
+function downloadFocusPDF(){
+  const jsPDFLib=window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+  if(!jsPDFLib){alert("PDF library missing.");return;}
+  const date=document.getElementById("focusFilterDate")?.value || localISODate();
+  const logs=getFocusLogs().filter(x=>x.date===date);
+  if(!logs.length){alert("Is date ke liye koi focus log nahi hai.");return;}
+  const total=logs.reduce((a,x)=>a+x.minutes,0), qs=logs.reduce((a,x)=>a+x.questions,0);
+  const pdf=new jsPDFLib({orientation:"portrait",unit:"mm",format:"a4"});
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("370R JEE Tracker — Focus Report",14,16);
+  pdf.setFontSize(11);pdf.text(`${date}  •  Focus: ${formatMinutes(total)}  •  Questions: ${qs}`,14,24);
+  const body=logs.map((x,i)=>[i+1,x.subject,x.activity,formatMinutes(x.minutes),x.questions,x.note||""]);
+  if(pdf.autoTable)pdf.autoTable({startY:32,head:[["#","SUBJECT","ACTIVITY","TIME","Q","NOTE"]],body,theme:"grid",styles:{fontSize:8}});
+  pdf.save(`370R-Focus-${date}.pdf`);
+}
+function initFocus(){
+  const f=document.getElementById("focusFilterDate");
+  if(f)f.value=localISODate();
+  const md=document.getElementById("focusManualDate");
+  if(md)md.value=localISODate();
+  const manualBtn=document.getElementById("focusManualSaveBtn");
+  if(manualBtn)manualBtn.onclick=saveManualFocusLog;
+  document.querySelectorAll("[data-focus-min]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const minutes=document.getElementById("focusManualMinutes");
+      if(minutes)minutes.value=btn.dataset.focusMin;
+      minutes?.focus();
+    });
+  });
+  document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
+  f?.addEventListener("change",renderFocus);
+}
 
 function initWeeklyReport(){
   const d=document.getElementById("weeklyEndDate");
@@ -707,6 +865,183 @@ function initWeeklyReport(){
   document.getElementById("weeklyThisWeekBtn")?.addEventListener("click",()=>{if(d)d.value=localISODate();renderWeeklyReport();});
   d?.addEventListener("change",renderWeeklyReport);
   window.addEventListener("resize",()=>{if(!document.getElementById("weeklyView")?.hidden)renderWeeklyReport();});
+}
+
+
+/* ---------- PYQ Question Tracker: chapter-wise 10-question blocks + revision ---------- */
+const PYQ_KEY = "370R_JEE_PYQ_TRACKER_V1";
+const PYQ_SUBJECTS = ["Physics","Chemistry","Mathematics"];
+
+function pyqData(){
+  try{
+    const raw=localStorage.getItem(PYQ_KEY);
+    const x=raw?JSON.parse(raw):{chapters:[]};
+    return {version:1,chapters:(Array.isArray(x.chapters)?x.chapters:[]).map(c=>({
+      id:String(c.id||("pyq_"+Date.now()+Math.random().toString(36).slice(2))),
+      subject:PYQ_SUBJECTS.includes(c.subject)?c.subject:"Physics",
+      name:String(c.name||"").trim(),
+      total:Math.max(1,Math.min(1000,parseInt(c.total,10)||1)),
+      done:Array.isArray(c.done)?c.done.map(Boolean):[],
+      rev:Array.isArray(c.rev)?c.rev.map(Boolean):[]
+    })).filter(c=>c.name)};
+  }catch(e){return {version:1,chapters:[]};}
+}
+function savePYQData(d){localStorage.setItem(PYQ_KEY,JSON.stringify(d));}
+
+function pyqBlocks(c){
+  const count=Math.ceil(c.total/10);
+  let html="";
+  for(let i=0;i<count;i++){
+    const start=i*10+1, end=Math.min((i+1)*10,c.total);
+    html+=`<button type="button" class="pyq-block ${c.done[i]?"checked":""}" data-pyq-block="${escapeFeatureText(c.id)}" data-block-index="${i}" aria-label="Questions ${start}-${end}">
+      <span class="pyq-square"></span><span class="pyq-range">${start}-${end}</span>
+    </button>`;
+  }
+  return html;
+}
+function pyqRevision(c){
+  return `<button type="button" class="pyq-rev-box ${c.rev[0]?"checked":""}" data-pyq-rev="${escapeFeatureText(c.id)}" data-rev-index="0" aria-label="Revision"></button>`;
+}
+function renderPYQ(){
+  const list=document.getElementById("pyqList"); if(!list)return;
+  const d=pyqData();
+  if(!d.chapters.length){
+    list.innerHTML='<div class="sy-empty">No PYQ chapters yet. Add your first chapter above.</div>'; return;
+  }
+  list.innerHTML=PYQ_SUBJECTS.map(subject=>{
+    const rows=d.chapters.filter(c=>c.subject===subject);
+    if(!rows.length)return "";
+    return `<section class="pyq-subject">
+      <div class="pyq-subject-head"><h3>${escapeFeatureText(subject)}</h3><span>${rows.length} chapter${rows.length>1?"s":""}</span></div>
+      <div class="pyq-table-wrap">
+        <table class="pyq-table">
+          <thead><tr><th class="pyq-idx">INDEX</th><th class="pyq-name">CHAPTER NAME</th><th class="pyq-total">TOTAL</th><th>PYQ BLOCKS — 10 Q</th><th class="pyq-rev">REV</th><th class="pyq-action">ACTION</th></tr></thead>
+          <tbody>${rows.map((c,i)=>`<tr>
+            <td class="pyq-idx">${String(i+1).padStart(2,"0")}</td>
+            <td class="pyq-name">${escapeFeatureText(c.name)}</td>
+            <td class="pyq-total">${c.total}</td>
+            <td class="pyq-progress"><div class="pyq-blocks">${pyqBlocks(c)}</div></td>
+            <td class="pyq-rev"><div class="pyq-revisions">${pyqRevision(c)}</div></td>
+            <td class="pyq-action"><button type="button" class="pyq-delete" data-pyq-delete="${escapeFeatureText(c.id)}">Delete</button></td>
+          </tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </section>`;
+  }).join("");
+}
+function addPYQChapter(){
+  const subject=document.getElementById("pyqSubject")?.value;
+  const name=document.getElementById("pyqChapterName")?.value.trim();
+  const total=Number(document.getElementById("pyqTotalQuestions")?.value);
+  if(!PYQ_SUBJECTS.includes(subject)||!name||!Number.isInteger(total)||total<1||total>1000){
+    alert("Subject, Chapter Name aur Total PYQs (1–1000) sahi se bharo.");return;
+  }
+  const d=pyqData();
+  d.chapters.push({id:"pyq_"+Date.now()+"_"+Math.random().toString(36).slice(2),subject,name,total,done:[],rev:[]});
+  savePYQData(d);renderPYQ();
+  document.getElementById("pyqChapterName").value="";
+  document.getElementById("pyqTotalQuestions").value="";
+  document.getElementById("pyqChapterName").focus();
+}
+function initPYQ(){
+  document.getElementById("pyqAddBtn")?.addEventListener("click",addPYQChapter);
+  document.getElementById("pyqChapterName")?.addEventListener("keydown",e=>{if(e.key==="Enter")addPYQChapter();});
+  document.getElementById("pyqBackBtn")?.addEventListener("click",()=>openFeature("menu"));
+  document.getElementById("pyqClearBtn")?.addEventListener("click",()=>{
+    if(!pyqData().chapters.length)return;
+    if(confirm("Clear the complete PYQ tracker?")){savePYQData({version:1,chapters:[]});renderPYQ();}
+  });
+  document.getElementById("pyqList")?.addEventListener("click",e=>{
+    const block=e.target.closest("[data-pyq-block]");
+    if(block){
+      const d=pyqData(),c=d.chapters.find(x=>x.id===block.dataset.pyqBlock),i=Number(block.dataset.blockIndex);
+      if(c){c.done[i]=!c.done[i];savePYQData(d);renderPYQ();} return;
+    }
+    const rev=e.target.closest("[data-pyq-rev]");
+    if(rev){
+      const d=pyqData(),c=d.chapters.find(x=>x.id===rev.dataset.pyqRev),i=Number(rev.dataset.revIndex);
+      if(c){c.rev[i]=!c.rev[i];savePYQData(d);renderPYQ();} return;
+    }
+    const del=e.target.closest("[data-pyq-delete]");
+    if(del){
+      const d=pyqData(),c=d.chapters.find(x=>x.id===del.dataset.pyqDelete);
+      if(c&&confirm(`Delete “${c.name}”?`)){d.chapters=d.chapters.filter(x=>x.id!==c.id);savePYQData(d);renderPYQ();}
+    }
+  });
+  document.getElementById("pyqPdfBtn")?.addEventListener("click",downloadPYQPDF);
+  renderPYQ();
+}
+function downloadPYQPDF(){
+  const JsPDF=window.jspdf?.jsPDF||window.jsPDF;
+  if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
+  const d=pyqData();
+  if(!d.chapters.length){alert("Pehle PYQ chapters add karo.");return;}
+  const pdf=new JsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
+  const M=8, pageW=210, tableW=pageW-M*2;
+  let first=true;
+  PYQ_SUBJECTS.forEach(subject=>{
+    const rows=d.chapters.filter(c=>c.subject===subject);
+    if(!rows.length)return;
+    // Split long subjects across A4 portrait pages.
+    let chunks=[], chunk=[], used=0;
+    rows.forEach(c=>{
+      const lines=Math.ceil(Math.ceil(c.total/10)/7);
+      const h=Math.max(12,lines*7+3);
+      if(chunk.length && used+h>235){chunks.push(chunk);chunk=[];used=0;}
+      chunk.push(c);used+=h;
+    });
+    if(chunk.length)chunks.push(chunk);
+
+    chunks.forEach((pageRows,chunkIndex)=>{
+      if(!first)pdf.addPage(); first=false;
+      pdf.setTextColor(0,0,0);pdf.setFont("helvetica","bold");pdf.setFontSize(14);
+      pdf.text("JEE PYQ QUESTIONS TRACKER",M,10);
+      pdf.setFontSize(9);pdf.text(subject.toUpperCase(),M,16);
+      pdf.setFont("helvetica","normal");pdf.setFontSize(6.5);
+      pdf.text("1 small square = 10 PYQs  •  Tick by hand  •  REV = one revision tick",M,20);
+
+      const headers=["INDEX","CHAPTER NAME","TOTAL PYQ","PYQ PROGRESS — 10 Q / SQUARE","REV","ACTION"];
+      const body=pageRows.map((c,i)=>[String(chunkIndex*pageRows.length+i+1).padStart(2,"0"),c.name,String(c.total),"","",""]);
+      pdf.autoTable({
+        startY:24,margin:{left:M,right:M,top:6,bottom:7},tableWidth:tableW,
+        head:[headers],body,theme:"grid",rowPageBreak:"avoid",
+        styles:{font:"helvetica",fontSize:6.5,cellPadding:1.2,valign:"middle",halign:"center",lineWidth:.35,lineColor:[0,0,0],textColor:[0,0,0]},
+        headStyles:{fontStyle:"bold",fontSize:5.8,fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2},
+        columnStyles:{0:{cellWidth:12},1:{cellWidth:48,halign:"left",fontSize:8.2,fontStyle:"bold"},2:{cellWidth:18},3:{cellWidth:94},4:{cellWidth:10},5:{cellWidth:12}},
+        didParseCell:data=>{
+          if(data.section==="body"&&data.column.index===3){
+            const c=pageRows[data.row.index],lines=Math.ceil(Math.ceil(c.total/10)/7);
+            data.cell.styles.minCellHeight=Math.max(11,lines*7+2);
+          }
+        },
+        didDrawCell:data=>{
+          if(data.section!=="body")return;
+          const c=pageRows[data.row.index];
+          if(data.column.index===3){
+            const count=Math.ceil(c.total/10),perLine=7,box=3.4,gapX=11.8,gapY=6.4;
+            for(let i=0;i<count;i++){
+              const line=Math.floor(i/perLine),pos=i%perLine;
+              const x=data.cell.x+2+pos*gapX,y=data.cell.y+1.3+line*gapY;
+              pdf.setDrawColor(0,0,0);pdf.setLineWidth(.35);pdf.rect(x,y,box,box);
+              if(c.done[i]){pdf.setFillColor(0,0,0);pdf.rect(x+.55,y+.55,box-1.1,box-1.1,"F");}
+              pdf.setFont("helvetica","normal");pdf.setFontSize(3.6);pdf.setTextColor(0,0,0);
+              const end=Math.min((i+1)*10,c.total);
+              pdf.text(`${i*10+1}-${end}`,x+4.2,y+2.6);
+            }
+          }
+          if(data.column.index===4){
+            // Exactly ONE compact revision square, centered inside the REV cell.
+            const box=4.2;
+            const x=data.cell.x+(data.cell.width-box)/2;
+            const y=data.cell.y+(data.cell.height-box)/2;
+            pdf.setDrawColor(0,0,0);pdf.setLineWidth(.4);pdf.rect(x,y,box,box);
+            if(c.rev[0]){pdf.setFillColor(0,0,0);pdf.rect(x+.6,y+.6,box-1.2,box-1.2,"F");}
+          }
+        }
+      });
+    });
+  });
+  pdf.save("JEE-PYQ-Questions-Tracker-A4-Portrait.pdf");
 }
 
 /* ---------- Syllabus Tracker: configurable chapters + A4 printable sheet ---------- */
@@ -769,7 +1104,7 @@ function initSyllabus(){
   document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
   renderSyllabus();
 }
-function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(80,80,80); pdf.setLineWidth(0.25); pdf.rect(x,y,size,size); }
+function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(0,0,0); pdf.setLineWidth(0.45); pdf.rect(x,y,size,size); }
 function downloadSyllabusPDF(){
   const JsPDF=window.jspdf?.jsPDF || window.jsPDF;
   if(!JsPDF){alert("PDF library load nahi hui. Internet on karke page reload karo.");return;}
@@ -779,7 +1114,7 @@ function downloadSyllabusPDF(){
   // Large syllabuses used to make one very heavy autoTable call. On phones
   // that could stall jsPDF before the browser got a chance to download it.
   // Build the PDF in small page-sized chunks instead.
-  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  const pdf=new JsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
   const M=7, usable=297-14;
   const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
   const widths=[7,55,60,14,10,...SYLLABUS_TASKS.map(()=>12)];
@@ -792,7 +1127,7 @@ function downloadSyllabusPDF(){
 
     pdf.setFont("helvetica","bold");
     pdf.setFontSize(15);
-    pdf.setTextColor(25,25,25);
+    pdf.setTextColor(0,0,0);
     pdf.text("JEE SYLLABUS TRACKER",M,9);
 
     pdf.setFont("helvetica","normal");
@@ -818,12 +1153,12 @@ function downloadSyllabusPDF(){
       rowPageBreak:"avoid",
       styles:{
         font:"helvetica",fontSize:6.4,cellPadding:1.2,overflow:"linebreak",
-        valign:"middle",halign:"center",lineWidth:0.18,
-        lineColor:[145,145,145],textColor:[30,30,30]
+        valign:"middle",halign:"center",lineWidth:0.45,
+        lineColor:[0,0,0],textColor:[0,0,0]
       },
       headStyles:{
         fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
-        fillColor:[235,235,235],textColor:[25,25,25],cellPadding:1.2
+        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2
       },
       columnStyles:Object.fromEntries(
         widths.map((w,i)=>[
@@ -854,7 +1189,7 @@ function downloadSyllabusPDF(){
             pdfBox(pdf,x,y,box);
             pdf.setFont("helvetica","normal");
             pdf.setFontSize(5.2);
-            pdf.setTextColor(55,55,55);
+            pdf.setTextColor(0,0,0);
             pdf.text(String(n+1),x+5.2,y+3.0);
           }
         }
@@ -916,6 +1251,7 @@ function downloadSyllabusPDF(){
 document.addEventListener("DOMContentLoaded",()=>{
   initFeatureMenu();
   initSyllabus();
+  initPYQ();
   initThemes();
   initTodo();
   initFocus();
