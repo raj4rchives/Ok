@@ -539,7 +539,7 @@ function updateDashboard(selectedDateData) {
 
 
 /* =========================================================
-   MENU + 29 THEMES + DAILY TODO + FOCUS MODE
+   MENU + 62 THEMES + DAILY TODO + MANUAL FOCUS MODE
    These features use separate localStorage keys and do not
    alter the existing tracker data.
    ========================================================= */
@@ -608,14 +608,16 @@ function initFeatureMenu() {
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeFeature(); });
 }
 
-/* ---------- 48 themes ---------- */
+/* ---------- 62 themes ---------- */
 const THEMES = [
   "classic","peach","pink","lavender","mint","ocean","rose-dark","forest",
   "sky","sunset","coral","lemon","aqua","teal","indigo","violet","plum",
   "berry","cherry","coffee","sand","slate","midnight","neon","aurora","ember",
   "grape","ice","amoled","dracula","tokyo-night","nord-dark","solar-dark",
   "deep-ocean","cyberpunk","synthwave","matrix","crimson","royal-dark","obsidian",
-  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night"
+  "charcoal","cosmic","toxic","blueberry-dark","cocoa-dark","rosewood","teal-night","gold-night",
+  "glass","bento","brutalist","terminal","notebook","paper","mono","glass-dark",
+  "dashboard","arcade","blueprint","newspaper","soft-3d","editorial"
 ];
 
 function applyTheme(theme) {
@@ -718,48 +720,17 @@ function initTodo() {
   document.getElementById("todoPdfBtn")?.addEventListener("click",downloadTodoPDF);
 }
 
-/* ---------- Focus Mode ---------- */
-let focusTimer=null, focusSeconds=0, focusRunning=false, focusStartedAt=null;
+/* ---------- Focus Mode — manual time only ---------- */
 function getFocusLogs(){return safeJSON(FOCUS_KEY,[]);}
 function saveFocusLogs(x){localStorage.setItem(FOCUS_KEY,JSON.stringify(x));}
-function formatHMS(sec){
-  sec=Math.max(0,Math.floor(sec));
-  const h=String(Math.floor(sec/3600)).padStart(2,"0");
-  const m=String(Math.floor(sec%3600/60)).padStart(2,"0");
-  const s=String(sec%60).padStart(2,"0");
-  return `${h}:${m}:${s}`;
-}
 function formatMinutes(min){min=Math.round(min);return min>=60?`${Math.floor(min/60)}h ${min%60}m`:`${min}m`;}
-function updateFocusClock(){put("focusClock",formatHMS(focusSeconds));}
-function startFocus(){
-  if(focusRunning)return;
-  focusRunning=true;
-  if(!focusStartedAt)focusStartedAt=Date.now()-focusSeconds*1000;
-  focusTimer=setInterval(()=>{focusSeconds=Math.floor((Date.now()-focusStartedAt)/1000);updateFocusClock();},1000);
-}
-function pauseFocus(){focusRunning=false;clearInterval(focusTimer);focusTimer=null;}
-function resetFocus(){pauseFocus();focusSeconds=0;focusStartedAt=null;updateFocusClock();}
-function saveFocusLog(){
-  const minutes=Math.round(focusSeconds/60);
-  if(minutes<1){alert("At least 1 minute ka focus log save karo.");return;}
-  const logs=getFocusLogs();
-  logs.push({
-    id:Date.now()+Math.random(),date:localISODate(),minutes,
-    subject:document.getElementById("focusSubject").value,
-    activity:document.getElementById("focusActivity").value,
-    questions:Number(document.getElementById("focusQuestions").value)||0,
-    note:document.getElementById("focusNote").value.trim(),
-    createdAt:Date.now()
-  });
-  saveFocusLogs(logs);resetFocus();renderFocus();
-}
 function saveManualFocusLog(e){
   if(e){e.preventDefault();e.stopPropagation();}
   const minutesEl=document.getElementById("focusManualMinutes");
   const dateEl=document.getElementById("focusManualDate");
   const minutes=parseInt(minutesEl?.value,10);
   if(!Number.isFinite(minutes) || minutes<1){
-    alert("Manual focus time me 1 ya usse zyada minutes enter karo.");
+    alert("Study time me 1 ya usse zyada minutes enter karo.");
     minutesEl?.focus();
     return false;
   }
@@ -772,9 +743,11 @@ function saveManualFocusLog(e){
   logs.push({id:Date.now()+Math.random(),date,minutes,subject,activity,questions,note,createdAt:Date.now(),manual:true});
   saveFocusLogs(logs);
   if(minutesEl) minutesEl.value="";
+  if(document.getElementById("focusQuestions")) document.getElementById("focusQuestions").value="0";
+  if(document.getElementById("focusNote")) document.getElementById("focusNote").value="";
   if(document.getElementById("focusFilterDate")) document.getElementById("focusFilterDate").value=date;
   renderFocus();
-  if(!document.getElementById("weeklyView")?.hidden) renderWeeklyReport();
+  refreshWeeklyIfOpen();
   alert(`✅ ${formatMinutes(minutes)} focus time saved for ${date}.`);
   return false;
 }
@@ -869,19 +842,21 @@ function downloadFocusPDF(){
   pdf.save(`370R-Focus-${date}.pdf`);
 }
 function initFocus(){
-  const f=document.getElementById("focusFilterDate");if(f)f.value=localISODate();
-  document.getElementById("focusStartBtn")?.addEventListener("click",startFocus);
-  document.getElementById("focusPauseBtn")?.addEventListener("click",pauseFocus);
-  document.getElementById("focusResetBtn")?.addEventListener("click",resetFocus);
-  document.getElementById("focusSaveBtn")?.addEventListener("click",saveFocusLog);
+  const f=document.getElementById("focusFilterDate");
+  if(f)f.value=localISODate();
+  const md=document.getElementById("focusManualDate");
+  if(md)md.value=localISODate();
   const manualBtn=document.getElementById("focusManualSaveBtn");
-  if(manualBtn){
-    manualBtn.onclick=saveManualFocusLog;
-  }
-  const md=document.getElementById("focusManualDate"); if(md)md.value=localISODate();
+  if(manualBtn)manualBtn.onclick=saveManualFocusLog;
+  document.querySelectorAll("[data-focus-min]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const minutes=document.getElementById("focusManualMinutes");
+      if(minutes)minutes.value=btn.dataset.focusMin;
+      minutes?.focus();
+    });
+  });
   document.getElementById("focusPdfBtn")?.addEventListener("click",downloadFocusPDF);
   f?.addEventListener("change",renderFocus);
-  updateFocusClock();
 }
 
 function initWeeklyReport(){

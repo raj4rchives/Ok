@@ -63,13 +63,13 @@
           <span>💾</span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="themes">
-          <span>🎨</span><div><b>Themes</b><small>29 different colour styles</small></div>
+          <span>🎨</span><div><b>Themes</b><small>62 visual themes — different layouts, not just colours</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="todo">
           <span>📝</span><div><b>Daily TODO</b><small>Date-wise tasks + PDF + analysis</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="focus">
-          <span>⏱️</span><div><b>Focus Mode</b><small>Timer + study logs + analysis</small></div>
+          <span>⏱️</span><div><b>Focus Mode</b><small>Manual focus time + study logs + analysis</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="weekly">
           <span>📊</span><div><b>Weekly Report</b><small>Questions • Lectures • Focus time chart</small></div>
@@ -176,6 +176,20 @@
           <button class="theme-option" data-theme="rosewood"><span class="theme-dot theme-rosewood"></span><b>Rosewood</b></button>
           <button class="theme-option" data-theme="teal-night"><span class="theme-dot theme-teal-night"></span><b>Teal Night</b></button>
           <button class="theme-option" data-theme="gold-night"><span class="theme-dot theme-gold-night"></span><b>Gold Night</b></button>
+          <button class="theme-option" data-theme="glass"><span class="theme-dot theme-glass"></span><b>Glass</b></button>
+          <button class="theme-option" data-theme="bento"><span class="theme-dot theme-bento"></span><b>Bento</b></button>
+          <button class="theme-option" data-theme="brutalist"><span class="theme-dot theme-brutalist"></span><b>Brutalist</b></button>
+          <button class="theme-option" data-theme="terminal"><span class="theme-dot theme-terminal"></span><b>Terminal</b></button>
+          <button class="theme-option" data-theme="notebook"><span class="theme-dot theme-notebook"></span><b>Notebook</b></button>
+          <button class="theme-option" data-theme="paper"><span class="theme-dot theme-paper"></span><b>Paper</b></button>
+          <button class="theme-option" data-theme="mono"><span class="theme-dot theme-mono"></span><b>Mono</b></button>
+          <button class="theme-option" data-theme="glass-dark"><span class="theme-dot theme-glass-dark"></span><b>Glass Dark</b></button>
+          <button class="theme-option" data-theme="dashboard"><span class="theme-dot theme-dashboard"></span><b>Dashboard</b></button>
+          <button class="theme-option" data-theme="arcade"><span class="theme-dot theme-arcade"></span><b>Arcade</b></button>
+          <button class="theme-option" data-theme="blueprint"><span class="theme-dot theme-blueprint"></span><b>Blueprint</b></button>
+          <button class="theme-option" data-theme="newspaper"><span class="theme-dot theme-newspaper"></span><b>Newspaper</b></button>
+          <button class="theme-option" data-theme="soft-3d"><span class="theme-dot theme-soft-3d"></span><b>Soft 3D</b></button>
+          <button class="theme-option" data-theme="editorial"><span class="theme-dot theme-editorial"></span><b>Editorial</b></button>
         </div>
       </div>
 
@@ -232,22 +246,32 @@
       </div>
 
       <div id="focusView" class="feature-view" hidden>
-        <div class="focus-controls">
-          <div class="focus-clock" id="focusClock">00:00:00</div>
+        <div class="focus-hero">
+          <div>
+            <div class="focus-kicker">MANUAL STUDY LOG</div>
+            <h3>Log your focus time</h3>
+            <p>No stopwatch. Just enter how long you studied and save it.</p>
+          </div>
+          <div class="focus-hero-badge">⏱ <b>Manual only</b><span>No live timer</span></div>
+        </div>
+        <div class="focus-controls manual-focus-card">
           <div class="focus-fields">
             <div><label>Subject</label><select id="focusSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Other</option></select></div>
             <div><label>Activity</label><select id="focusActivity"><option>Lecture</option><option>Questions</option><option>Revision</option><option>DPP</option><option>PYQ</option><option>Other</option></select></div>
-            <div><label>Questions</label><input id="focusQuestions" type="number" min="0" value="0"></div>
-            <div><label>Note</label><input id="focusNote" type="text" maxlength="100" placeholder="Optional"></div>
-            <div><label>Manual time (minutes)</label><input id="focusManualMinutes" type="number" min="1" placeholder="e.g. 90"></div>
-            <div><label>Manual log date</label><input id="focusManualDate" type="date"></div>
+            <div class="focus-duration-field"><label>Study time (minutes)</label><input id="focusManualMinutes" type="number" min="1" max="1440" inputmode="numeric" placeholder="e.g. 90"></div>
+            <div><label>Questions</label><input id="focusQuestions" type="number" min="0" value="0" inputmode="numeric"></div>
+            <div class="focus-date-field"><label>Study date</label><input id="focusManualDate" type="date"></div>
+            <div><label>Note</label><input id="focusNote" type="text" maxlength="100" placeholder="Optional — chapter, topic, etc."></div>
+          </div>
+          <div class="focus-presets" aria-label="Quick time presets">
+            <span>Quick add:</span>
+            <button type="button" class="focus-chip" data-focus-min="30">30m</button>
+            <button type="button" class="focus-chip" data-focus-min="60">1h</button>
+            <button type="button" class="focus-chip" data-focus-min="90">1h 30m</button>
+            <button type="button" class="focus-chip" data-focus-min="120">2h</button>
           </div>
           <div class="focus-buttons">
-            <button class="primary" id="focusStartBtn">▶ Start</button>
-            <button class="secondary" id="focusPauseBtn">Ⅱ Pause</button>
-            <button class="secondary" id="focusResetBtn">↻ Reset</button>
-            <button class="primary" id="focusSaveBtn">Save Focus Log</button>
-            <button class="secondary" id="focusManualSaveBtn">➕ Save Manual Time</button>
+            <button class="primary focus-save-main" id="focusManualSaveBtn">＋ Add Focus Log</button>
           </div>
         </div>
         <div class="todo-analysis focus-analysis">
