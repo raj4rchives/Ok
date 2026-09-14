@@ -7,15 +7,17 @@
 <meta name="tracker-default-theme" content="mono">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>370R JEE Advanced Tracker by Raj Sharma</title>
 <link rel="stylesheet" href="style.css">
+
+
 </head>
-<body>
+
+  <body>
 <div class="wrap">
   <div class="top">
     <div>
       <h1>370R JEE Advanced Tracker</h1>
-      <div class="sub">Unlimited study log → keep adding days as long as you study → dashboard → export PDF.</div>
+      <div class="sub">Built to keep your JEE preparation consistent and on track.</div>
     </div>
     <div class="actions">
       <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="openFeature('menu')"><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
@@ -38,7 +40,7 @@
       <div class="small"><label>JEE Mains target date</label><input id="examDate" type="date" value="2027-01-24"></div>
       <span class="badge">Target: 70–80 questions/day • CRACK JEE</span>
     </div>
-    <p class="note">For Physics/Chemistry/Maths, enter the combined <b>HW / CLASS ILLU</b> question count in one cell. DPP and PYQ are entered separately. Values like <b>18Q</b> or <b>12/15</b> count as 18 and 12 questions.</p>
+    <p class="note">Pick a theme. It is saved automatically. <b>Default theme is Mono (black &amp; white).</b></p>
   </div>
 
 
@@ -56,25 +58,31 @@
 
       <div id="menuView" class="feature-view">
         <button class="menu-feature-btn" data-open-feature="syllabus">
-          <span>📚</span><div><b>Syllabus Tracker</b><small>Add chapter + total lectures → print A4 tracker</small></div>
+          <span>➔</span><div><b>Syllabus Tracker</b><small>Add chapter + total lectures → print A4 tracker</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="pyq">
-          <span>☑️</span><div><b>PYQ Question Tracker</b><small>Chapter-wise 10-question blocks + revision ticks</small></div>
+          <span>➔</span><div><b>PYQ Question Tracker</b><small>Chapter-wise 10-question blocks + revision ticks</small></div>
+        </button>
+        <button class="menu-feature-btn" data-open-feature="tests">
+          <span>➔</span><div><b>Test Tracker</b><small>Add test name + syllabus + PYQ progress + revision</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="backup">
-          <span>💾</span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
+          <span>➔
+          </span><div><b>Backup & Import</b><small>Export all tracker data to JSON or restore it later</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="themes">
-          <span>🎨</span><div><b>Themes</b><small>62 visual themes — different layouts, not just colours</small></div>
+          <span>➔
+          </span><div><b>Themes</b><small>8 visual themes — different layouts and colour variants</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="todo">
-          <span>📝</span><div><b>Daily TODO</b><small>Date-wise tasks + PDF + analysis</small></div>
+          <span>➔
+          </span><div><b>Daily TODO</b><small>Date-wise tasks + PDF + analysis</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="focus">
-          <span>⏱️</span><div><b>Focus Mode</b><small>Manual focus time + study logs + analysis</small></div>
+          <span>➔</span><div><b>Focus Mode</b><small>Manual focus time + study logs + analysis</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="weekly">
-          <span>📊</span><div><b>Weekly Report</b><small>Questions • Lectures • Focus time chart</small></div>
+          <span>➔</span><div><b>Weekly Report</b><small>Questions • Lectures • Focus time chart</small></div>
         </button>
       </div>
 
@@ -127,71 +135,53 @@
         <div id="pyqList" class="pyq-list"></div>
       </div>
 
+      <div id="testsView" class="feature-view" hidden>
+        <div class="tests-toolbar">
+          <button class="secondary" id="testsBackBtn" type="button">← Menu</button>
+          <button class="secondary" id="testsClearBtn" type="button">Clear Tests</button>
+          <button class="primary" id="testsPdfBtn" type="button">📄 Download A4 PDF</button>
+        </div>
+
+        <div class="tests-form card">
+          <div><label>Test Name</label>
+            <input id="testName" type="text" maxlength="120" placeholder="e.g. Full Syllabus Test 01">
+          </div>
+          <div><label>Test Syllabus</label>
+            <textarea id="testSyllabus" maxlength="1000" rows="2" placeholder="e.g. Kinematics, NLM, Mole Concept, Quadratic Equations..."></textarea>
+          </div>
+          <div class="small"><label>Total PYQs</label>
+            <input id="testTotalQuestions" type="number" min="1" max="2000" step="1" placeholder="50">
+          </div>
+          <button class="primary" id="testAddBtn" type="button">+ Add Test</button>
+        </div>
+
+        <div class="test-help">
+          <b>10 PYQs = 1 tick square.</b> Every test gets one REV square for revision. Example: 50 PYQs → 5 PYQ squares.
+        </div>
+        <div id="testsList" class="tests-list"></div>
+      </div>
+
       <div id="themesView" class="feature-view" hidden>
         <p class="note">Pick any theme. It is saved automatically. <b>Default theme is Mono (black & white).</b> To change the default, edit <code>&lt;meta name="tracker-default-theme" content="mono"&gt;</code> in this HTML file.</p>
         <div class="theme-grid theme-grid-48" id="themeGrid">
-          <button class="theme-option" data-theme="classic"><span class="theme-dot theme-classic"></span><b>Classic</b></button>
-          <button class="theme-option" data-theme="peach"><span class="theme-dot theme-peach"></span><b>Peach</b></button>
-          <button class="theme-option" data-theme="pink"><span class="theme-dot theme-pink"></span><b>Bubblegum</b></button>
-          <button class="theme-option" data-theme="lavender"><span class="theme-dot theme-lavender"></span><b>Lavender</b></button>
-          <button class="theme-option" data-theme="mint"><span class="theme-dot theme-mint"></span><b>Mint</b></button>
-          <button class="theme-option" data-theme="ocean"><span class="theme-dot theme-ocean"></span><b>Ocean</b></button>
-          <button class="theme-option" data-theme="rose-dark"><span class="theme-dot theme-rose-dark"></span><b>Rose Dark</b></button>
-          <button class="theme-option" data-theme="forest"><span class="theme-dot theme-forest"></span><b>Forest</b></button>
-          <button class="theme-option" data-theme="sky"><span class="theme-dot theme-sky"></span><b>Sky</b></button>
-          <button class="theme-option" data-theme="sunset"><span class="theme-dot theme-sunset"></span><b>Sunset</b></button>
-          <button class="theme-option" data-theme="coral"><span class="theme-dot theme-coral"></span><b>Coral</b></button>
-          <button class="theme-option" data-theme="lemon"><span class="theme-dot theme-lemon"></span><b>Lemon</b></button>
-          <button class="theme-option" data-theme="aqua"><span class="theme-dot theme-aqua"></span><b>Aqua</b></button>
-          <button class="theme-option" data-theme="teal"><span class="theme-dot theme-teal"></span><b>Teal</b></button>
-          <button class="theme-option" data-theme="indigo"><span class="theme-dot theme-indigo"></span><b>Indigo</b></button>
-          <button class="theme-option" data-theme="violet"><span class="theme-dot theme-violet"></span><b>Violet</b></button>
-          <button class="theme-option" data-theme="plum"><span class="theme-dot theme-plum"></span><b>Plum</b></button>
-          <button class="theme-option" data-theme="berry"><span class="theme-dot theme-berry"></span><b>Berry</b></button>
-          <button class="theme-option" data-theme="cherry"><span class="theme-dot theme-cherry"></span><b>Cherry</b></button>
-          <button class="theme-option" data-theme="coffee"><span class="theme-dot theme-coffee"></span><b>Coffee</b></button>
-          <button class="theme-option" data-theme="sand"><span class="theme-dot theme-sand"></span><b>Sand</b></button>
-          <button class="theme-option" data-theme="slate"><span class="theme-dot theme-slate"></span><b>Slate</b></button>
-          <button class="theme-option" data-theme="midnight"><span class="theme-dot theme-midnight"></span><b>Midnight</b></button>
-          <button class="theme-option" data-theme="neon"><span class="theme-dot theme-neon"></span><b>Neon</b></button>
-          <button class="theme-option" data-theme="aurora"><span class="theme-dot theme-aurora"></span><b>Aurora</b></button>
-          <button class="theme-option" data-theme="ember"><span class="theme-dot theme-ember"></span><b>Ember</b></button>
-          <button class="theme-option" data-theme="grape"><span class="theme-dot theme-grape"></span><b>Grape</b></button>
-          <button class="theme-option" data-theme="ice"><span class="theme-dot theme-ice"></span><b>Ice</b></button>
-          <button class="theme-option" data-theme="amoled"><span class="theme-dot theme-amoled"></span><b>AMOLED</b></button>
-          <button class="theme-option" data-theme="dracula"><span class="theme-dot theme-dracula"></span><b>Dracula</b></button>
-          <button class="theme-option" data-theme="tokyo-night"><span class="theme-dot theme-tokyo-night"></span><b>Tokyo Night</b></button>
-          <button class="theme-option" data-theme="nord-dark"><span class="theme-dot theme-nord-dark"></span><b>Nord Dark</b></button>
-          <button class="theme-option" data-theme="solar-dark"><span class="theme-dot theme-solar-dark"></span><b>Solar Dark</b></button>
-          <button class="theme-option" data-theme="deep-ocean"><span class="theme-dot theme-deep-ocean"></span><b>Deep Ocean</b></button>
-          <button class="theme-option" data-theme="cyberpunk"><span class="theme-dot theme-cyberpunk"></span><b>Cyberpunk</b></button>
-          <button class="theme-option" data-theme="synthwave"><span class="theme-dot theme-synthwave"></span><b>Synthwave</b></button>
-          <button class="theme-option" data-theme="matrix"><span class="theme-dot theme-matrix"></span><b>Matrix</b></button>
-          <button class="theme-option" data-theme="crimson"><span class="theme-dot theme-crimson"></span><b>Crimson</b></button>
-          <button class="theme-option" data-theme="royal-dark"><span class="theme-dot theme-royal-dark"></span><b>Royal Dark</b></button>
-          <button class="theme-option" data-theme="obsidian"><span class="theme-dot theme-obsidian"></span><b>Obsidian</b></button>
-          <button class="theme-option" data-theme="charcoal"><span class="theme-dot theme-charcoal"></span><b>Charcoal</b></button>
-          <button class="theme-option" data-theme="cosmic"><span class="theme-dot theme-cosmic"></span><b>Cosmic</b></button>
-          <button class="theme-option" data-theme="toxic"><span class="theme-dot theme-toxic"></span><b>Toxic</b></button>
-          <button class="theme-option" data-theme="blueberry-dark"><span class="theme-dot theme-blueberry-dark"></span><b>Blueberry</b></button>
-          <button class="theme-option" data-theme="cocoa-dark"><span class="theme-dot theme-cocoa-dark"></span><b>Cocoa Dark</b></button>
-          <button class="theme-option" data-theme="rosewood"><span class="theme-dot theme-rosewood"></span><b>Rosewood</b></button>
-          <button class="theme-option" data-theme="teal-night"><span class="theme-dot theme-teal-night"></span><b>Teal Night</b></button>
-          <button class="theme-option" data-theme="gold-night"><span class="theme-dot theme-gold-night"></span><b>Gold Night</b></button>
-          <button class="theme-option" data-theme="glass"><span class="theme-dot theme-glass"></span><b>Glass</b></button>
           <button class="theme-option" data-theme="bento"><span class="theme-dot theme-bento"></span><b>Bento</b></button>
           <button class="theme-option" data-theme="brutalist"><span class="theme-dot theme-brutalist"></span><b>Brutalist</b></button>
-          <button class="theme-option" data-theme="terminal"><span class="theme-dot theme-terminal"></span><b>Terminal</b></button>
-          <button class="theme-option" data-theme="notebook"><span class="theme-dot theme-notebook"></span><b>Notebook</b></button>
-          <button class="theme-option" data-theme="paper"><span class="theme-dot theme-paper"></span><b>Paper</b></button>
           <button class="theme-option" data-theme="mono"><span class="theme-dot theme-mono"></span><b>Mono</b></button>
-          <button class="theme-option" data-theme="glass-dark"><span class="theme-dot theme-glass-dark"></span><b>Glass Dark</b></button>
-          <button class="theme-option" data-theme="dashboard"><span class="theme-dot theme-dashboard"></span><b>Dashboard</b></button>
-          <button class="theme-option" data-theme="arcade"><span class="theme-dot theme-arcade"></span><b>Arcade</b></button>
           <button class="theme-option" data-theme="blueprint"><span class="theme-dot theme-blueprint"></span><b>Blueprint</b></button>
-          <button class="theme-option" data-theme="newspaper"><span class="theme-dot theme-newspaper"></span><b>Newspaper</b></button>
-          <button class="theme-option" data-theme="soft-3d"><span class="theme-dot theme-soft-3d"></span><b>Soft 3D</b></button>
-          <button class="theme-option" data-theme="editorial"><span class="theme-dot theme-editorial"></span><b>Editorial</b></button>
+          <button class="theme-option" data-theme="mono-red"><span class="theme-dot theme-mono-red"></span><b>Mono Red</b></button>
+          <button class="theme-option" data-theme="mono-blue"><span class="theme-dot theme-mono-blue"></span><b>Mono Blue</b></button>
+          <button class="theme-option" data-theme="mono-green"><span class="theme-dot theme-mono-green"></span><b>Mono Green</b></button>
+          <button class="theme-option" data-theme="mono-purple"><span class="theme-dot theme-mono-purple"></span><b>Mono Purple</b></button>
+          <button class="theme-option" data-theme="bento-coral"><span class="theme-dot theme-bento-coral"></span><b>Bento Coral</b></button>
+          <button class="theme-option" data-theme="bento-mint"><span class="theme-dot theme-bento-mint"></span><b>Bento Mint</b></button>
+          <button class="theme-option" data-theme="bento-lavender"><span class="theme-dot theme-bento-lavender"></span><b>Bento Lavender</b></button>
+          <button class="theme-option" data-theme="bento-ocean"><span class="theme-dot theme-bento-ocean"></span><b>Bento Ocean</b></button>
+          <button class="theme-option" data-theme="bento-sunset"><span class="theme-dot theme-bento-sunset"></span><b>Bento Sunset</b></button>
+          <button class="theme-option" data-theme="brutalist-blue"><span class="theme-dot theme-brutalist-blue"></span><b>Brutalist Blue</b></button>
+          <button class="theme-option" data-theme="brutalist-green"><span class="theme-dot theme-brutalist-green"></span><b>Brutalist Green</b></button>
+          <button class="theme-option" data-theme="brutalist-purple"><span class="theme-dot theme-brutalist-purple"></span><b>Brutalist Purple</b></button>
+          <button class="theme-option" data-theme="brutalist-orange"><span class="theme-dot theme-brutalist-orange"></span><b>Brutalist Orange</b></button>
+          <button class="theme-option" data-theme="brutalist-pink"><span class="theme-dot theme-brutalist-pink"></span><b>Brutalist Pink</b></button>
         </div>
       </div>
 

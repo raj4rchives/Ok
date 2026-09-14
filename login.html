@@ -1,1 +1,21 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login — EXAMYWEB</title><link rel="stylesheet" href="portal.css"></head><body class="auth-body"><div class="auth-wrap"><a class="brand" href="index.html"><span class="brand-mark">E</span><span>EXAMY<span>WEB</span></span></a><div class="auth-card"><div class="eyebrow">WELCOME BACK</div><h1>Enter EXAMYWEB.</h1><p>Create your profile and continue directly to your free study tracker. No payment is required.</p><form id="loginForm"><label>Name<input id="name" required placeholder="Your name"></label><label>Email<input id="email" type="email" required placeholder="you@example.com"></label><label>Exam<select id="exam"><option>JEE Main</option><option>JEE Advanced</option><option>NEET</option><option>Boards</option><option>CUET</option><option>Other</option></select></label><button class="btn primary full" type="submit">Continue to free tracker →</button></form><small class="auth-note">By continuing you agree to use EXAMYWEB for study tracking.</small></div><a class="back" href="index.html">← Back to EXAMYWEB</a></div><script>document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();const user={name:name.value.trim(),email:email.value.trim(),exam:exam.value};localStorage.setItem('examyUser',JSON.stringify(user));location.href='tracker.html'});</script></body></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title> Currently you don't need to login or signup for using Examyweb.</title><link rel="stylesheet" href="stylehe.css"></head>
+<body class="login-page">
+<div class="login-wrap">
+  <a class="back" href="index.html">← EXAMYWEB</a>
+  <div class="login-card">
+    <div class="eyebrow">EXAMYWEB · STUDY TRACKER</div>
+    <h1>Welcome back.</h1>
+    <p>Currently you don't need to login or signup for using Examyweb.</p>
+    <form onsubmit="event.preventDefault(); location.href='index.html';">
+      <label>Email<input type="email" placeholder="you@example.com" required></label>
+      <label>Password<input type="password" placeholder="••••••••" required></label>
+      <button class="submit" type="submit">Log in →</button>
+    </form>
+    <div class="free"> Build by Raj Sharma</div>
+  </div>
+</div>
+</body>
+</html>
