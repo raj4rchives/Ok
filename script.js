@@ -573,8 +573,8 @@ function escapeFeatureText(value) {
 function openFeature(name) {
   const overlay = document.getElementById("featureOverlay");
   const title = document.getElementById("featurePageTitle");
-  const views = ["menu","syllabus","pyq","tests","themes","todo","focus","weekly","backup"];
-  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"☑️ PYQ Question Tracker",tests:"📝 Test Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
+  const views = ["menu","syllabus","pyq","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"☑️ PYQ Question Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
   overlay.hidden = false;
   views.forEach(v => {
     const el = document.getElementById(v + "View");
@@ -582,7 +582,6 @@ function openFeature(name) {
   });
   title.textContent = titles[name] || "Menu";
   if (name === "pyq") renderPYQ();
-  if (name === "tests") renderTests();
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
@@ -1300,9 +1299,9 @@ function downloadSyllabusPDF(){
   // that could stall jsPDF before the browser got a chance to download it.
   // Build the PDF in small page-sized chunks instead.
   const pdf=new JsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
-  const M=7, usable=297-14;
+  const M=7, usable=210-14;
   const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
-  const widths=[7,55,60,14,10,...SYLLABUS_TASKS.map(()=>12)];
+  const widths=[7,34,48,10,10,...SYLLABUS_TASKS.map(()=>7.9)];
 
   let firstPage=true;
 
@@ -1337,25 +1336,25 @@ function downloadSyllabusPDF(){
       theme:"grid",
       rowPageBreak:"avoid",
       styles:{
-        font:"helvetica",fontSize:6.4,cellPadding:1.2,overflow:"linebreak",
+        font:"helvetica",fontSize:5.6,cellPadding:0.8,overflow:"linebreak",
         valign:"middle",halign:"center",lineWidth:0.45,
         lineColor:[0,0,0],textColor:[0,0,0]
       },
       headStyles:{
-        fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
-        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2
+        fontStyle:"bold",fontSize:5.3,halign:"center",valign:"middle",
+        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:0.7
       },
       columnStyles:Object.fromEntries(
         widths.map((w,i)=>[
           i,{cellWidth:w,halign:i===1?"left":"center",
-          fontSize:i===1?10:(i===3?8:6.4),fontStyle:i===1||i===3?"bold":"normal"}
+          fontSize:i===1?7.8:(i===3?6.8:5.3),fontStyle:i===1||i===3?"bold":"normal"}
         ])
       ),
       didParseCell:data=>{
         if(data.section==="body" && data.column.index===2){
           const total=chapters[data.row.index].total;
-          const lines=Math.ceil(total/5);
-          data.cell.styles.minCellHeight=Math.max(8,lines*7.0+1.5);
+          const lines=Math.ceil(total/6);
+          data.cell.styles.minCellHeight=Math.max(7,lines*5.5+1.2);
         }
       },
       didDrawCell:data=>{
@@ -1363,12 +1362,12 @@ function downloadSyllabusPDF(){
 
         if(data.column.index===2){
           const total=chapters[data.row.index].total;
-          const perLine=5, box=4.0, step=11.0, lineH=7.0;
+          const perLine=6, box=3.2, step=7.3, lineH=5.5;
 
           for(let n=0;n<total;n++){
             const line=Math.floor(n/perLine), pos=n%perLine;
-            const x=data.cell.x+2.0+pos*step;
-            const y=data.cell.y+1.0+line*lineH;
+            const x=data.cell.x+1.5+pos*step;
+            const y=data.cell.y+0.7+line*lineH;
             if(y+box>data.cell.y+data.cell.height-0.3)continue;
 
             pdfBox(pdf,x,y,box);
@@ -1395,7 +1394,8 @@ function downloadSyllabusPDF(){
   try{
     // Keep each autoTable call comfortably within one A4 page's worth of rows.
     // A chapter with up to 100 lectures still fits as a single row.
-    const MAX_BODY_HEIGHT=255;
+    const MAX_BODY_HEIGHT=245;
+    const MAX_ROWS_PER_PAGE=15;
 
     for(const subject of SYLLABUS_SUBJECTS){
       const chapters=d.chapters.filter(c=>c.subject===subject);
@@ -1409,7 +1409,7 @@ function downloadSyllabusPDF(){
         const h=Math.max(8,Math.ceil(chapter.total/5)*7.0+1.5);
 
         // Flush before adding another large row.
-        if(chunk.length && used+h>MAX_BODY_HEIGHT){
+        if(chunk.length && (used+h>MAX_BODY_HEIGHT || chunk.length>=MAX_ROWS_PER_PAGE)){
           drawPage(subject,chunk,startIndex);
           startIndex=index;
           chunk=[];
