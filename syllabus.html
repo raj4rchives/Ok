@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="feature-manifest.json">
+<meta name="theme-color" content="#7566d8">
+<link rel="stylesheet" href="feature-style.css">
+</head>
+<body class="feature-standalone">
+<div class="feature-shell">
+  <nav class="feature-nav">
+    <div class="nav-links">
+      <a class="feature-back" href="menu.html">← Menu</a>
+      <a class="feature-home" href="tracker.html">⌂ Tracker</a>
+    </div>
+    <a class="feature-back" href="index.html">Home</a>
+  </nav>
+  <main class="feature-page-card">
+    <h1 class="feature-page-title">📚 Syllabus Tracker</h1>
+    <p class="feature-page-sub">Build a chapter-wise lecture tracker and print an A4 sheet.</p>
+    
+        <div class="syllabus-toolbar">
+          
+          <div class="syllabus-actions">
+            <button class="secondary" id="syllabusClearBtn" type="button">Clear Syllabus</button>
+            <button class="primary" id="syllabusPdfBtn" type="button">📄 Download A4 PDF</button>
+          </div>
+        </div>
+        <div class="syllabus-form card">
+          <div class="small"><label>Subject</label><select id="syllabusSubject"><option>Physics</option><option>Chemistry</option><option>Mathematics</option></select></div>
+          <div class="small"><label>Chapter Name</label><input id="syllabusChapterName" type="text" placeholder="e.g. Laws of Motion" maxlength="100"></div>
+          <div class="small"><label>Total Lectures</label><input id="syllabusTotalLectures" type="number" min="1" max="100" step="1" placeholder="e.g. 13"></div>
+          <button class="primary syllabus-add-btn" id="syllabusAddBtn" type="button">+ Add Chapter</button>
+        </div>
+        <p class="note">बस Subject, Chapter Name और Total Lectures डालो. PDF में हर lecture के लिए <b>□ L1   □ L2   □ L3...</b> और JM/Adv/MBBS/OPP/HW/Module/PYQ/Adv Prob/R1/R2/R3 के अलग boxes होंगे. A4 Landscape में print करके offline tick कर सकते हो.</p>
+        <div id="syllabusList" class="syllabus-list"></div>
+      
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="feature-script.js"></script>
+</body>
+</html>

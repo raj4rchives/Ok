@@ -4,7 +4,7 @@
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7566d8">
 <!-- DEFAULT TRACKER THEME: change "mono" to any theme key from the Themes panel -->
-<meta name="tracker-default-theme" content="mono-blue">
+<meta name="tracker-default-theme" content="mono">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="style.css">
@@ -19,8 +19,8 @@
       <h1>370R JEE Advanced Tracker</h1>
       <div class="sub">Built to keep your JEE preparation consistent and on track.</div>
     </div>
-    <div class="actions">
-      <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="openFeature('menu')"><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
+    <div class="actions"><a class="secondary" href="menu.html" style="text-decoration:none">☰ Menu</a><a class="secondary" href="daily-checklist.html" style="text-decoration:none">☑️ Daily Checklist</a><a class="secondary" href="syllabus.html" style="text-decoration:none">📚 Syllabus Tracker</a>
+      <button class="secondary top-menu-btn" id="topMenuBtn" type="button" onclick="location.href='menu.html'"><span class="top-btn-icon">☰</span><span class="top-btn-label">Menu</span></button>
       <button class="secondary top-theme-btn" id="topThemeBtn" type="button" onclick="openFeature('themes')"><span class="top-btn-icon">🎨</span><span class="top-btn-label">Themes</span></button>
       <button class="secondary" id="saveBtn">Save</button>
       <button class="secondary" id="loadBtn">Load</button>
@@ -40,7 +40,7 @@
       <div class="small"><label>JEE Mains target date</label><input id="examDate" type="date" value="2027-01-24"></div>
       <span class="badge">Target: 70–80 questions/day • CRACK JEE</span>
     </div>
-    <p class="note">Pick a theme. Your selection is saved automatically. Default theme: Mono Blue.</p>
+    <p class="note">Pick a theme. It is saved automatically. <b>Default theme is Mono (black &amp; white).</b></p>
   </div>
 
 
@@ -62,6 +62,9 @@
         </button>
         <button class="menu-feature-btn" data-open-feature="pyq">
           <span>➔</span><div><b>PYQ Question Tracker</b><small>Chapter-wise 10-question blocks + revision ticks</small></div>
+        </button>
+        <button class="menu-feature-btn" data-open-feature="tests">
+          <span>➔</span><div><b>Test Tracker</b><small>Add test name + syllabus + PYQ progress + revision</small></div>
         </button>
         <button class="menu-feature-btn" data-open-feature="backup">
           <span>➔
@@ -88,7 +91,7 @@
           <button class="secondary" id="syllabusBackBtn" type="button">← Menu</button>
           <div class="syllabus-actions">
             <button class="secondary" id="syllabusClearBtn" type="button">Clear Syllabus</button>
-            <label class="pdf-theme-control" for="syllabusPdfTheme">PDF Theme<select id="syllabusPdfTheme"><option value="blue">Mono Blue</option><option value="red">Mono Red</option><option value="yellow">Mono Yellow</option><option value="black">Mono Black</option><option value="green">Mono Green</option><option value="purple">Mono Purple</option><option value="orange">Mono Orange</option><option value="pink">Mono Pink</option><option value="teal">Mono Teal</option><option value="gray">Mono Gray</option></select></label><button class="primary" id="syllabusPdfBtn" type="button">📄 Download A4 PDF</button>
+            <button class="primary" id="syllabusPdfBtn" type="button">📄 Download A4 PDF</button>
           </div>
         </div>
         <div class="syllabus-form card">
@@ -132,8 +135,34 @@
         <div id="pyqList" class="pyq-list"></div>
       </div>
 
+      <div id="testsView" class="feature-view" hidden>
+        <div class="tests-toolbar">
+          <button class="secondary" id="testsBackBtn" type="button">← Menu</button>
+          <button class="secondary" id="testsClearBtn" type="button">Clear Tests</button>
+          <button class="primary" id="testsPdfBtn" type="button">📄 Download A4 PDF</button>
+        </div>
+
+        <div class="tests-form card">
+          <div><label>Test Name</label>
+            <input id="testName" type="text" maxlength="120" placeholder="e.g. Full Syllabus Test 01">
+          </div>
+          <div><label>Test Syllabus</label>
+            <textarea id="testSyllabus" maxlength="1000" rows="2" placeholder="e.g. Kinematics, NLM, Mole Concept, Quadratic Equations..."></textarea>
+          </div>
+          <div class="small"><label>Total PYQs</label>
+            <input id="testTotalQuestions" type="number" min="1" max="2000" step="1" placeholder="50">
+          </div>
+          <button class="primary" id="testAddBtn" type="button">+ Add Test</button>
+        </div>
+
+        <div class="test-help">
+          <b>10 PYQs = 1 tick square.</b> Every test gets one REV square for revision. Example: 50 PYQs → 5 PYQ squares.
+        </div>
+        <div id="testsList" class="tests-list"></div>
+      </div>
+
       <div id="themesView" class="feature-view" hidden>
-        <p class="note">Pick any theme. It is saved automatically. Default theme is <b>Mono Blue</b>. You can switch themes whenever you want.</p>
+        <p class="note">Pick any theme. It is saved automatically. <b>Default theme is Mono (black & white).</b> To change the default, edit <code>&lt;meta name="tracker-default-theme" content="mono"&gt;</code> in this HTML file.</p>
         <div class="theme-grid theme-grid-48" id="themeGrid">
           <button class="theme-option" data-theme="bento"><span class="theme-dot theme-bento"></span><b>Bento</b></button>
           <button class="theme-option" data-theme="brutalist"><span class="theme-dot theme-brutalist"></span><b>Brutalist</b></button>
@@ -143,12 +172,6 @@
           <button class="theme-option" data-theme="mono-blue"><span class="theme-dot theme-mono-blue"></span><b>Mono Blue</b></button>
           <button class="theme-option" data-theme="mono-green"><span class="theme-dot theme-mono-green"></span><b>Mono Green</b></button>
           <button class="theme-option" data-theme="mono-purple"><span class="theme-dot theme-mono-purple"></span><b>Mono Purple</b></button>
-          <button class="theme-option" data-theme="mono-yellow"><span class="theme-dot theme-mono-yellow"></span><b>Mono Yellow</b></button>
-          <button class="theme-option" data-theme="mono-black"><span class="theme-dot theme-mono-black"></span><b>Mono Black</b></button>
-          <button class="theme-option" data-theme="mono-orange"><span class="theme-dot theme-mono-orange"></span><b>Mono Orange</b></button>
-          <button class="theme-option" data-theme="mono-pink"><span class="theme-dot theme-mono-pink"></span><b>Mono Pink</b></button>
-          <button class="theme-option" data-theme="mono-teal"><span class="theme-dot theme-mono-teal"></span><b>Mono Teal</b></button>
-          <button class="theme-option" data-theme="mono-gray"><span class="theme-dot theme-mono-gray"></span><b>Mono Gray</b></button>
           <button class="theme-option" data-theme="bento-coral"><span class="theme-dot theme-bento-coral"></span><b>Bento Coral</b></button>
           <button class="theme-option" data-theme="bento-mint"><span class="theme-dot theme-bento-mint"></span><b>Bento Mint</b></button>
           <button class="theme-option" data-theme="bento-lavender"><span class="theme-dot theme-bento-lavender"></span><b>Bento Lavender</b></button>

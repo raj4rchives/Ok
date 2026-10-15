@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JEE Tracker — Daily Checklist</title>
+<link rel="stylesheet" href="feature-style.css">
+</head>
+<body>
+<header>
+  <div>
+    <div class="eyebrow">JEE PREPARATION TRACKER</div>
+    <h1>📚 EXAMYTRACK</h1>
+    <p>by Raj Sharma · 14-Day Offline Progress Tracker</p>
+  </div>
+  <div class="headerActions"><a href="menu.html" class="themeBtn" style="text-decoration:none;display:inline-flex;align-items:center">☰ Menu</a><button id="syllabusBtn">📚 Syllabus Tracker</button><button class="themeBtn" id="themeBtn">🎨 Themes</button></div>
+</header>
+
+<main>
+<section class="panel setup">
+  <div class="sectionTitle">Create your 14-day tracker</div>
+  <div class="grid">
+    <label>Number of Days
+      <input id="days" type="number" min="1" max="365" value="20">
+    </label>
+    <label>Total Lectures per day
+      <input id="lectures" type="number" min="0" max="30" value="4">
+    </label>
+    <label>HW / Module blocks per day
+      <input id="hw" type="number" min="0" max="20" value="1">
+    </label>
+    <label>DPP blocks per day
+      <input id="dpp" type="number" min="0" max="20" value="1">
+    </label>
+    <label>PYQ blocks per day
+      <input id="pyq" type="number" min="0" max="20" value="1">
+    </label>
+    <label>Total Questions per day
+      <input id="questions" type="number" min="0" max="300" value="30">
+    </label>
+    <label>REV blocks per day
+      <input id="rev" type="number" min="0" max="20" value="1">
+    </label>
+  </div>
+  <div class="note">Questions are automatically converted at <b>10 questions = 1 checklist square</b>.</div>
+  <div class="actions">
+    <button class="primary" id="generate">＋ Generate Tracker</button>
+    <button id="clear">Clear Ticks</button>
+    <button id="print">🖨 Download / Print PDF</button>
+  </div>
+</section>
+
+<section class="panel trackerPanel">
+  <div class="trackerHead">
+    <div>
+      <div class="eyebrow">YOUR DAILY PLAN</div>
+      <h2>14-Day Checklist</h2>
+    </div>
+    <div class="progress" id="progress">0%</div>
+  </div>
+  <div class="tableWrap">
+    <table id="tracker"></table>
+  </div>
+</section>
+
+<!-- Generated automatically: 20 days per printable A4 page -->
+<div id="printPages"></div>
+
+<!-- Syllabus Tracker -->
+<div class="modal" id="syllabusModal" aria-hidden="true">
+  <div class="modalCard">
+    <div class="modalHead">
+      <div>
+        <div class="eyebrow">JEE SYLLABUS TRACKER</div>
+        <h2>📚 Syllabus Tracker</h2>
+        <p>Add Subject, Chapter Name and Total Lectures. The PDF is made for offline ticking.</p>
+      </div>
+      <button class="closeBtn" id="closeSyllabus">✕</button>
+    </div>
+
+    <div class="syllabusActionsTop">
+      <button id="loadPhysicsExample">⚡ Load Physics Example</button>
+      <button id="clearSyllabus">Clear Syllabus</button>
+      <button class="primary" id="downloadSyllabus">📄 Download A4 PDF</button>
+    </div>
+
+    <div class="syllabusForm">
+      <label>Subject
+        <select id="sySubject">
+          <option>Physics</option><option>Chemistry</option><option>Mathematics</option><option>Biology</option><option>Other</option>
+        </select>
+      </label>
+      <label>Chapter Name
+        <input id="syChapter" placeholder="e.g. Laws of Motion">
+      </label>
+      <label>Total Lectures
+        <input id="syLectures" type="number" min="0" max="99" placeholder="e.g. 13">
+      </label>
+      <button class="primary addChapterBtn" id="addChapter">＋ Add Chapter</button>
+    </div>
+
+    <div class="syNote">Each lecture gets an <b>L1, L2, L3...</b> box. The PDF also includes separate boxes for <b>Main Level, Adv Level, Short Notes, DPP, HW, Module, PYQ, Test, R1, R2 and R3</b>.</div>
+    <div id="syllabusPreview" class="syllabusPreview"></div>
+  </div>
+</div>
+
+<!-- Printable syllabus PDF -->
+<div id="syllabusPrint"></div>
+</main>
+
+<div class="themeMenu" id="themeMenu">
+  <div class="themeTitle">Choose Theme</div>
+  <button data-theme="dark">🌑 Dark</button>
+  <button data-theme="red">🔴 Dark Red</button>
+  <button data-theme="yellow">🟡 Dark Yellow</button>
+  <button data-theme="ocean">🔵 Ocean</button>
+  <button data-theme="purple">🟣 Purple</button>
+  <button data-theme="emerald">🟢 Emerald</button>
+  <button data-theme="light">☀️ Light</button>
+  <button data-theme="brutal">⬛ Brutalist</button>
+  <button data-theme="bento">🍱 Bento</button>
+  <button data-theme="midnight">🌌 Midnight</button>
+</div>
+
+<script src="feature-script.js"></script>
+</body>
+</html>

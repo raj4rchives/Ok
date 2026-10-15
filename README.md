@@ -13,3 +13,9 @@ Features:
 Note: the default countdown date is 23 May 2027 as an editable planning date. JEE Advanced 2027 official date was not found on the official JEE Advanced site in this build; change the date when officially announced.
 
 GitHub Pages: upload all files to repository root.
+
+
+## Added features
+- `syllabus.html`: dedicated chapter-wise syllabus tracker and A4 PDF export from the supplied Short-main project.
+- `daily-checklist.html`: daily checklist generator and printable checklist from the supplied Short-main project.
+- `menu.html`: navigation for the new pages and main tracker.
