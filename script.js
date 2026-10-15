@@ -573,8 +573,8 @@ function escapeFeatureText(value) {
 function openFeature(name) {
   const overlay = document.getElementById("featureOverlay");
   const title = document.getElementById("featurePageTitle");
-  const views = ["menu","syllabus","pyq","tests","themes","todo","focus","weekly","backup"];
-  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"☑️ PYQ Question Tracker",tests:"📝 Test Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
+  const views = ["menu","syllabus","pyq","themes","todo","focus","weekly","backup"];
+  const titles = {menu:"Menu",syllabus:"📚 Syllabus Tracker",pyq:"☑️ PYQ Question Tracker",themes:"🎨 Themes",todo:"📝 Daily TODO",focus:"⏱️ Focus Mode",weekly:"📊 Weekly Report",backup:"💾 Backup & Import"};
   overlay.hidden = false;
   views.forEach(v => {
     const el = document.getElementById(v + "View");
@@ -582,7 +582,6 @@ function openFeature(name) {
   });
   title.textContent = titles[name] || "Menu";
   if (name === "pyq") renderPYQ();
-  if (name === "tests") renderTests();
   if (name === "themes") updateThemeButtons();
   if (name === "todo") renderTodoList();
   if (name === "focus") renderFocus();
@@ -611,7 +610,7 @@ function initFeatureMenu() {
 
 /* ---------- 62 themes ---------- */
 const THEMES = [
-  "bento","brutalist","mono","blueprint","mono-red","mono-blue","mono-green","mono-purple",
+  "bento","brutalist","mono","blueprint","mono-red","mono-blue","mono-green","mono-purple","mono-yellow","mono-black","mono-orange","mono-pink","mono-teal","mono-gray",
   "bento-coral","bento-mint","bento-lavender","bento-ocean","bento-sunset",
   "brutalist-blue","brutalist-green","brutalist-purple","brutalist-orange","brutalist-pink"
 ];
@@ -1004,7 +1003,7 @@ function downloadPYQPDF(){
       pdf.setTextColor(0,0,0);pdf.setFont("helvetica","bold");pdf.setFontSize(14);
       pdf.text("JEE PYQ QUESTIONS TRACKER",M,10);
       pdf.setFontSize(9);pdf.text(subject.toUpperCase(),M,16);
-      pdf.setFont("helvetica","normal");pdf.setFontSize(6.5);
+      pdf.setFont("helvetica","normal");pdf.setFontSize(7);
       pdf.text("1 small square = 10 PYQs  •  Tick by hand  •  REV = one revision tick",M,20);
 
       const headers=["INDEX","CHAPTER NAME","TOTAL PYQ","PYQ PROGRESS — 10 Q / SQUARE","REV","ACTION"];
@@ -1012,7 +1011,7 @@ function downloadPYQPDF(){
       pdf.autoTable({
         startY:24,margin:{left:M,right:M,top:6,bottom:7},tableWidth:tableW,
         head:[headers],body,theme:"grid",rowPageBreak:"avoid",
-        styles:{font:"helvetica",fontSize:6.5,cellPadding:1.2,valign:"middle",halign:"center",lineWidth:.35,lineColor:[0,0,0],textColor:[0,0,0]},
+        styles:{font:"helvetica",fontSize:6.5,cellPadding:1.2,valign:"middle",halign:"center",lineWidth:.35,lineColor:palette.line,textColor:[30,35,45]},
         headStyles:{fontStyle:"bold",fontSize:5.8,fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2},
         columnStyles:{0:{cellWidth:12},1:{cellWidth:48,halign:"left",fontSize:8.2,fontStyle:"bold"},2:{cellWidth:18},3:{cellWidth:94},4:{cellWidth:10},5:{cellWidth:12}},
         didParseCell:data=>{
@@ -1171,7 +1170,7 @@ function downloadTestsPDF(){
     body,
     theme:"grid",
     rowPageBreak:"avoid",
-    styles:{font:"helvetica",fontSize:7,cellPadding:1.6,valign:"middle",halign:"center",lineWidth:.35,lineColor:[0,0,0],textColor:[0,0,0]},
+    styles:{font:"helvetica",fontSize:7,cellPadding:1.6,valign:"middle",halign:"center",lineWidth:.35,lineColor:palette.line,textColor:[30,35,45]},
     headStyles:{fontStyle:"bold",fontSize:6.2,fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.6},
     columnStyles:{
       0:{cellWidth:14},
@@ -1287,6 +1286,8 @@ function initSyllabus(){
   });
   document.getElementById("syllabusBackBtn")?.addEventListener("click",()=>openFeature("menu"));
   document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
+  const pdfThemeSelect=document.getElementById("syllabusPdfTheme");
+  if(pdfThemeSelect){pdfThemeSelect.value="bw";pdfThemeSelect.addEventListener("change",()=>localStorage.setItem("jeeSyllabusPdfTheme","bw"));}
   renderSyllabus();
 }
 function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(0,0,0); pdf.setLineWidth(0.45); pdf.rect(x,y,size,size); }
@@ -1299,10 +1300,12 @@ function downloadSyllabusPDF(){
   // Large syllabuses used to make one very heavy autoTable call. On phones
   // that could stall jsPDF before the browser got a chance to download it.
   // Build the PDF in small page-sized chunks instead.
-  const pdf=new JsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
-  const M=7, usable=297-14;
+  const pdf=new JsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  const M=8, usable=297-16;
   const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
-  const widths=[7,55,60,14,10,...SYLLABUS_TASKS.map(()=>12)];
+  // Strict black-and-white print palette: no colored fills or accents.
+  const palette={line:[0,0,0],pale:[255,255,255],ink:[0,0,0]};
+  const widths=[8,56,75,11,12,...SYLLABUS_TASKS.map(()=>10.8)];
 
   let firstPage=true;
 
@@ -1311,17 +1314,19 @@ function downloadSyllabusPDF(){
     firstPage=false;
 
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(15);
-    pdf.setTextColor(0,0,0);
-    pdf.text("JEE SYLLABUS TRACKER",M,9);
+    pdf.setFontSize(17);
+    pdf.setTextColor(...palette.ink);
+    pdf.text("JEE SYLLABUS TRACKER",M,12);
 
     pdf.setFont("helvetica","normal");
     pdf.setFontSize(6.5);
-    pdf.text("Offline Printable • Tick everything by hand",M,13);
+    pdf.setTextColor(75,85,99);
+    pdf.text("Offline Printable • Tick everything by hand",M,17);
 
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(10.5);
-    pdf.text(subject.toUpperCase(),M,19);
+    pdf.setFontSize(12);
+    pdf.setTextColor(...palette.ink);
+    pdf.text(subject.toUpperCase(),M,25);
 
     const rows=chapters.map((c,i)=>[
       String(startIndex+i+1), c.name, "", String(c.total), "",
@@ -1329,33 +1334,33 @@ function downloadSyllabusPDF(){
     ]);
 
     pdf.autoTable({
-      startY:22,
-      margin:{left:M,right:M,top:6,bottom:7},
+      startY:30,
+      margin:{left:M,right:M,top:5,bottom:6},
       tableWidth:usable,
       head:[headers],
       body:rows,
       theme:"grid",
       rowPageBreak:"avoid",
       styles:{
-        font:"helvetica",fontSize:6.4,cellPadding:1.2,overflow:"linebreak",
+        font:"helvetica",fontSize:6.4,cellPadding:1.0,overflow:"linebreak",
         valign:"middle",halign:"center",lineWidth:0.45,
-        lineColor:[0,0,0],textColor:[0,0,0]
+        lineColor:palette.line,textColor:[30,35,45]
       },
       headStyles:{
-        fontStyle:"bold",fontSize:6.2,halign:"center",valign:"middle",
-        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2
+        fontStyle:"bold",fontSize:6.0,halign:"center",valign:"middle",
+        fillColor:palette.pale,textColor:palette.ink,lineColor:palette.line,cellPadding:0.7
       },
       columnStyles:Object.fromEntries(
         widths.map((w,i)=>[
           i,{cellWidth:w,halign:i===1?"left":"center",
-          fontSize:i===1?10:(i===3?8:6.4),fontStyle:i===1||i===3?"bold":"normal"}
+          fontSize:i===1?8.0:(i===3?7.0:6.0),fontStyle:i===1||i===3?"bold":"normal"}
         ])
       ),
       didParseCell:data=>{
         if(data.section==="body" && data.column.index===2){
           const total=chapters[data.row.index].total;
-          const lines=Math.ceil(total/5);
-          data.cell.styles.minCellHeight=Math.max(8,lines*7.0+1.5);
+          const lines=Math.ceil(total/6);
+          data.cell.styles.minCellHeight=Math.max(8.5,lines*5.2+1.5);
         }
       },
       didDrawCell:data=>{
@@ -1363,30 +1368,31 @@ function downloadSyllabusPDF(){
 
         if(data.column.index===2){
           const total=chapters[data.row.index].total;
-          const perLine=5, box=4.0, step=11.0, lineH=7.0;
+          const perLine=6, box=3.3, step=10.5, lineH=5.2;
 
           for(let n=0;n<total;n++){
             const line=Math.floor(n/perLine), pos=n%perLine;
-            const x=data.cell.x+2.0+pos*step;
-            const y=data.cell.y+1.0+line*lineH;
+            const x=data.cell.x+2+pos*step;
+            const y=data.cell.y+0.8+line*lineH;
             if(y+box>data.cell.y+data.cell.height-0.3)continue;
 
-            pdfBox(pdf,x,y,box);
+            pdf.setDrawColor(...palette.line); pdf.setLineWidth(0.35); pdf.rect(x,y,box,box);
             pdf.setFont("helvetica","normal");
-            pdf.setFontSize(5.2);
-            pdf.setTextColor(0,0,0);
-            pdf.text(String(n+1),x+5.2,y+3.0);
+            pdf.setFontSize(5.8);
+            pdf.setTextColor(...palette.ink);
+            pdf.text(String(n+1),x+4.0,y+3.0);
           }
         }
 
         if(data.column.index>=5){
-          const box=4.0;
-          pdfBox(
-            pdf,
+          const box=4.2;
+          pdf.setDrawColor(...palette.line); pdf.setLineWidth(0.35);
+          pdf.rect(
             data.cell.x+(data.cell.width-box)/2,
             data.cell.y+(data.cell.height-box)/2,
-            box
+            box,box
           );
+
         }
       }
     });
@@ -1395,7 +1401,8 @@ function downloadSyllabusPDF(){
   try{
     // Keep each autoTable call comfortably within one A4 page's worth of rows.
     // A chapter with up to 100 lectures still fits as a single row.
-    const MAX_BODY_HEIGHT=255;
+    const MAX_BODY_HEIGHT=164;
+    const MAX_ROWS_PER_PAGE=15;
 
     for(const subject of SYLLABUS_SUBJECTS){
       const chapters=d.chapters.filter(c=>c.subject===subject);
@@ -1406,10 +1413,10 @@ function downloadSyllabusPDF(){
       let startIndex=0;
 
       chapters.forEach((chapter,index)=>{
-        const h=Math.max(8,Math.ceil(chapter.total/5)*7.0+1.5);
+        const h=Math.max(9,Math.ceil(chapter.total/6)*5.8+2.5);
 
         // Flush before adding another large row.
-        if(chunk.length && used+h>MAX_BODY_HEIGHT){
+        if(chunk.length && (used+h>MAX_BODY_HEIGHT || chunk.length>=MAX_ROWS_PER_PAGE)){
           drawPage(subject,chunk,startIndex);
           startIndex=index;
           chunk=[];
@@ -1425,7 +1432,7 @@ function downloadSyllabusPDF(){
       });
     }
 
-    pdf.save("JEE-Syllabus-Tracker-A4-Landscape.pdf");
+    pdf.save("JEE-Syllabus-Tracker-Black-White-A4-Landscape.pdf");
   }catch(e){
     console.error("Syllabus PDF generation failed:",e);
     alert("PDF generate nahi ho paaya. Data safe hai — chapters/lectures delete nahi hue. Page reload karke dobara try karo.");
