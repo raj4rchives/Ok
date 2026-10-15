@@ -610,7 +610,7 @@ function initFeatureMenu() {
 
 /* ---------- 62 themes ---------- */
 const THEMES = [
-  "bento","brutalist","mono","blueprint","mono-red","mono-blue","mono-green","mono-purple",
+  "bento","brutalist","mono","blueprint","mono-red","mono-blue","mono-green","mono-purple","mono-yellow","mono-black","mono-orange","mono-pink","mono-teal","mono-gray",
   "bento-coral","bento-mint","bento-lavender","bento-ocean","bento-sunset",
   "brutalist-blue","brutalist-green","brutalist-purple","brutalist-orange","brutalist-pink"
 ];
@@ -1011,7 +1011,7 @@ function downloadPYQPDF(){
       pdf.autoTable({
         startY:24,margin:{left:M,right:M,top:6,bottom:7},tableWidth:tableW,
         head:[headers],body,theme:"grid",rowPageBreak:"avoid",
-        styles:{font:"helvetica",fontSize:6.5,cellPadding:1.2,valign:"middle",halign:"center",lineWidth:.35,lineColor:[0,0,0],textColor:[0,0,0]},
+        styles:{font:"helvetica",fontSize:6.5,cellPadding:1.2,valign:"middle",halign:"center",lineWidth:.35,lineColor:palette.line,textColor:[30,35,45]},
         headStyles:{fontStyle:"bold",fontSize:5.8,fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.2},
         columnStyles:{0:{cellWidth:12},1:{cellWidth:48,halign:"left",fontSize:8.2,fontStyle:"bold"},2:{cellWidth:18},3:{cellWidth:94},4:{cellWidth:10},5:{cellWidth:12}},
         didParseCell:data=>{
@@ -1170,7 +1170,7 @@ function downloadTestsPDF(){
     body,
     theme:"grid",
     rowPageBreak:"avoid",
-    styles:{font:"helvetica",fontSize:7,cellPadding:1.6,valign:"middle",halign:"center",lineWidth:.35,lineColor:[0,0,0],textColor:[0,0,0]},
+    styles:{font:"helvetica",fontSize:7,cellPadding:1.6,valign:"middle",halign:"center",lineWidth:.35,lineColor:palette.line,textColor:[30,35,45]},
     headStyles:{fontStyle:"bold",fontSize:6.2,fillColor:[255,255,255],textColor:[0,0,0],cellPadding:1.6},
     columnStyles:{
       0:{cellWidth:14},
@@ -1286,6 +1286,8 @@ function initSyllabus(){
   });
   document.getElementById("syllabusBackBtn")?.addEventListener("click",()=>openFeature("menu"));
   document.getElementById("syllabusPdfBtn")?.addEventListener("click",downloadSyllabusPDF);
+  const pdfThemeSelect=document.getElementById("syllabusPdfTheme");
+  if(pdfThemeSelect){pdfThemeSelect.value=localStorage.getItem("jeeSyllabusPdfTheme")||"blue";pdfThemeSelect.addEventListener("change",()=>localStorage.setItem("jeeSyllabusPdfTheme",pdfThemeSelect.value));}
   renderSyllabus();
 }
 function pdfBox(pdf,x,y,size=3.4){ pdf.setDrawColor(0,0,0); pdf.setLineWidth(0.45); pdf.rect(x,y,size,size); }
@@ -1301,6 +1303,21 @@ function downloadSyllabusPDF(){
   const pdf=new JsPDF({orientation:"portrait",unit:"mm",format:"a4",compress:true});
   const M=7, usable=210-14;
   const headers=["#","Chapter Name","Lecture Tracker","Total Lec","Lec Comp",...SYLLABUS_TASKS.map(k=>SYLLABUS_TASK_LABELS[k])];
+  const pdfThemeMap={
+    blue:{line:[90,157,240],pale:[229,241,255],ink:[18,65,130]},
+    red:{line:[220,75,91],pale:[255,235,238],ink:[145,25,43]},
+    yellow:{line:[210,163,0],pale:[255,248,210],ink:[105,78,0]},
+    black:{line:[70,70,70],pale:[235,235,235],ink:[25,25,25]},
+    green:{line:[55,155,100],pale:[230,247,237],ink:[25,95,55]},
+    purple:{line:[145,100,205],pale:[243,235,255],ink:[80,45,130]},
+    orange:{line:[230,130,45],pale:[255,240,222],ink:[140,70,15]},
+    pink:{line:[220,105,165],pale:[255,235,246],ink:[135,45,95]},
+    teal:{line:[40,155,155],pale:[225,247,246],ink:[20,95,95]},
+    gray:{line:[135,145,155],pale:[240,242,245],ink:[55,65,75]}
+  };
+  const chosenTheme=document.getElementById("syllabusPdfTheme")?.value || localStorage.getItem("jeeSyllabusPdfTheme") || "blue";
+  const palette=pdfThemeMap[chosenTheme] || pdfThemeMap.blue;
+  localStorage.setItem("jeeSyllabusPdfTheme",chosenTheme);
   const widths=[7,34,48,10,10,...SYLLABUS_TASKS.map(()=>7.9)];
 
   let firstPage=true;
@@ -1311,15 +1328,17 @@ function downloadSyllabusPDF(){
 
     pdf.setFont("helvetica","bold");
     pdf.setFontSize(15);
-    pdf.setTextColor(0,0,0);
+    pdf.setTextColor(...palette.ink);
     pdf.text("JEE SYLLABUS TRACKER",M,9);
 
     pdf.setFont("helvetica","normal");
     pdf.setFontSize(6.5);
+    pdf.setTextColor(75,85,99);
     pdf.text("Offline Printable • Tick everything by hand",M,13);
 
     pdf.setFont("helvetica","bold");
     pdf.setFontSize(10.5);
+    pdf.setTextColor(...palette.ink);
     pdf.text(subject.toUpperCase(),M,19);
 
     const rows=chapters.map((c,i)=>[
@@ -1338,11 +1357,11 @@ function downloadSyllabusPDF(){
       styles:{
         font:"helvetica",fontSize:5.6,cellPadding:0.8,overflow:"linebreak",
         valign:"middle",halign:"center",lineWidth:0.45,
-        lineColor:[0,0,0],textColor:[0,0,0]
+        lineColor:palette.line,textColor:[30,35,45]
       },
       headStyles:{
         fontStyle:"bold",fontSize:5.3,halign:"center",valign:"middle",
-        fillColor:[255,255,255],textColor:[0,0,0],cellPadding:0.7
+        fillColor:palette.pale,textColor:palette.ink,lineColor:palette.line,cellPadding:0.7
       },
       columnStyles:Object.fromEntries(
         widths.map((w,i)=>[
@@ -1370,22 +1389,23 @@ function downloadSyllabusPDF(){
             const y=data.cell.y+0.7+line*lineH;
             if(y+box>data.cell.y+data.cell.height-0.3)continue;
 
-            pdfBox(pdf,x,y,box);
+            pdf.setDrawColor(...palette.line); pdf.setLineWidth(0.35); pdf.rect(x,y,box,box);
             pdf.setFont("helvetica","normal");
             pdf.setFontSize(5.2);
-            pdf.setTextColor(0,0,0);
+            pdf.setTextColor(...palette.ink);
             pdf.text(String(n+1),x+5.2,y+3.0);
           }
         }
 
         if(data.column.index>=5){
           const box=4.0;
-          pdfBox(
-            pdf,
+          pdf.setDrawColor(...palette.line); pdf.setLineWidth(0.35);
+          pdf.rect(
             data.cell.x+(data.cell.width-box)/2,
             data.cell.y+(data.cell.height-box)/2,
-            box
+            box,box
           );
+
         }
       }
     });

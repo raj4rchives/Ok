@@ -1145,3 +1145,23 @@ body[data-theme^="brutalist-"] h1{font-weight:1000;text-transform:uppercase}
 .test-action{width:75px;text-align:center}
 .test-action .pyq-delete{display:inline-flex;align-items:center;justify-content:center;min-width:58px;cursor:pointer}
 @media(max-width:800px){.tests-form{grid-template-columns:1fr}.tests-table{min-width:900px}}
+
+
+/* Extra monochrome colour themes */
+.theme-mono-yellow{background:linear-gradient(135deg,#4b3a00,#eab308)}
+.theme-mono-black{background:linear-gradient(135deg,#090909,#737373)}
+.theme-mono-orange{background:linear-gradient(135deg,#542509,#f97316)}
+.theme-mono-pink{background:linear-gradient(135deg,#4a1734,#ec4899)}
+.theme-mono-teal{background:linear-gradient(135deg,#073b3b,#14b8a6)}
+.theme-mono-gray{background:linear-gradient(135deg,#252a31,#a3aab5)}
+body[data-theme="mono-yellow"]{--bg:#fffbea;--panel:#fffef7;--line:#9a7800;--text:#302600;--muted:#75652c;--accent:#d6a900;--stat-bg:#fff5c2;--badge-bg:#f7e8a2;--button-bg:#fff;--todo-bg:#fffef7;--danger-text:#b4233f}
+body[data-theme="mono-black"]{--bg:#ededed;--panel:#fff;--line:#292929;--text:#111;--muted:#555;--accent:#222;--stat-bg:#e5e5e5;--badge-bg:#d8d8d8;--button-bg:#fff;--todo-bg:#fff;--danger-text:#b4233f}
+body[data-theme="mono-orange"]{--bg:#fff4e9;--panel:#fffdf9;--line:#9b4a0c;--text:#3b1d08;--muted:#8c6348;--accent:#ea580c;--stat-bg:#ffead8;--badge-bg:#ffddc2;--button-bg:#fff;--todo-bg:#fffdf9;--danger-text:#b4233f}
+body[data-theme="mono-pink"]{--bg:#fff0f7;--panel:#fffafe;--line:#8d285d;--text:#3d1029;--muted:#8b5b76;--accent:#db2777;--stat-bg:#ffe3f0;--badge-bg:#f8cfe3;--button-bg:#fff;--todo-bg:#fffafe;--danger-text:#b4233f}
+body[data-theme="mono-teal"]{--bg:#eafafa;--panel:#fbffff;--line:#126c6c;--text:#0b3030;--muted:#4e7777;--accent:#0d9488;--stat-bg:#d9f5f2;--badge-bg:#c4eeea;--button-bg:#fff;--todo-bg:#fbffff;--danger-text:#b4233f}
+body[data-theme="mono-gray"]{--bg:#f0f1f3;--panel:#fff;--line:#525a65;--text:#20242a;--muted:#68717d;--accent:#525a65;--stat-bg:#e5e7eb;--badge-bg:#d8dce2;--button-bg:#fff;--todo-bg:#fff;--danger-text:#b4233f}
+body[data-theme^="mono-"] .primary{color:#fff!important}
+.pdf-theme-control{display:flex;flex-direction:column;gap:5px;min-width:115px;color:var(--muted);font-size:12px;font-weight:700}
+.pdf-theme-control select{min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font:inherit}
+.syllabus-actions{align-items:end}
+@media(max-width:600px){.pdf-theme-control{flex:1;min-width:125px}.syllabus-actions #syllabusPdfBtn{flex:1}}
