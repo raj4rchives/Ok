@@ -1,7 +1,470 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkout — EXAMYWEB</title><link rel="stylesheet" href="portal.css"></head><body class="auth-body"><div class="auth-wrap checkout-wrap"><a class="brand" href="index.html"><span class="brand-mark">E</span><span>EXAMY<span>WEB</span></span></a><div class="auth-card"><div class="eyebrow">SECURE CHECKOUT</div><h1 id="title">Starter plan.</h1><div class="checkout-price" id="price">₹99 <span>/ month</span></div><p>Choose your payment method. Pay with Paytm or directly through UPI.</p><div class="summary"><div><span>Account</span><b id="account">—</b></div><div><span>Exam</span><b id="examOut">—</b></div><div><span>Plan</span><b id="planOut">Starter</b></div></div><div class="pay-tabs"><button class="pay-tab active" id="upiTab">UPI</button><button class="pay-tab" id="paytmTab">Paytm</button></div><section id="upiBox" class="payment-box"><div class="upi-badge">UPI PAYMENT</div><h2>Pay ₹<span id="upiAmount">99</span>/month</h2><p>Send the exact amount to the EXAMYWEB UPI ID below.</p><div class="upi-id-row"><code id="upiId">6900365026@superyes</code><button class="copy-btn" id="copyUpi">Copy</button></div><div class="upi-actions"><a class="btn primary" id="upiPay" href="#">Pay via UPI app ↗</a></div><div class="upi-note">On Android, the button opens an installed UPI app. If it doesn't, copy the UPI ID and pay manually.</div><label>UPI Transaction ID / UTR<input id="utr" placeholder="Enter the 12-digit UTR after payment" inputmode="numeric" maxlength="20"></label><button class="btn primary full" id="upiSubmit">I have paid — Submit UTR</button><div id="upiMsg" class="pay-msg"></div></section><section id="paytmBox" class="payment-box" hidden><div class="upi-badge">PAYTM</div><p>Pay securely with Paytm. Your Paytm merchant credentials stay on the server.</p><button class="btn primary full" id="payBtn">Pay with Paytm →</button><div id="msg" class="pay-msg"></div></section><small class="auth-note">UPI payments are verified using the submitted UTR before paid access is granted. UPI itself does not automatically create a recurring monthly subscription.</small></div><a class="back" href="login.html">← Change account</a></div><script>
-const plans={starter:{name:'Starter',amount:99,usd:'$1'},pro:{name:'Pro',amount:199,usd:'$2'},elite:{name:'Elite',amount:299,usd:'$3'}};const UPI_ID='6900365026@superyes';const p=new URLSearchParams(location.search).get('plan')||'starter';const plan=plans[p]||plans.starter;const u=JSON.parse(localStorage.getItem('examyUser')||'null');if(!u){location.href='login.html?plan='+p}document.getElementById('title').textContent=plan.name+' plan.';document.getElementById('price').innerHTML='₹'+plan.amount+' <span>/ month · '+plan.usd+'</span>';document.getElementById('account').textContent=u?.email||'—';document.getElementById('examOut').textContent=u?.exam||'—';document.getElementById('planOut').textContent=plan.name;document.getElementById('upiAmount').textContent=plan.amount;document.getElementById('upiId').textContent=UPI_ID;
-const intent='upi://pay?pa='+encodeURIComponent(UPI_ID)+'&pn='+encodeURIComponent('EXAMYWEB')+'&am='+plan.amount.toFixed(2)+'&cu=INR&tn='+encodeURIComponent('EXAMYWEB '+plan.name+' Monthly');document.getElementById('upiPay').href=intent;document.getElementById('copyUpi').onclick=async()=>{try{await navigator.clipboard.writeText(UPI_ID);document.getElementById('copyUpi').textContent='Copied ✓';setTimeout(()=>document.getElementById('copyUpi').textContent='Copy',1400)}catch(e){}};
-upiTab.onclick=()=>{upiBox.hidden=false;paytmBox.hidden=true;upiTab.classList.add('active');paytmTab.classList.remove('active')};paytmTab.onclick=()=>{upiBox.hidden=true;paytmBox.hidden=false;paytmTab.classList.add('active');upiTab.classList.remove('active')};
-document.getElementById('upiSubmit').onclick=async()=>{const utr=document.getElementById('utr').value.trim();const m=document.getElementById('upiMsg');if(!utr){m.textContent='Please enter your UTR / transaction ID.';return}m.textContent='Submitting payment for verification…';try{const r=await fetch('/api/upi/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:p,amount:plan.amount,utr,email:u.email,name:u.name,exam:u.exam})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not submit');m.textContent='UTR submitted. Access will open after payment verification.';localStorage.setItem('examyPaymentPending',JSON.stringify(d));}catch(e){m.textContent=e.message+' (Run the EXAMYWEB server for UPI submission.)'}};
-document.getElementById('payBtn').onclick=async()=>{const msg=document.getElementById('msg');msg.textContent='Connecting to Paytm…';try{const r=await fetch('/api/paytm/initiate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:p,amount:plan.amount,email:u.email,name:u.name})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Payment setup failed');const s=document.createElement('script');s.src=d.checkoutJsUrl;s.onload=()=>{const config={root:'',flow:'DEFAULT',data:{orderId:d.orderId,token:d.txnToken,tokenType:'TXN_TOKEN',amount:d.amount},handler:{notifyMerchant:(eventName,data)=>{if(data?.STATUS==='TXN_SUCCESS'||data?.resultInfo?.resultStatus==='TXN_SUCCESS')location.href='success.html?orderId='+encodeURIComponent(d.orderId)}}};window.Paytm.CheckoutJS.onLoad(()=>window.Paytm.CheckoutJS.init(config).then(()=>window.Paytm.CheckoutJS.invoke()).catch(()=>msg.textContent='Paytm checkout error.'))};document.head.appendChild(s)}catch(e){msg.textContent=e.message+' — add Paytm credentials in .env and run the server.'}};
-</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced 150-Day Study Checklist Generator</title>
+    <style>
+        :root {
+            --primary-color: #1e293b;
+            --accent-color: #3b82f6;
+            --border-color: #0f172a;
+            --bg-color: #f8fafc;
+            --sidebar-width: 300px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Control Panel */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #475569;
+        }
+
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #475569;
+        }
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* Main Preview Area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #e2e8f0;
+        }
+
+        /* Page Layout (A4 simulation) */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            padding: 15mm;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #0f172a;
+        }
+
+        .target-goal {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+            border-bottom: 1px dashed #0f172a;
+            padding-bottom: 2px;
+        }
+
+        .page-footer-info {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Table Design */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #0f172a;
+            color: white;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 2px;
+        }
+
+        td {
+            padding: 4px 2px;
+            font-size: 0.75rem;
+        }
+
+        .day-cell {
+            font-weight: 800;
+            font-size: 0.75rem;
+            background: #f8fafc;
+            padding: 4px;
+            line-height: 1.1;
+        }
+
+        .day-sub {
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Checkbox Styling */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid #0f172a;
+            border-radius: 2px;
+            background-color: white;
+            cursor: pointer;
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: #0f172a;
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✔';
+            position: absolute;
+            top: -2px;
+            left: 1px;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .checkbox-group {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            flex-wrap: wrap;
+        }
+
+        /* Modal for Code Copy */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            width: 80%;
+            max-width: 700px;
+            border-radius: 8px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-content textarea {
+            width: 100%;
+            height: 350px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            margin-top: 10px;
+            resize: vertical;
+        }
+
+        /* Print Media Query */
+        @media print {
+            body {
+                background: none;
+            }
+            .sidebar, .modal {
+                display: none !important;
+            }
+            .main-content {
+                margin: 0;
+                padding: 0;
+                background: none;
+            }
+            .page {
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+                break-after: page;
+                width: 210mm;
+                height: 297mm;
+                padding: 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Controls -->
+    <div class="sidebar">
+        <h2>Checklist Builder</h2>
+        
+        <div class="control-group">
+            <label>Total Days</label>
+            <input type="number" id="totalDaysInput" value="150" min="20" max="365" step="10">
+        </div>
+
+        <div class="control-group">
+            <label>Days Per Page</label>
+            <input type="number" id="daysPerPageInput" value="20" min="10" max="31">
+        </div>
+
+        <div class="control-group">
+            <label>Header Subtitle</label>
+            <input type="text" id="headerSubInput" value="YOUR DAILY PLAN">
+        </div>
+
+        <div class="control-group">
+            <label>Target Goal Header</label>
+            <input type="text" id="targetGoalInput" value="IIT Bombay -> AIR under 500">
+        </div>
+
+        <div class="control-group">
+            <label>Lectures Checkboxes Count</label>
+            <input type="number" id="lecCountInput" value="4" min="1" max="6">
+        </div>
+
+        <div class="control-group">
+            <label>Question Tracking Boxes Count</label>
+            <input type="number" id="qCountInput" value="10" min="0" max="15">
+        </div>
+
+        <div class="control-group">
+            <label>Sub-Label under Day</label>
+            <input type="text" id="daySubInput" value="JEE TRACK">
+        </div>
+
+        <button class="btn" onclick="generateTracker()">Update & Regenerate</button>
+        <button class="btn btn-secondary" onclick="window.print()">Print / Save PDF</button>
+        <button class="btn btn-secondary" onclick="openCodeModal()">View & Copy Code</button>
+    </div>
+
+    <!-- Main Dynamic Pages Container -->
+    <div class="main-content" id="printContainer">
+        <!-- Generated pages will appear here -->
+    </div>
+
+    <!-- Code View Modal -->
+    <div class="modal" id="codeModal">
+        <div class="modal-content">
+            <h3>Full Page Source Code</h3>
+            <textarea id="codeTextArea" readonly></textarea>
+            <button class="btn" style="margin-top: 10px;" onclick="copyCodeToClipboard()">Copy Code to Clipboard</button>
+            <button class="btn btn-secondary" style="margin-top: 5px;" onclick="closeCodeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function generateTracker() {
+            const totalDays = parseInt(document.getElementById('totalDaysInput').value) || 150;
+            const daysPerPage = parseInt(document.getElementById('daysPerPageInput').value) || 20;
+            const headerSub = document.getElementById('headerSubInput').value;
+            const targetGoal = document.getElementById('targetGoalInput').value;
+            const lecCount = parseInt(document.getElementById('lecCountInput').value) || 4;
+            const qCount = parseInt(document.getElementById('qCountInput').value) || 10;
+            const daySub = document.getElementById('daySubInput').value;
+
+            const container = document.getElementById('printContainer');
+            container.innerHTML = '';
+
+            const totalPages = Math.ceil(totalDays / daysPerPage);
+
+            for (let p = 0; p < totalPages; p++) {
+                const startDay = p * daysPerPage + 1;
+                const endDay = Math.min((p + 1) * daysPerPage, totalDays);
+
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+
+                // Header HTML
+                let html = `
+                    <div>
+                        <div class="page-header">
+                            <div>
+                                <div class="brand-sub">${headerSub} • EXAMTRACK</div>
+                                <div class="page-title">Days ${startDay}–${endDay} Checklist</div>
+                            </div>
+                            <div class="target-goal">${targetGoal}</div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 12%;">DAY</th>
+                                    <th style="width: 18%;">LECTURES</th>
+                                    <th style="width: 10%;">HW / MOD</th>
+                                    <th style="width: 8%;">DPP</th>
+                                    <th style="width: 8%;">PYQ</th>
+                                    <th style="width: 36%;">QUESTIONS (${qCount} = ${qCount} $\Box$)</th>
+                                    <th style="width: 8%;">REV</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                // Rows for each day on this page
+                for (let d = startDay; d <= endDay; d++) {
+                    // Lecture Checkboxes
+                    let lecChecks = '';
+                    for (let l = 0; l < lecCount; l++) {
+                        lecChecks += `<input type="checkbox">`;
+                    }
+
+                    // Question Checkboxes
+                    let qChecks = '';
+                    for (let q = 0; q < qCount; q++) {
+                        qChecks += `<input type="checkbox">`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td class="day-cell">
+                                DAY ${d}
+                                <div class="day-sub">${daySub}</div>
+                            </td>
+                            <td>
+                                <div class="checkbox-group">${lecChecks}</div>
+                            </td>
+                            <td><input type="checkbox"></td>
+                            <td><input type="checkbox"></td>
+                            <td><input type="checkbox"></td>
+                            <td>
+                                <div class="checkbox-group">${qChecks}</div>
+                            </td>
+                            <td><input type="checkbox"></td>
+                        </tr>
+                    `;
+                }
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="page-footer-info">
+                        Page ${p + 1} of ${totalPages} • Customizable Study Tracking System
+                    </div>
+                `;
+
+                pageDiv.innerHTML = html;
+                container.appendChild(pageDiv);
+            }
+        }
+
+        function openCodeModal() {
+            const fullCode = '<!DOCTYPE html>\n<html lang="en">\n' + document.documentElement.innerHTML + '\n</html>';
+            document.getElementById('codeTextArea').value = fullCode;
+            document.getElementById('codeModal').style.display = 'flex';
+        }
+
+        function closeCodeModal() {
+            document.getElementById('codeModal').style.display = 'none';
+        }
+
+        function copyCodeToClipboard() {
+            const textarea = document.getElementById('codeTextArea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Source code copied to clipboard successfully!');
+        }
+
+        // Initialize on load
+        window.onload = generateTracker;
+    </script>
+</body>
+          </html>
+          
