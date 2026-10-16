@@ -1165,3 +1165,18 @@ body[data-theme^="mono-"] .primary{color:#fff!important}
 .pdf-theme-control select{min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font:inherit}
 .syllabus-actions{align-items:end}
 @media(max-width:600px){.pdf-theme-control{flex:1;min-width:125px}.syllabus-actions #syllabusPdfBtn{flex:1}}
+
+
+/* Syllabus PDF-inspired clean tracker styling (screen UI); PDF export remains strict black & white. */
+#syllabusView .syllabus-toolbar{padding-bottom:10px;border-bottom:1px solid var(--line)}
+#syllabusView .syllabus-form{border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+#syllabusView .syllabus-form label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+#syllabusView .syllabus-form input,#syllabusView .syllabus-form select{min-height:40px;border-radius:7px}
+#syllabusView .syllabus-add-btn{font-weight:750}
+#syllabusView .sy-subject{border:1px solid #777;border-radius:4px;box-shadow:none}
+#syllabusView .sy-subject-head{background:#f1f1f1;color:#111;border-bottom:1px solid #777}
+#syllabusView .sy-subject-head span{color:#333}
+#syllabusView .sy-simple-table th{background:#eee;color:#111;font-size:11px;text-transform:uppercase;letter-spacing:.2px}
+#syllabusView .sy-simple-table td{background:#fff;color:#111;border-color:#888}
+#syllabusView .sy-simple-table th,#syllabusView .sy-simple-table td{padding:8px 7px}
+@media print{#syllabusView .sy-subject-head,#syllabusView .sy-simple-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}

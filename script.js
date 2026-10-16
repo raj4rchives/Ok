@@ -1314,17 +1314,17 @@ function downloadSyllabusPDF(){
     firstPage=false;
 
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(17);
+    pdf.setFontSize(16);
     pdf.setTextColor(...palette.ink);
     pdf.text("JEE SYLLABUS TRACKER",M,12);
 
     pdf.setFont("helvetica","normal");
-    pdf.setFontSize(6.5);
-    pdf.setTextColor(75,85,99);
-    pdf.text("Offline Printable • Tick everything by hand",M,17);
+    pdf.setFontSize(7);
+    pdf.setTextColor(...palette.ink);
+    pdf.text("CLASS 11 & 12 MASTER PROGRESS LEDGER",M,17);
 
     pdf.setFont("helvetica","bold");
-    pdf.setFontSize(12);
+    pdf.setFontSize(10);
     pdf.setTextColor(...palette.ink);
     pdf.text(subject.toUpperCase(),M,25);
 
@@ -1334,7 +1334,7 @@ function downloadSyllabusPDF(){
     ]);
 
     pdf.autoTable({
-      startY:30,
+      startY:29,
       margin:{left:M,right:M,top:5,bottom:6},
       tableWidth:usable,
       head:[headers],
@@ -1342,7 +1342,7 @@ function downloadSyllabusPDF(){
       theme:"grid",
       rowPageBreak:"avoid",
       styles:{
-        font:"helvetica",fontSize:6.4,cellPadding:1.0,overflow:"linebreak",
+        font:"helvetica",fontSize:6.4,cellPadding:1.15,overflow:"linebreak",
         valign:"middle",halign:"center",lineWidth:0.45,
         lineColor:palette.line,textColor:[30,35,45]
       },
